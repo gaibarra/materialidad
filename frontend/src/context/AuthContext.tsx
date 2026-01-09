@@ -1,0 +1,196 @@
+"use client";
+
+import Cookies from "js-cookie";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import { loadSession, persistSession, removeSession } from "../lib/token-storage";
+
+const isTokenExpired = (token: string | null | undefined): boolean => {
+  if (!token) {
+    return true;
+  }
+  try {
+    const [, payload] = token.split(".");
+    if (!payload) {
+      return true;
+    }
+    const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/"))) as {
+      exp?: number;
+    };
+    if (!decoded.exp) {
+      return false;
+    }
+    return decoded.exp * 1000 <= Date.now();
+  } catch {
+    return true;
+  }
+};
+
+export type UserProfile = {
+  id: number;
+  email: string;
+  full_name: string | null;
+  tenant_slug: string | null;
+  despacho_slug: string | null;
+  is_staff: boolean;
+  is_superuser: boolean;
+};
+
+type AuthContextValue = {
+  accessToken: string | null;
+  refreshToken: string | null;
+  tenant: string | null;
+  user: UserProfile | null;
+  isAuthenticated: boolean;
+  login: (payload: LoginPayload) => Promise<void>;
+  logout: () => void;
+  refreshProfile: () => Promise<void>;
+};
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+if (!apiBaseUrl) {
+  throw new Error("NEXT_PUBLIC_API_BASE_URL debe estar definido");
+}
+
+type AuthProviderProps = {
+  children: React.ReactNode;
+};
+
+type LoginPayload = {
+  email: string;
+  password: string;
+  tenant: string;
+};
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
+  const [tenant, setTenant] = useState<string | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
+
+  const logout = useCallback(() => {
+    setAccessToken(null);
+    setRefreshToken(null);
+    setTenant(null);
+    setUser(null);
+    removeSession();
+    Cookies.remove("tenant");
+  }, []);
+
+  useEffect(() => {
+    const session = loadSession();
+    if (session) {
+      if (isTokenExpired(session.accessToken)) {
+        removeSession();
+        Cookies.remove("tenant");
+        return;
+      }
+      setAccessToken(session.accessToken);
+      setRefreshToken(session.refreshToken);
+      setTenant(session.tenant);
+    }
+  }, []);
+
+  const fetchProfile = useCallback(
+    async (token: string, tenantSlug: string) => {
+      if (isTokenExpired(token)) {
+        logout();
+        return;
+      }
+
+      const response = await fetch(`${apiBaseUrl}/api/accounts/me/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "X-Tenant": tenantSlug,
+        },
+        cache: "no-store",
+      });
+      if (response.ok) {
+        const payload = (await response.json()) as UserProfile;
+        setUser(payload);
+      } else if (response.status === 401) {
+        logout();
+      }
+    },
+    [logout]
+  );
+
+  useEffect(() => {
+    if (accessToken && tenant && !user && !isTokenExpired(accessToken)) {
+      void fetchProfile(accessToken, tenant);
+    }
+  }, [accessToken, tenant, user, fetchProfile]);
+
+  const login = useCallback(
+    async ({ email, password, tenant: tenantSlug }: LoginPayload) => {
+      const response = await fetch(`${apiBaseUrl}/api/accounts/token/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, tenant: tenantSlug }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Credenciales inválidas o empresa incorrecta");
+      }
+
+      const data = (await response.json()) as {
+        access: string;
+        refresh: string;
+        tenant: string;
+      };
+
+      setAccessToken(data.access);
+      setRefreshToken(data.refresh);
+      setTenant(data.tenant);
+      persistSession({
+        accessToken: data.access,
+        refreshToken: data.refresh,
+        tenant: data.tenant,
+      });
+      Cookies.set("tenant", data.tenant);
+      await fetchProfile(data.access, data.tenant);
+    },
+    [fetchProfile]
+  );
+
+  const refreshProfile = useCallback(async () => {
+    if (accessToken && tenant && !isTokenExpired(accessToken)) {
+      await fetchProfile(accessToken, tenant);
+    } else if (accessToken && isTokenExpired(accessToken)) {
+      logout();
+    }
+  }, [accessToken, tenant, fetchProfile, logout]);
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      accessToken,
+      refreshToken,
+      tenant,
+      user,
+      isAuthenticated: Boolean(accessToken && tenant),
+      login,
+      logout,
+      refreshProfile,
+    }),
+    [accessToken, tenant, user, login, logout, refreshProfile, refreshToken]
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuthContext(): AuthContextValue {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuthContext debe usarse dentro de AuthProvider");
+  }
+  return context;
+}

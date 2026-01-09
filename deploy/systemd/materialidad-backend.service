@@ -1,0 +1,18 @@
+[Unit]
+Description=Gunicorn service for Materialidad Backend
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/materialidad/backend
+EnvironmentFile=/srv/materialidad/backend/.env
+ExecStart=/srv/materialidad/.venv/bin/gunicorn --config /srv/materialidad/backend/gunicorn.conf.py materialidad_backend.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+TimeoutStopSec=30
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target
