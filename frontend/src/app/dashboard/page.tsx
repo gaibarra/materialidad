@@ -106,6 +106,26 @@ const KPI_TONE_LABEL: Record<MetricTone, string> = {
   info: "Seguimiento",
 };
 
+const REGIMENES_FISCALES = [
+  { value: "601", label: "601 - General de Ley Personas Morales" },
+  { value: "603", label: "603 - Personas Morales con Fines no Lucrativos" },
+  { value: "605", label: "605 - Sueldos y Salarios e Ingresos Asimilados a Salarios" },
+  { value: "606", label: "606 - Arrendamiento" },
+  { value: "608", label: "608 - Demás ingresos" },
+  { value: "610", label: "610 - Residentes en el Extranjero sin Establecimiento Permanente" },
+  { value: "611", label: "611 - Ingresos por Dividendos (socios y accionistas)" },
+  { value: "612", label: "612 - Personas Físicas con Actividades Empresariales y Profesionales" },
+  { value: "614", label: "614 - Ingresos por intereses" },
+  { value: "615", label: "615 - Régimen de los ingresos por obtención de premios" },
+  { value: "620", label: "620 - Sociedades por Acciones Simplificadas" },
+  { value: "621", label: "621 - Incorporación Fiscal" },
+  { value: "622", label: "622 - Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras" },
+  { value: "623", label: "623 - Opcional para Grupos de Sociedades" },
+  { value: "624", label: "624 - Coordinados" },
+  { value: "625", label: "625 - Actividades Empresariales con ingresos a través de Plataformas Tecnológicas" },
+  { value: "626", label: "626 - Régimen Simplificado de Confianza" },
+];
+
 const INSIGHT_STYLES: Record<DashboardMetrics["insights"][number]["severity"], string> = {
   info: "text-jade-600 bg-jade-50",
   warning: "text-amber-600 bg-amber-50",
@@ -192,6 +212,9 @@ export default function DashboardPage() {
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [historyDays, setHistoryDays] = useState<number>(90);
 
+  const inputClass =
+    "mt-1 w-full rounded-lg border border-slate-300 bg-white/95 px-3 py-2 text-sm text-ink-700 placeholder-slate-500 focus:border-jade-500 focus:ring-2 focus:ring-jade-500/15 focus:outline-none";
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace("/login");
@@ -265,7 +288,7 @@ export default function DashboardPage() {
     void loadHistory(historyDays);
   }, [historyDays, isAuthenticated, loadEmpresas, loadMetrics, loadHistory]);
 
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = event.target;
     setFormData((prev) => ({
       ...prev,
@@ -847,7 +870,7 @@ export default function DashboardPage() {
                     required
                     value={formData.razon_social}
                     onChange={handleInputChange}
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-jade-500 focus:outline-none"
+                    className={inputClass}
                   />
                 </div>
                 <div>
@@ -859,19 +882,27 @@ export default function DashboardPage() {
                     maxLength={13}
                     value={formData.rfc}
                     onChange={handleInputChange}
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm uppercase focus:border-jade-500 focus:outline-none"
+                    className={`${inputClass} uppercase`}
                   />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-ink-500">Régimen fiscal</label>
-                  <input
-                    type="text"
+                  <select
                     name="regimen_fiscal"
                     required
                     value={formData.regimen_fiscal}
                     onChange={handleInputChange}
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-jade-500 focus:outline-none"
-                  />
+                    className={inputClass}
+                  >
+                    <option value="" disabled>
+                      Selecciona un régimen
+                    </option>
+                    {REGIMENES_FISCALES.map((regimen) => (
+                      <option key={regimen.value} value={regimen.label}>
+                        {regimen.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-ink-500">Fecha de constitución</label>
@@ -881,7 +912,7 @@ export default function DashboardPage() {
                     required
                     value={formData.fecha_constitucion}
                     onChange={handleInputChange}
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-jade-500 focus:outline-none"
+                    className={inputClass}
                   />
                 </div>
                 <div>
@@ -892,7 +923,7 @@ export default function DashboardPage() {
                     required
                     value={formData.pais}
                     onChange={handleInputChange}
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-jade-500 focus:outline-none"
+                    className={inputClass}
                   />
                 </div>
                 <div>
@@ -903,7 +934,7 @@ export default function DashboardPage() {
                     required
                     value={formData.estado}
                     onChange={handleInputChange}
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-jade-500 focus:outline-none"
+                    className={inputClass}
                   />
                 </div>
                 <div>
@@ -914,7 +945,7 @@ export default function DashboardPage() {
                     required
                     value={formData.ciudad}
                     onChange={handleInputChange}
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-jade-500 focus:outline-none"
+                    className={inputClass}
                   />
                 </div>
                 <div>
@@ -924,7 +955,7 @@ export default function DashboardPage() {
                     name="email_contacto"
                     value={formData.email_contacto}
                     onChange={handleInputChange}
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-jade-500 focus:outline-none"
+                    className={inputClass}
                   />
                 </div>
                 <div>
@@ -934,7 +965,7 @@ export default function DashboardPage() {
                     name="telefono_contacto"
                     value={formData.telefono_contacto}
                     onChange={handleInputChange}
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-jade-500 focus:outline-none"
+                    className={inputClass}
                   />
                 </div>
               </div>
@@ -962,7 +993,7 @@ export default function DashboardPage() {
               )}
             </form>
           ) : (
-            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            <div className="rounded-xl border border-dashed border-slate-300 bg-white/70 p-4 text-sm text-ink-500">
               {empresas.length
                 ? "Consulta el padrón y abre el formulario cuando necesites agregar o actualizar una razón social."
                 : "Aún no hay empresas registradas. Haz clic en \"Registrar empresa\" para capturar la primera."}

@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { useAuthContext } from "../context/AuthContext";
 import { alertError, alertSuccess } from "../lib/alerts";
 
 export function LoginForm() {
   const { login } = useAuthContext();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [tenant, setTenant] = useState("");
@@ -17,7 +19,8 @@ export function LoginForm() {
     setIsLoading(true);
     try {
       await login({ email, password, tenant });
-      void alertSuccess("Acceso autorizado", "Redirigiendo al panel principal");
+      await alertSuccess("Acceso autorizado", "Redirigiendo al panel principal");
+      router.push("/dashboard");
     } catch (err) {
       void alertError("No pudimos iniciar sesión", (err as Error).message);
     } finally {
