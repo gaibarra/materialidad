@@ -45,7 +45,6 @@ const NAV_ITEMS: NavItem[] = [
   { type: "link", label: "Alertas ESG", href: "/dashboard/alertas" },
 
   { type: "header", label: "Legal e IA" },
-  { type: "link", label: "Biblioteca legal", href: "/dashboard/fuentes" },
   { type: "link", label: "Consulta legal", href: "/dashboard/consultas" },
 
   { type: "header", label: "Administración" },

@@ -51,3 +51,8 @@ export function createLegalConsultation(payload: LegalConsultationPayload): Prom
     body: JSON.stringify(payload),
   });
 }
+export function deleteLegalConsultation(id: number): Promise<void> {
+  return apiFetch<void>(`/api/materialidad/consultas-legales/${id}/`, {
+    method: "DELETE",
+  });
+}

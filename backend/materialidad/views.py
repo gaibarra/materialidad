@@ -670,6 +670,7 @@ class LegalConsultationViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
     serializer_class = LegalConsultationSerializer
@@ -678,7 +679,7 @@ class LegalConsultationViewSet(
     ordering_fields = ("created_at",)
     ordering = ("-created_at",)
     filterset_fields = ("ai_model",)
-    http_method_names = ["get", "post"]
+    http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
         tenant = TenantContext.get_current_tenant()

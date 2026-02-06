@@ -20,6 +20,8 @@ __all__ = [
     "OpenAIClient",
     "OpenAIClientError",
     "OpenAIModelNotFoundError",
+    "GeminiClient",
+    "GeminiClientError",
 ]
 
 
@@ -39,8 +41,63 @@ class OpenAIModelNotFoundError(OpenAIClientError):
     """Modelo configurado no disponible."""
 
 
+class GeminiClientError(RuntimeError):
+    """Señala problemas al interactuar con Gemini."""
+
+
+class GeminiClient:
+    """Cliente para invocar Gemini (Google AI) mediante su SDK oficial."""
+
+    def __init__(self, *, model: str | None = None) -> None:
+        import google.generativeai as genai
+
+        api_key = settings.GEMINI_API_KEY
+        if not api_key:
+            raise ImproperlyConfigured("GEMINI_API_KEY debe estar configurada")
+
+        genai.configure(api_key=api_key)
+        self._model_name = model or settings.GEMINI_DEFAULT_MODEL
+        self._model = genai.GenerativeModel(self._model_name)
+
+    @property
+    def model_name(self) -> str:
+        return self._model_name
+
+    def generate_text(
+        self,
+        messages: Sequence[ChatMessage],
+        *,
+        temperature: float = 0.2,
+        max_output_tokens: int = 2048,
+    ) -> str:
+        if not messages:
+            raise ValueError("messages no puede estar vacío")
+
+        # Convertimos para el SDK de Gemini
+        # Gemini usa 'user' y 'model' (assistant)
+        history = []
+        for msg in messages[:-1]:
+            role = "user" if msg.role in ("user", "system") else "model"
+            history.append({"role": role, "parts": [msg.content]})
+
+        last_msg = messages[-1]
+        
+        chat = self._model.start_chat(history=history)
+        try:
+            response = chat.send_message(
+                last_msg.content,
+                generation_config={
+                    "temperature": temperature,
+                    "max_output_tokens": max_output_tokens,
+                }
+            )
+            return response.text.strip()
+        except Exception as exc:
+            raise GeminiClientError(f"Error al invocar Gemini: {exc}") from exc
+
+
 class OpenAIClient:
-    """Cliente reutilizable para invocar GPT-5 mini desde el backend."""
+    """Cliente reutilizable para invocar modelos AI desde el backend."""
 
     def __init__(self, *, model: str | None = None) -> None:
         self._provider = getattr(settings, "AI_PROVIDER", "openai").lower()
@@ -48,6 +105,8 @@ class OpenAIClient:
 
         if self._provider == "perplexity":
             self._configure_perplexity(model)
+        elif self._provider == "gemini":
+            self._gemini_client = GeminiClient(model=model)
         else:
             self._provider = "openai"
             self._configure_openai(model)
@@ -58,6 +117,8 @@ class OpenAIClient:
 
         if self._provider == "perplexity":
             return self._perplexity_model
+        if self._provider == "gemini":
+            return self._gemini_client.model_name
         return self._last_used_model or self._primary_model
 
     def generate_text(
@@ -74,6 +135,15 @@ class OpenAIClient:
             {"role": message.role, "content": message.content}
             for message in messages
         ]
+
+        if self._provider == "gemini":
+            text = self._gemini_client.generate_text(
+                messages,
+                temperature=temperature,
+                max_output_tokens=max_output_tokens,
+            )
+            self._last_used_model = self._gemini_client.model_name
+            return text
 
         if self._provider == "perplexity":
             text = self._generate_perplexity_with_continuations(
