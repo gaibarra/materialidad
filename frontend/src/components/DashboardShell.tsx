@@ -14,24 +14,49 @@ type NavLink = {
   requiresSuperuser?: boolean;
 };
 
-const NAV_LINKS: NavLink[] = [
-  { label: "Inteligencia fiscal", href: "/dashboard" },
-  { label: "Generador de contratos", href: "/dashboard/contratos" },
-  { label: "Validador CFDI/SPEI", href: "/dashboard/validador" },
-  { label: "Operaciones", href: "/dashboard/operaciones" },
-  { label: "Finanzas", href: "/dashboard/finanzas" },
-  { label: "Firma y fecha cierta", href: "/dashboard/firma-logistica" },
-  { label: "Razón de negocio", href: "/dashboard/razon-negocio" },
-  { label: "Comparador de precios", href: "/dashboard/comparador-precios" },
-  { label: "Proveedores", href: "/dashboard/proveedores" },
-  { label: "Biblioteca legal", href: "/dashboard/fuentes" },
-  { label: "Consulta legal", href: "/dashboard/consultas" },
-  { label: "Checklist", href: "/dashboard/checklists" },
-  { label: "Alertas ESG", href: "/dashboard/alertas" },
-  { label: "Expedientes digitales", href: "/dashboard/expedientes" },
-  { label: "Organizaciones", href: "/dashboard/admin/organizaciones", requiresSuperuser: true },
-  { label: "Administración", href: "/dashboard/administracion", requiresStaff: true },
-  { label: "Auditoría", href: "/dashboard/administracion/auditoria", requiresStaff: true },
+type NavItem =
+  | { type: "header"; label: string }
+  | ({ type: "link" } & NavLink);
+
+const NAV_ITEMS: NavItem[] = [
+  { type: "header", label: "Inicio" },
+  { type: "link", label: "Inteligencia fiscal", href: "/dashboard" },
+
+  { type: "header", label: "Base operativa" },
+  { type: "link", label: "Empresas", href: "/dashboard/empresas" },
+  { type: "link", label: "Proveedores", href: "/dashboard/proveedores" },
+
+  { type: "header", label: "Contratación" },
+  { type: "link", label: "Generador de contratos", href: "/dashboard/contratos" },
+  { type: "link", label: "Firma y fecha cierta", href: "/dashboard/firma-logistica" },
+  { type: "link", label: "Razón de negocio", href: "/dashboard/razon-negocio" },
+
+  { type: "header", label: "Ejecución" },
+  { type: "link", label: "Operaciones", href: "/dashboard/operaciones" },
+
+  { type: "header", label: "Fiscal y financiero" },
+  { type: "link", label: "Validador CFDI/SPEI", href: "/dashboard/validador" },
+  { type: "link", label: "Finanzas", href: "/dashboard/finanzas" },
+  { type: "link", label: "Comparador de precios", href: "/dashboard/comparador-precios" },
+
+  { type: "header", label: "Evidencia y cumplimiento" },
+  { type: "link", label: "Expedientes digitales", href: "/dashboard/expedientes" },
+  { type: "link", label: "Checklist", href: "/dashboard/checklists" },
+  { type: "link", label: "Alertas ESG", href: "/dashboard/alertas" },
+
+  { type: "header", label: "Legal e IA" },
+  { type: "link", label: "Biblioteca legal", href: "/dashboard/fuentes" },
+  { type: "link", label: "Consulta legal", href: "/dashboard/consultas" },
+
+  { type: "header", label: "Administración" },
+  {
+    type: "link",
+    label: "Organizaciones",
+    href: "/dashboard/admin/organizaciones",
+    requiresSuperuser: true,
+  },
+  { type: "link", label: "Administración", href: "/dashboard/administracion", requiresStaff: true },
+  { type: "link", label: "Auditoría", href: "/dashboard/administracion/auditoria", requiresStaff: true },
 ];
 
 export function DashboardShell({ children }: { children: ReactNode }) {
@@ -54,11 +79,24 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           <p className="mt-1 text-sm text-slate-500">{orgLabel}</p>
         </div>
         <nav className="mt-10 space-y-2 text-base">
-          {NAV_LINKS.filter((item) => {
+          {NAV_ITEMS.filter((item) => {
+            if (item.type === "header") return true;
             if (item.requiresSuperuser && !user?.is_superuser) return false;
             if (item.requiresStaff && !user?.is_staff) return false;
             return true;
-          }).map((item) => {
+          }).map((item, index, items) => {
+            if (item.type === "header") {
+              const nextItem = items[index + 1];
+              if (nextItem && nextItem.type === "header") return null;
+              return (
+                <p
+                  key={`header-${item.label}`}
+                  className="mt-6 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400"
+                >
+                  {item.label}
+                </p>
+              );
+            }
             const isActive = pathname?.startsWith(item.href);
             return (
               <Link

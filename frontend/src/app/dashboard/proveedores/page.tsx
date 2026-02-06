@@ -186,237 +186,253 @@ export default function ProveedoresPage() {
 
   return (
     <DashboardShell>
-      <div className="space-y-6 text-white">
+      <div className="space-y-8 text-slate-900">
         <form
           onSubmit={handleSubmit}
-          className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/30"
+          className="space-y-6 rounded-3xl border border-slate-100 bg-white p-6 shadow-2xl shadow-slate-200/60"
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">Capacidad del proveedor</p>
-              <h2 className="text-2xl font-semibold text-white">
+              <p className="text-xs uppercase tracking-[0.35em] text-emerald-500">Capacidad del proveedor</p>
+              <h2 className="text-2xl font-semibold text-slate-900">
                 {editing ? `Editar ${editing.razon_social}` : "Nuevo proveedor"}
               </h2>
-              <p className="text-sm text-slate-300">Captura datos de capacidad operativa y presencia.</p>
+              <p className="text-sm text-slate-500">Captura datos de capacidad operativa y presencia.</p>
             </div>
             {editing && (
               <button
                 type="button"
                 onClick={resetForm}
-                className="rounded-full border border-white/20 px-4 py-2 text-xs font-semibold text-white transition hover:border-emerald-300"
+                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-600"
               >
                 Cancelar edición
               </button>
             )}
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            <label className="text-sm text-slate-200">
-              Razón social
-              <input
-                name="razon_social"
-                value={form.razon_social || ""}
-                onChange={handleChange}
-                required
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-950/60 px-3 py-2 text-sm text-white"
-              />
-            </label>
-            <label className="text-sm text-slate-200">
-              RFC
-              <input
-                name="rfc"
-                value={form.rfc || ""}
-                onChange={handleChange}
-                required
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-950/60 px-3 py-2 text-sm text-white uppercase"
-              />
-            </label>
-            <label className="text-sm text-slate-200">
-              Actividad principal
-              <input
-                name="actividad_principal"
-                value={form.actividad_principal || ""}
-                onChange={handleChange}
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-950/60 px-3 py-2 text-sm text-white"
-              />
-            </label>
-          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-3xl border border-slate-100 bg-slate-50/70 p-5">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Información general</p>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <label className="text-sm text-slate-600">
+                  Razón social
+                  <input
+                    name="razon_social"
+                    value={form.razon_social || ""}
+                    onChange={handleChange}
+                    required
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                  />
+                </label>
+                <label className="text-sm text-slate-600">
+                  RFC
+                  <input
+                    name="rfc"
+                    value={form.rfc || ""}
+                    onChange={handleChange}
+                    required
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 uppercase shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                  />
+                </label>
+                <label className="text-sm text-slate-600">
+                  Actividad principal
+                  <input
+                    name="actividad_principal"
+                    value={form.actividad_principal || ""}
+                    onChange={handleChange}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                  />
+                </label>
+                <label className="text-sm text-slate-600">
+                  País
+                  <input
+                    name="pais"
+                    value={form.pais || ""}
+                    onChange={handleChange}
+                    required
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                  />
+                </label>
+                <label className="text-sm text-slate-600">
+                  Estado
+                  <input
+                    name="estado"
+                    value={form.estado || ""}
+                    onChange={handleChange}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                  />
+                </label>
+                <label className="text-sm text-slate-600">
+                  Ciudad
+                  <input
+                    name="ciudad"
+                    value={form.ciudad || ""}
+                    onChange={handleChange}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                  />
+                </label>
+                <label className="text-sm text-slate-600">
+                  Correo de contacto
+                  <input
+                    type="email"
+                    name="correo_contacto"
+                    value={form.correo_contacto || ""}
+                    onChange={handleChange}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                  />
+                </label>
+                <label className="text-sm text-slate-600">
+                  Teléfono
+                  <input
+                    name="telefono_contacto"
+                    value={form.telefono_contacto || ""}
+                    onChange={handleChange}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                  />
+                </label>
+              </div>
+            </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            <label className="text-sm text-slate-200">
-              País
-              <input
-                name="pais"
-                value={form.pais || ""}
-                onChange={handleChange}
-                required
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-950/60 px-3 py-2 text-sm text-white"
-              />
-            </label>
-            <label className="text-sm text-slate-200">
-              Estado
-              <input
-                name="estado"
-                value={form.estado || ""}
-                onChange={handleChange}
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-950/60 px-3 py-2 text-sm text-white"
-              />
-            </label>
-            <label className="text-sm text-slate-200">
-              Ciudad
-              <input
-                name="ciudad"
-                value={form.ciudad || ""}
-                onChange={handleChange}
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-950/60 px-3 py-2 text-sm text-white"
-              />
-            </label>
-          </div>
+            <div className="space-y-4">
+              <details open className="group rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+                <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-slate-800">
+                  <span>Capacidad</span>
+                  <span className="text-xs text-slate-400 group-open:rotate-180 transition">▾</span>
+                </summary>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <label className="text-sm text-slate-600">
+                    Registro REPS/IMSS
+                    <input
+                      name="reps_registro"
+                      value={form.reps_registro || ""}
+                      onChange={handleChange}
+                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                    />
+                  </label>
+                  <label className="text-sm text-slate-600">
+                    Registro patronal IMSS
+                    <input
+                      name="imss_patronal"
+                      value={form.imss_patronal || ""}
+                      onChange={handleChange}
+                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                    />
+                  </label>
+                  <label className="text-sm text-slate-600">
+                    Activos relevantes (separa con coma)
+                    <input
+                      name="activos_relevantes"
+                      value={(form.activos_relevantes as string[])?.join(", ") || ""}
+                      onChange={(e) => handleArrayField("activos_relevantes", e.target.value)}
+                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                    />
+                  </label>
+                  <label className="text-sm text-slate-600">
+                    Personal clave (nombres separados por coma)
+                    <input
+                      name="personal_clave"
+                      value={(form.personal_clave as string[])?.join(", ") || ""}
+                      onChange={(e) => handleArrayField("personal_clave", e.target.value)}
+                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                    />
+                  </label>
+                </div>
+              </details>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm text-slate-200">
-              Correo de contacto
-              <input
-                type="email"
-                name="correo_contacto"
-                value={form.correo_contacto || ""}
-                onChange={handleChange}
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-950/60 px-3 py-2 text-sm text-white"
-              />
-            </label>
-            <label className="text-sm text-slate-200">
-              Teléfono
-              <input
-                name="telefono_contacto"
-                value={form.telefono_contacto || ""}
-                onChange={handleChange}
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-950/60 px-3 py-2 text-sm text-white"
-              />
-            </label>
-          </div>
+              <details className="group rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+                <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-slate-800">
+                  <span>Presencia</span>
+                  <span className="text-xs text-slate-400 group-open:rotate-180 transition">▾</span>
+                </summary>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <label className="text-sm text-slate-600">
+                    Sitio web
+                    <input
+                      name="sitio_web"
+                      value={form.sitio_web || ""}
+                      onChange={handleChange}
+                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                    />
+                  </label>
+                  <label className="text-sm text-slate-600">
+                    Capturas web (URLs separadas por coma)
+                    <input
+                      name="sitio_web_capturas"
+                      value={(form.sitio_web_capturas as string[])?.join(", ") || ""}
+                      onChange={(e) => handleArrayField("sitio_web_capturas", e.target.value)}
+                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                    />
+                  </label>
+                  <label className="text-sm text-slate-600 md:col-span-2">
+                    Notas de capacidad
+                    <textarea
+                      name="notas_capacidad"
+                      value={form.notas_capacidad || ""}
+                      onChange={handleChange}
+                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                      rows={2}
+                    />
+                  </label>
+                </div>
+              </details>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm text-slate-200">
-              Registro REPS/IMSS
-              <input
-                name="reps_registro"
-                value={form.reps_registro || ""}
-                onChange={handleChange}
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-950/60 px-3 py-2 text-sm text-white"
-              />
-            </label>
-            <label className="text-sm text-slate-200">
-              Registro patronal IMSS
-              <input
-                name="imss_patronal"
-                value={form.imss_patronal || ""}
-                onChange={handleChange}
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-950/60 px-3 py-2 text-sm text-white"
-              />
-            </label>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm text-slate-200">
-              Activos relevantes (separa con coma)
-              <input
-                name="activos_relevantes"
-                value={(form.activos_relevantes as string[])?.join(", ") || ""}
-                onChange={(e) => handleArrayField("activos_relevantes", e.target.value)}
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-950/60 px-3 py-2 text-sm text-white"
-              />
-            </label>
-            <label className="text-sm text-slate-200">
-              Personal clave (nombres separados por coma)
-              <input
-                name="personal_clave"
-                value={(form.personal_clave as string[])?.join(", ") || ""}
-                onChange={(e) => handleArrayField("personal_clave", e.target.value)}
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-950/60 px-3 py-2 text-sm text-white"
-              />
-            </label>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm text-slate-200">
-              Fotos domicilio (URLs separadas por coma)
-              <input
-                name="fotos_domicilio"
-                value={(form.fotos_domicilio as string[])?.join(", ") || ""}
-                onChange={(e) => handleArrayField("fotos_domicilio", e.target.value)}
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-950/60 px-3 py-2 text-sm text-white"
-              />
-            </label>
-            <label className="text-sm text-slate-200">
-              Sitio web
-              <input
-                name="sitio_web"
-                value={form.sitio_web || ""}
-                onChange={handleChange}
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-950/60 px-3 py-2 text-sm text-white"
-              />
-            </label>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm text-slate-200">
-              Capturas web (URLs separadas por coma)
-              <input
-                name="sitio_web_capturas"
-                value={(form.sitio_web_capturas as string[])?.join(", ") || ""}
-                onChange={(e) => handleArrayField("sitio_web_capturas", e.target.value)}
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-950/60 px-3 py-2 text-sm text-white"
-              />
-            </label>
-            <label className="text-sm text-slate-200">
-              Notas de capacidad
-              <textarea
-                name="notas_capacidad"
-                value={form.notas_capacidad || ""}
-                onChange={handleChange}
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-950/60 px-3 py-2 text-sm text-white"
-                rows={2}
-              />
-            </label>
+              <details className="group rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+                <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-slate-800">
+                  <span>Evidencias</span>
+                  <span className="text-xs text-slate-400 group-open:rotate-180 transition">▾</span>
+                </summary>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <label className="text-sm text-slate-600">
+                    Fotos domicilio (URLs separadas por coma)
+                    <input
+                      name="fotos_domicilio"
+                      value={(form.fotos_domicilio as string[])?.join(", ") || ""}
+                      onChange={(e) => handleArrayField("fotos_domicilio", e.target.value)}
+                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                    />
+                  </label>
+                </div>
+              </details>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-3">
             <button
               type="submit"
               disabled={saving}
-              className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {saving ? "Guardando…" : editing ? "Actualizar proveedor" : "Crear proveedor"}
             </button>
             <button
               type="button"
               onClick={resetForm}
-              className="rounded-full border border-white/20 px-5 py-2 text-sm font-semibold text-white transition hover:border-emerald-300"
+              className="rounded-full border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-600"
             >
               Limpiar
             </button>
           </div>
         </form>
 
-        <header className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900/40 to-emerald-900/30 p-6 shadow-2xl shadow-emerald-500/20">
-          <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">Due diligence</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Proveedores y alertas 69-B</h1>
-          <p className="mt-2 text-sm text-slate-200">
+        <header className="rounded-3xl border border-slate-100 bg-white p-6 shadow-2xl shadow-slate-200/60">
+          <p className="text-xs uppercase tracking-[0.35em] text-emerald-500">Due diligence</p>
+          <h1 className="mt-2 text-3xl font-semibold text-slate-900">Proveedores y alertas 69-B</h1>
+          <p className="mt-2 text-sm text-slate-500">
             Consulta estatus SAT, alertas del artículo 69-B y envía validaciones al flujo n8n.
           </p>
           <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
-              <p className="text-slate-300">Proveedores registrados</p>
-              <p className="text-2xl font-semibold text-white">{proveedores.length}</p>
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm">
+              <p className="text-slate-500">Proveedores registrados</p>
+              <p className="text-2xl font-semibold text-slate-900">{proveedores.length}</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
-              <p className="text-slate-300">Alertas 69-B</p>
-              <p className="text-2xl font-semibold text-white">{proveedoresEnRiesgo.length}</p>
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm">
+              <p className="text-slate-500">Alertas 69-B</p>
+              <p className="text-2xl font-semibold text-slate-900">{proveedoresEnRiesgo.length}</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
-              <p className="text-slate-300">Empresa para validar</p>
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm">
+              <p className="text-slate-500">Empresa para validar</p>
               <select
-                className="mt-1 w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-white"
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
                 value={selectedEmpresa ?? ""}
                 onChange={(e) => setSelectedEmpresa(e.target.value ? Number(e.target.value) : null)}
               >
@@ -432,22 +448,22 @@ export default function ProveedoresPage() {
         </header>
 
         <section className="space-y-4">
-          <div className="flex items-center justify-between text-sm text-slate-300">
+          <div className="flex items-center justify-between text-sm text-slate-500">
             <p>{isLoading ? "Cargando proveedores…" : `Proveedores (${proveedores.length})`}</p>
             {selectedEmpresa && (
-              <p className="text-xs text-emerald-200">Validar con empresa ID {selectedEmpresa}</p>
+              <p className="text-xs text-emerald-600">Validar con empresa ID {selectedEmpresa}</p>
             )}
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
             {proveedores.map((prov) => (
               <article
                 key={prov.id}
-                className="rounded-3xl border border-white/10 bg-white/5 p-5 text-sm shadow-2xl shadow-black/30"
+                className="rounded-3xl border border-slate-100 bg-white p-5 text-sm shadow-xl shadow-slate-200/60"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-lg font-semibold text-white">{prov.razon_social}</p>
-                    <p className="text-xs text-slate-300">RFC {prov.rfc}</p>
+                    <p className="text-lg font-semibold text-slate-900">{prov.razon_social}</p>
+                    <p className="text-xs text-slate-500">RFC {prov.rfc}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Badge label={prov.estatus_sat || "Sin estatus SAT"} />
@@ -460,19 +476,19 @@ export default function ProveedoresPage() {
                 </div>
 
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
-                  <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-3">
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
                     <p className="text-xs uppercase text-slate-400">Última validación SAT</p>
-                    <p className="text-sm text-white">{formatDate(prov.ultima_validacion_sat)}</p>
+                    <p className="text-sm text-slate-900">{formatDate(prov.ultima_validacion_sat)}</p>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-3">
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
                     <p className="text-xs uppercase text-slate-400">Última validación 69-B</p>
-                    <p className="text-sm text-white">{formatDate(prov.ultima_validacion_69b)}</p>
+                    <p className="text-sm text-slate-900">{formatDate(prov.ultima_validacion_69b)}</p>
                   </div>
                 </div>
 
                 {prov.riesgos_detectados && prov.riesgos_detectados.length > 0 && (
-                  <div className="mt-3 rounded-2xl border border-amber-300/30 bg-amber-500/10 p-3 text-xs text-amber-100">
-                    <p className="font-semibold text-amber-200">Riesgos detectados</p>
+                  <div className="mt-3 rounded-2xl border border-amber-200/60 bg-amber-50 p-3 text-xs text-amber-700">
+                    <p className="font-semibold text-amber-700">Riesgos detectados</p>
                     <ul className="mt-1 list-disc space-y-1 pl-5">
                       {prov.riesgos_detectados.map((r, idx) => (
                         <li key={`${prov.id}-riesgo-${idx}`}>{r}</li>
@@ -482,7 +498,7 @@ export default function ProveedoresPage() {
                 )}
 
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-3 text-xs text-slate-200">
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
                     <p className="text-[11px] uppercase tracking-[0.35em] text-slate-400">Capacidad operativa</p>
                     <ul className="mt-2 space-y-1 text-sm">
                       <li>REPS/IMSS: {prov.reps_registro || "N/D"}</li>
@@ -492,12 +508,12 @@ export default function ProveedoresPage() {
                       <li>Fotos domicilio: {countItems(prov.fotos_domicilio)}</li>
                     </ul>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-3 text-xs text-slate-200">
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
                     <p className="text-[11px] uppercase tracking-[0.35em] text-slate-400">Presencia y notas</p>
                     <ul className="mt-2 space-y-1 text-sm">
                       <li>
                         Sitio web: {prov.sitio_web ? (
-                          <a href={prov.sitio_web} target="_blank" rel="noreferrer" className="text-emerald-200 underline">
+                          <a href={prov.sitio_web} target="_blank" rel="noreferrer" className="text-emerald-600 underline">
                             {prov.sitio_web}
                           </a>
                         ) : (
@@ -505,7 +521,7 @@ export default function ProveedoresPage() {
                         )}
                       </li>
                       <li>Capturas web: {countItems(prov.sitio_web_capturas)}</li>
-                      {prov.notas_capacidad && <li className="text-slate-300">{prov.notas_capacidad}</li>}
+                      {prov.notas_capacidad && <li className="text-slate-500">{prov.notas_capacidad}</li>}
                     </ul>
                   </div>
                 </div>
@@ -515,14 +531,14 @@ export default function ProveedoresPage() {
                     type="button"
                     onClick={() => void handleValidar(prov)}
                     disabled={requestingId === prov.id}
-                    className="rounded-xl border border-emerald-300/60 bg-emerald-500/15 px-4 py-2 text-xs font-semibold text-emerald-200 transition hover:border-emerald-200 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 transition hover:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {requestingId === prov.id ? "Enviando…" : "Solicitar validación"}
                   </button>
                   <button
                     type="button"
                     onClick={() => handleEdit(prov)}
-                    className="rounded-xl border border-white/20 px-4 py-2 text-xs font-semibold text-white transition hover:border-emerald-200"
+                    className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-600"
                   >
                     Editar
                   </button>
@@ -531,7 +547,7 @@ export default function ProveedoresPage() {
               </article>
             ))}
             {!isLoading && proveedores.length === 0 && (
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-center text-sm text-slate-300">
+              <div className="rounded-3xl border border-slate-100 bg-white p-6 text-center text-sm text-slate-500">
                 No hay proveedores registrados todavía.
               </div>
             )}
