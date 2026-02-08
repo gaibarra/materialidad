@@ -1,18 +1,24 @@
 [Unit]
 Description=Gunicorn service for Materialidad Backend
-After=network.target
+After=network.target postgresql.service
+Requires=postgresql.service
 
 [Service]
 Type=notify
 User=www-data
 Group=www-data
+RuntimeDirectory=materialidad
+RuntimeDirectoryMode=0755
 WorkingDirectory=/srv/materialidad/backend
 EnvironmentFile=/srv/materialidad/backend/.env
 ExecStart=/srv/materialidad/.venv/bin/gunicorn --config /srv/materialidad/backend/gunicorn.conf.py materialidad_backend.wsgi:application
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure
+RestartSec=5
 TimeoutStopSec=30
 KillMode=mixed
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target

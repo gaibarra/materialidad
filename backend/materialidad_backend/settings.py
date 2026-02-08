@@ -6,7 +6,6 @@ from pathlib import Path
 
 import environ
 from corsheaders.defaults import default_headers
-from corsheaders.defaults import default_headers
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.dateparse import parse_duration
 
@@ -155,7 +154,6 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = env.bool("CORS_ALLOW_ALL_ORIGINS", default=False)
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_HEADERS = list(default_headers) + ["x-tenant"]
 CORS_ALLOW_HEADERS = list(default_headers) + ["x-tenant"]
 
 API_BASE_PATH = "/api/"

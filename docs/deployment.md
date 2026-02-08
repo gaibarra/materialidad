@@ -2,10 +2,33 @@
 
 > Dominio oficial del entorno productivo: **materialidad.online**. Todos los ejemplos de Nginx y certificados asumen ese FQDN.
 
-## Paquetes del sistema
+## Despliegue rápido (script automatizado)
+
+```bash
+# Desde el VPS como root:
+sudo REPO_URL="https://github.com/gaibarra/materialidad.git" ./scripts/deploy.sh
+
+# Sin SSL (para pruebas):
+sudo ./scripts/deploy.sh --skip-ssl
 ```
+
+El script instala todo: paquetes del sistema, Node.js 20.x, Python 3.12, PostgreSQL, Nginx, Supervisor, Certbot, clona el repo, construye el frontend y backend, y levanta todos los servicios.
+
+---
+
+## Despliegue manual paso a paso
+
+### Paquetes del sistema
+```bash
 sudo apt update
-sudo apt install -y python3.12 python3.12-venv python3-pip postgresql postgresql-contrib nginx certbot python3-certbot-nginx
+sudo apt install -y python3.12 python3.12-venv python3-pip \
+    postgresql postgresql-contrib \
+    nginx certbot python3-certbot-nginx \
+    supervisor git curl build-essential libpq-dev
+
+# Node.js 20.x
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
 ```
 
 ## Código y entorno virtual
@@ -22,10 +45,16 @@ pip install -r backend/requirements.txt
 ```
 
 ## Variables de entorno
-```
+```bash
 cp backend/.env.template backend/.env
 ```
-Edita `backend/.env` y asigna valores reales a cada variable (cadena DSN de la base de control, secret key, hosts permitidos, URLs de n8n, TTL de los tokens, etc.).
+Edita `backend/.env` y asigna valores reales. Variables **obligatorias**:
+- `DJANGO_SECRET_KEY` — se genera automáticamente si usas `deploy.sh`
+- `DJANGO_CONTROL_DB_URL` — DSN de PostgreSQL (ej: `postgres://materialidad:pass@localhost:5432/materialidad_control`)
+- `DJANGO_ALLOWED_HOSTS` — `materialidad.online,www.materialidad.online`
+- `DJANGO_CSRF_TRUSTED_ORIGINS` — `https://materialidad.online,https://www.materialidad.online`
+- `CORS_ALLOWED_ORIGINS` — `https://materialidad.online,https://www.materialidad.online`
+- `OPENAI_API_KEY` — clave de API para funciones de IA
 
 ## Migraciones de la base de control
 ```
@@ -56,17 +85,13 @@ python backend/manage.py collectstatic --no-input
 
 ## Gunicorn vía systemd
 1. Copia el servicio:
-```
+```bash
 sudo cp deploy/systemd/materialidad-backend.service /etc/systemd/system/
 ```
-2. Ajusta `WorkingDirectory`, `EnvironmentFile` y `ExecStart` al path real.
-3. Crea el directorio del socket:
-```
-sudo mkdir -p /run/materialidad
-sudo chown www-data:www-data /run/materialidad
-```
+2. Ajusta `WorkingDirectory`, `EnvironmentFile` y `ExecStart` al path real si difiere de `/srv/materialidad`.
+3. El directorio del socket `/run/materialidad/` se crea automáticamente gracias a `RuntimeDirectory=materialidad` en el unit file. No requiere creación manual ni tmpfiles.d.
 4. Habilita y arranca:
-```
+```bash
 sudo systemctl daemon-reload
 sudo systemctl enable materialidad-backend
 sudo systemctl start materialidad-backend
@@ -74,83 +99,125 @@ sudo systemctl start materialidad-backend
 
 ## Nginx
 1. Copia la configuración:
-```
+```bash
 sudo cp deploy/nginx/materialidad.conf /etc/nginx/sites-available/
-sudo ln -s /etc/nginx/sites-available/materialidad.conf /etc/nginx/sites-enabled/materialidad.conf
+sudo ln -sf /etc/nginx/sites-available/materialidad.conf /etc/nginx/sites-enabled/materialidad.conf
+sudo rm -f /etc/nginx/sites-enabled/default
 ```
-   Configuración de referencia:
-```
-upstream materialidad_backend {
-	server unix:/run/materialidad/gunicorn.sock fail_timeout=0;
-}
+   La configuración incluye:
+   - `server_name materialidad.online www.materialidad.online`
+   - Proxy `/api/` y `/admin/` → Gunicorn (unix socket)
+   - Proxy `/` → Next.js (puerto 3000)
+   - Cache de archivos estáticos y media
+   - Headers de seguridad (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`)
 
-server {
-	listen 80;
-	server_name materialidad.online www.materialidad.online;
-
-	client_max_body_size 50m;
-
-	location /static/ {
-		alias /srv/materialidad/backend/staticfiles/;
-	}
-
-	location /media/ {
-		alias /srv/materialidad/backend/media/;
-	}
-
-	location /api/ {
-		proxy_set_header Host $host;
-		proxy_set_header X-Real-IP $remote_addr;
-		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		proxy_set_header X-Forwarded-Proto $scheme;
-		proxy_set_header X-Tenant $http_x_tenant;
-		proxy_pass http://materialidad_backend$request_uri;
-		proxy_redirect off;
-	}
-
-	location / {
-		proxy_set_header Host $host;
-		proxy_set_header X-Real-IP $remote_addr;
-		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		proxy_set_header X-Forwarded-Proto $scheme;
-		proxy_pass http://127.0.0.1:3000;
-		proxy_redirect off;
-	}
-}
-```
-2. Ajusta `server_name`, rutas de static/media y proxy según tu infraestructura (por defecto usa `server_name materialidad.online www.materialidad.online;`).
-3. Verifica y recarga:
-```
+2. Verifica y recarga:
+```bash
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
 ## Certbot
-Ejecuta `sudo certbot --nginx -d materialidad.online -d www.materialidad.online` para emitir los certificados. Certbot dejará programadas las renovaciones automáticas mediante systemd timers.
+```bash
+sudo certbot --nginx -d materialidad.online -d www.materialidad.online
 ```
+Certbot dejará programadas las renovaciones automáticas mediante systemd timers.
+
+## Frontend (Next.js con Supervisor)
+
+El frontend usa Next.js en modo `standalone` (configurado en `next.config.mjs`), que genera un servidor Node.js autocontenido en `.next/standalone/server.js`.
+
+```bash
 cd /srv/materialidad/frontend
-npm install
+npm ci --omit=dev
 cp .env.local.template .env.local
-# Define NEXT_PUBLIC_API_BASE_URL apuntando al dominio público del backend
+# Editar .env.local → NEXT_PUBLIC_API_BASE_URL=https://materialidad.online
 npm run build
-sudo apt install -y supervisor
-cat <<'EOF' | sudo tee /etc/supervisor/conf.d/materialidad-frontend.conf
-[program:materialidad-frontend]
-command=/usr/bin/npm run start -- -p 3000
-directory=/srv/materialidad/frontend
-autostart=true
-autorestart=true
-user=www-data
-environment=NODE_ENV="production",NEXT_PUBLIC_API_BASE_URL="https://materialidad.online"
-stdout_logfile=/var/log/materialidad/frontend.out.log
-stderr_logfile=/var/log/materialidad/frontend.err.log
-EOF
+
+# Copiar assets estáticos al directorio standalone
+cp -r .next/static .next/standalone/.next/static
+cp -r public .next/standalone/public
+```
+
+Instalar la configuración de Supervisor:
+```bash
+sudo mkdir -p /var/log/materialidad
+sudo chown www-data:www-data /var/log/materialidad
+sudo cp deploy/supervisor/materialidad-frontend.conf /etc/supervisor/conf.d/
 sudo supervisorctl reread
 sudo supervisorctl update
 ```
-El frontend queda bajo `supervisor`; no se requiere `pm2`.
+
+Verificar:
+```bash
+sudo supervisorctl status materialidad-frontend
+```
 
 ## Estrategia de migraciones futuras
 1. Ejecuta `python backend/manage.py migrate` en la base de control.
 2. Lanza `./scripts/migrate_tenant.sh` para aplicar cambios en cada tenant.
 3. Monitorea logs de Gunicorn y Nginx durante la operación.
+
+## Comandos útiles
+
+### Estado de servicios
+```bash
+sudo systemctl status materialidad-backend
+sudo supervisorctl status materialidad-frontend
+sudo systemctl status nginx
+```
+
+### Logs en tiempo real
+```bash
+journalctl -u materialidad-backend -f                   # Gunicorn
+tail -f /var/log/materialidad/frontend.out.log           # Next.js
+tail -f /var/log/nginx/access.log                        # Nginx
+```
+
+### Reiniciar servicios
+```bash
+sudo systemctl restart materialidad-backend              # Backend
+sudo supervisorctl restart materialidad-frontend         # Frontend
+sudo systemctl reload nginx                              # Nginx (sin downtime)
+```
+
+### Actualizar en producción
+```bash
+cd /srv/materialidad
+sudo git pull origin main
+sudo /srv/materialidad/.venv/bin/pip install -r backend/requirements.txt
+cd backend && sudo /srv/materialidad/.venv/bin/python manage.py migrate --no-input
+sudo /srv/materialidad/.venv/bin/python manage.py collectstatic --no-input
+cd ../frontend && sudo npm ci --omit=dev && npm run build
+cp -r .next/static .next/standalone/.next/static
+cp -r public .next/standalone/public
+sudo chown -R www-data:www-data /srv/materialidad
+sudo systemctl restart materialidad-backend
+sudo supervisorctl restart materialidad-frontend
+```
+
+## Arquitectura de producción
+
+```
+                    materialidad.online
+                         │ :443 HTTPS
+                  ┌──────▼──────┐
+                  │    Nginx    │
+                  └──┬───────┬──┘
+           /api/     │       │  /*
+           /admin/   │       │
+           /static/  │       │
+           /media/   │       │
+      ┌──────────────▼┐   ┌──▼──────────────┐
+      │   Gunicorn    │   │    Next.js       │
+      │  (systemd)    │   │  (supervisor)    │
+      │  unix socket  │   │  standalone      │
+      │  Django 5.0   │   │  port 3000       │
+      └───────┬───────┘   └─────────────────┘
+              │
+      ┌───────▼────────┐
+      │   PostgreSQL   │
+      │  control DB +  │
+      │  tenant DBs    │
+      └────────────────┘
+```
