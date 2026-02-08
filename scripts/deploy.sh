@@ -90,9 +90,19 @@ if [[ ! -f "${BACKEND_DIR}/.env" ]]; then
     warn "No existe ${BACKEND_DIR}/.env — creando desde template..."
     cp "${BACKEND_DIR}/.env.template" "${BACKEND_DIR}/.env"
 
-    # Generar SECRET_KEY automáticamente
-    SECRET=$("${VENV_DIR}/bin/python" -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
-    sed -i "s|^DJANGO_SECRET_KEY=.*|DJANGO_SECRET_KEY=${SECRET}|" "${BACKEND_DIR}/.env"
+    # Generar SECRET_KEY automáticamente (Python para evitar problemas con caracteres especiales en sed)
+    "${VENV_DIR}/bin/python" -c "
+import secrets, string
+charset = string.ascii_letters + string.digits + '!@#%^&*(-_=+)'
+key = ''.join(secrets.choice(charset) for _ in range(50))
+path = '${BACKEND_DIR}/.env'
+with open(path) as f:
+    content = f.read()
+content = content.replace('DJANGO_SECRET_KEY=cambia-esto-por-una-clave-segura', f'DJANGO_SECRET_KEY={key}')
+with open(path, 'w') as f:
+    f.write(content)
+print(f'SECRET_KEY generada correctamente')
+"
 
     warn "EDITA ${BACKEND_DIR}/.env con valores reales de PostgreSQL, API keys, etc."
     warn "Luego vuelve a ejecutar este script."
@@ -123,7 +133,7 @@ cd "$BACKEND_DIR"
 ok "Migraciones aplicadas"
 
 info "Recopilando archivos estáticos..."
-"${VENV_DIR}/bin/python" manage.py collectstatic --no-input -q
+"${VENV_DIR}/bin/python" manage.py collectstatic --no-input
 ok "Archivos estáticos recopilados"
 
 # ══════════════════════════════════════════════════════════════════════

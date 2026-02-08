@@ -177,9 +177,9 @@ export default function OrganizacionesPage() {
                                         ⚡ Solución Rápida (1 minuto):
                                     </h3>
                                     <ol className="list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300">
-                                        <li>Haz clic en <strong>"Cerrar Sesión y Volver a Entrar"</strong> abajo</li>
+                                        <li>Haz clic en <strong>&quot;Cerrar Sesión y Volver a Entrar&quot;</strong> abajo</li>
                                         <li>En la pantalla de login, ingresa tus credenciales</li>
-                                        <li>Deja el campo "Código de empresa" <strong>vacío</strong></li>
+                                        <li>Deja el campo &quot;Código de empresa&quot; <strong>vacío</strong></li>
                                         <li>El sistema te dará un token actualizado</li>
                                         <li>Regresa a esta página - funcionará perfectamente</li>
                                     </ol>

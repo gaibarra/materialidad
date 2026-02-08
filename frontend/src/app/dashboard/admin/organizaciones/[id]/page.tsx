@@ -396,7 +396,7 @@ function IntercompanyTab({ despachoId }: { despachoId: string }) {
                         </p>
                         <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
                             <li>Contratos con fecha cierta y razón de negocios clara</li>
-                            <li>Tasas de interés a valor de mercado (arm's length)</li>
+                            <li>Tasas de interés a valor de mercado (arm&apos;s length)</li>
                             <li>Estudio de precios de transferencia cuando aplique</li>
                             <li>Justificación del beneficio al grupo corporativo</li>
                         </ul>
