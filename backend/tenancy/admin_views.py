@@ -4,6 +4,9 @@ Solo accesibles para superusuarios.
 """
 from __future__ import annotations
 
+import secrets
+
+from django.conf import settings
 from django.db.models import Count, Q
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
@@ -12,6 +15,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .admin_serializers import DespachoSerializer
 from .models import Despacho, Tenant
+from .services import TenantProvisionError, provision_tenant
 
 
 class IsSuperUser(permissions.BasePermission):
@@ -96,67 +100,55 @@ class DespachoViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def create_tenant(self, request, pk=None):
-        """Crea un nuevo tenant asociado a este despacho."""
-        from django.contrib.auth import get_user_model
-        
+        """Crea un nuevo tenant asociado a este despacho con aprovisionamiento completo."""
         despacho = self.get_object()
         data = request.data
-        
+
         required_fields = ["name", "slug", "admin_email", "admin_password"]
-        missing_fields = [f for f in required_fields if f not in data]
+        missing_fields = [f for f in required_fields if not data.get(f)]
         if missing_fields:
             return Response(
                 {"detail": f"Faltan campos requeridos: {', '.join(missing_fields)}"},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
-            
+
         slug = data["slug"]
         db_name = data.get("db_name") or f"tenant_{slug}"
-        
-        # Validaciones de unicidad
-        if Tenant.objects.filter(slug=slug).exists():
-            return Response({"detail": "El slug ya está en uso"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if Tenant.objects.filter(db_name=db_name).exists():
-            return Response({"detail": "El nombre de base de datos ya está en uso"}, status=status.HTTP_400_BAD_REQUEST)
-            
-        User = get_user_model()
-        if User.objects.filter(email=data["admin_email"]).exists():
-            return Response({"detail": "El email del administrador ya está registrado"}, status=status.HTTP_400_BAD_REQUEST)
+        db_user = db_name
+
+        # Obtener defaults de conexión del control DB
+        default_db = settings.DATABASES.get("default", {})
 
         try:
-            # Crear registro Tenant
-            tenant = Tenant.objects.create(
-                despacho=despacho,
+            tenant = provision_tenant(
                 name=data["name"],
                 slug=slug,
-                db_name=db_name,
-                db_user=db_name, # Simplificación: usuario = dbname
-                db_password=User.objects.make_random_password(length=16),
-                is_active=True
-            )
-            
-            # Crear Usuario Admin vinculado al Tenant y al Despacho
-            User.objects.create_user(
-                email=data["admin_email"],
-                password=data["admin_password"],
-                full_name=f"Admin {data['name']}",
-                tenant=tenant,
                 despacho=despacho,
-                is_active=True
+                db_name=db_name,
+                db_user=db_user,
+                db_password=secrets.token_urlsafe(24),
+                db_host=default_db.get("HOST", "localhost"),
+                db_port=int(default_db.get("PORT", 5432)),
+                default_currency=data.get("default_currency", "MXN"),
+                admin_email=data["admin_email"].strip(),
+                admin_password=data["admin_password"],
+                admin_name=data.get("admin_name", f"Admin {data['name']}"),
+                create_database=True,
+                initiated_by=request.user if request.user.is_authenticated else None,
             )
-            
-            # TODO: Aquí se debería disparar una tarea asíncrona (Celery)
-            # para aprovisionar la base de datos real (Create DB, Migrations, etc.)
-            
-            return Response({
-                "detail": "Tenant creado exitosamente",
+        except TenantProvisionError as exc:
+            return Response(
+                {"detail": str(exc)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response(
+            {
+                "detail": "Tenant creado y aprovisionado exitosamente",
                 "id": tenant.id,
-                "name": tenant.name
-            }, status=status.HTTP_201_CREATED)
-            
-        except Exception as e:
-            # Si falla, intentamos limpiar (rollback manual básico)
-            if 'tenant' in locals() and tenant.id:
-                tenant.delete()
-            return Response({"detail": f"Error al crear tenant: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                "name": tenant.name,
+                "slug": tenant.slug,
+                "db_name": tenant.db_name,
+            },
+            status=status.HTTP_201_CREATED,
+        )

@@ -19,6 +19,7 @@ export default function NewTenantPage() {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
 
     const generateSlug = (name: string) => {
         return name
@@ -70,8 +71,13 @@ export default function NewTenantPage() {
                 throw new Error(data.detail || 'Error al crear tenant');
             }
 
-            // Éxito: Volver a la lista de tenants
-            router.push(`/dashboard/admin/organizaciones/${despachoId}`);
+            const result = await response.json();
+            setSuccessMsg(`✅ ${result.detail || 'Tenant aprovisionado'} — ${result.name} (${result.slug})`);
+
+            // Redirigir después de mostrar el mensaje
+            setTimeout(() => {
+                router.push(`/dashboard/admin/organizaciones/${despachoId}`);
+            }, 2000);
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -108,6 +114,12 @@ export default function NewTenantPage() {
                     {error && (
                         <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg flex items-center gap-2">
                             <span className="font-bold">Error:</span> {error}
+                        </div>
+                    )}
+
+                    {successMsg && (
+                        <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg font-medium">
+                            {successMsg}
                         </div>
                     )}
 
@@ -203,7 +215,7 @@ export default function NewTenantPage() {
                                 disabled={loading}
                                 className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex justify-center"
                             >
-                                {loading ? 'Creando Tenant...' : 'Crear Tenant'}
+                                {loading ? 'Aprovisionando...' : 'Crear y Aprovisionar Tenant'}
                             </button>
                         </div>
                     </form>

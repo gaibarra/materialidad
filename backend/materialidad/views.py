@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timedelta
+import logging
 from decimal import Decimal
+from django.db import DatabaseError
 from django.db.models import Prefetch
 
 from django.core.exceptions import ImproperlyConfigured
@@ -15,6 +17,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tenancy.context import TenantContext
+
+logger = logging.getLogger(__name__)
 
 from .ai.client import OpenAIClientError
 from .ai.clause_library import suggest_clauses
@@ -370,12 +374,20 @@ class LegalReferenceSourceViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], url_path="leyes")
     def available_laws(self, request, *args, **kwargs):
-        leyes = (
-            self.filter_queryset(self.get_queryset())
-            .order_by("ley")
-            .values_list("ley", flat=True)
-            .distinct()
-        )
+        try:
+            leyes = (
+                self.filter_queryset(self.get_queryset())
+                .using("default")
+                .values_list("ley", flat=True)
+                .distinct()
+                .order_by("ley")
+            )
+        except DatabaseError:
+            logger.exception("Error loading legal laws catalog")
+            return Response(
+                {"detail": "No se pudo cargar el catálogo de leyes"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         return Response({"results": list(leyes)}, status=status.HTTP_200_OK)
 
 
