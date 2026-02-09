@@ -64,7 +64,11 @@ class DespachoViewSet(viewsets.ModelViewSet):
     def tenants(self, request, pk=None):
         """Lista los tenants de un despacho/corporativo."""
         despacho = self.get_object()
-        tenants = Tenant.objects.filter(despacho=despacho, is_active=True).order_by("name")
+        show_inactive = request.query_params.get("include_inactive", "false").lower() == "true"
+        qs = Tenant.objects.filter(despacho=despacho)
+        if not show_inactive:
+            qs = qs.filter(is_active=True)
+        tenants = qs.order_by("name")
 
         data = [
             {
@@ -151,4 +155,68 @@ class DespachoViewSet(viewsets.ModelViewSet):
                 "db_name": tenant.db_name,
             },
             status=status.HTTP_201_CREATED,
+        )
+
+    # ── Tenant CRUD actions ──────────────────────────────────────────
+
+    @action(detail=True, methods=["patch"], url_path=r"tenants/(?P<tenant_id>\d+)")
+    def update_tenant(self, request, pk=None, tenant_id=None):
+        """Editar nombre de un tenant."""
+        despacho = self.get_object()
+        try:
+            tenant = Tenant.objects.get(id=tenant_id, despacho=despacho)
+        except Tenant.DoesNotExist:
+            return Response({"detail": "Tenant no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        allowed = ("name",)
+        updated = []
+        for field in allowed:
+            if field in request.data:
+                setattr(tenant, field, request.data[field])
+                updated.append(field)
+
+        if not updated:
+            return Response({"detail": "No se enviaron campos para actualizar"}, status=status.HTTP_400_BAD_REQUEST)
+
+        tenant.save(update_fields=updated + ["updated_at"])
+        return Response({
+            "detail": "Tenant actualizado",
+            "id": tenant.id,
+            "name": tenant.name,
+            "slug": tenant.slug,
+            "is_active": tenant.is_active,
+        })
+
+    @action(detail=True, methods=["post"], url_path=r"tenants/(?P<tenant_id>\d+)/toggle-active")
+    def toggle_tenant_active(self, request, pk=None, tenant_id=None):
+        """Activar/desactivar un tenant."""
+        despacho = self.get_object()
+        try:
+            tenant = Tenant.objects.get(id=tenant_id, despacho=despacho)
+        except Tenant.DoesNotExist:
+            return Response({"detail": "Tenant no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        tenant.is_active = not tenant.is_active
+        tenant.save(update_fields=["is_active", "updated_at"])
+        estado = "activado" if tenant.is_active else "desactivado"
+        return Response({
+            "detail": f"Tenant {estado} exitosamente",
+            "id": tenant.id,
+            "is_active": tenant.is_active,
+        })
+
+    @action(detail=True, methods=["delete"], url_path=r"tenants/(?P<tenant_id>\d+)/delete")
+    def delete_tenant(self, request, pk=None, tenant_id=None):
+        """Eliminar un tenant (solo el registro, no la base de datos)."""
+        despacho = self.get_object()
+        try:
+            tenant = Tenant.objects.get(id=tenant_id, despacho=despacho)
+        except Tenant.DoesNotExist:
+            return Response({"detail": "Tenant no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        tenant_name = tenant.name
+        tenant.delete()
+        return Response(
+            {"detail": f"Tenant '{tenant_name}' eliminado exitosamente"},
+            status=status.HTTP_200_OK,
         )

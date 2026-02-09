@@ -18,6 +18,11 @@ import {
     Calendar,
     FileText,
     Home,
+    Edit2,
+    Power,
+    Trash2,
+    X,
+    Check,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -107,7 +112,7 @@ export default function OrganizacionDetailPage() {
             if (!token) return;
 
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/tenancy/admin/despachos/${id}/tenants/`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/tenancy/admin/despachos/${id}/tenants/?include_inactive=true`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -267,7 +272,7 @@ export default function OrganizacionDetailPage() {
                     {/* Tab Content */}
                     <div className="p-6">
                         {activeTab === 'tenants' && (
-                            <TenantsTab tenants={tenants} despachoId={id} tipo={despacho.tipo} />
+                            <TenantsTab tenants={tenants} despachoId={id} tipo={despacho.tipo} onRefresh={() => { fetchTenants(); fetchStats(); }} />
                         )}
                         {activeTab === 'intercompany' && despacho.tipo === 'corporativo' && (
                             <IntercompanyTab despachoId={id} />
@@ -315,9 +320,104 @@ function InfoCard({ title, value, subtitle, icon, color, valueClass = 'text-2xl'
     );
 }
 
-function TenantsTab({ tenants, despachoId, tipo }: { tenants: Tenant[]; despachoId: string; tipo: 'despacho' | 'corporativo' }) {
+function TenantsTab({ tenants, despachoId, tipo, onRefresh }: { tenants: Tenant[]; despachoId: string; tipo: 'despacho' | 'corporativo'; onRefresh: () => void }) {
     const entityLabel = tipo === 'despacho' ? 'Cliente del Despacho' : 'Empresa del Grupo';
     const pluralLabel = tipo === 'despacho' ? 'Clientes del Despacho' : 'Empresas del Grupo';
+
+    const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
+    const [editName, setEditName] = useState('');
+    const [actionLoading, setActionLoading] = useState<number | null>(null);
+
+    const getToken = () => {
+        const session = loadSession();
+        return session?.accessToken;
+    };
+
+    const handleEdit = (tenant: Tenant) => {
+        setEditingTenant(tenant);
+        setEditName(tenant.name);
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editingTenant || !editName.trim()) return;
+        setActionLoading(editingTenant.id);
+        try {
+            const token = getToken();
+            if (!token) throw new Error('Sin sesión');
+
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/tenancy/admin/despachos/${despachoId}/tenants/${editingTenant.id}/`,
+                {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ name: editName.trim() }),
+                }
+            );
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.detail || 'Error al actualizar');
+            }
+            setEditingTenant(null);
+            onRefresh();
+        } catch (err: any) {
+            alert(err.message);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleToggleActive = async (tenant: Tenant) => {
+        const action = tenant.is_active ? 'desactivar' : 'activar';
+        if (!confirm(`¿Estás seguro de ${action} "${tenant.name}"?`)) return;
+        setActionLoading(tenant.id);
+        try {
+            const token = getToken();
+            if (!token) throw new Error('Sin sesión');
+
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/tenancy/admin/despachos/${despachoId}/tenants/${tenant.id}/toggle-active/`,
+                {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.detail || 'Error');
+            }
+            onRefresh();
+        } catch (err: any) {
+            alert(err.message);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleDelete = async (tenant: Tenant) => {
+        if (!confirm(`⚠️ ¿Eliminar permanentemente "${tenant.name}"?\n\nEsta acción no se puede deshacer. La base de datos del tenant NO será eliminada.`)) return;
+        setActionLoading(tenant.id);
+        try {
+            const token = getToken();
+            if (!token) throw new Error('Sin sesión');
+
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/tenancy/admin/despachos/${despachoId}/tenants/${tenant.id}/delete/`,
+                {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.detail || 'Error al eliminar');
+            }
+            onRefresh();
+        } catch (err: any) {
+            alert(err.message);
+        } finally {
+            setActionLoading(null);
+        }
+    };
 
     return (
         <div className="space-y-4">
@@ -346,13 +446,49 @@ function TenantsTab({ tenants, despachoId, tipo }: { tenants: Tenant[]; despacho
                     {tenants.map((tenant) => (
                         <div
                             key={tenant.id}
-                            className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+                            className={`p-4 border rounded-lg transition-colors ${
+                                tenant.is_active
+                                    ? 'border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400'
+                                    : 'border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-900/10'
+                            }`}
                         >
                             <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
-                                        {tenant.name}
-                                    </h4>
+                                <div className="flex-1 min-w-0">
+                                    {/* Inline edit mode */}
+                                    {editingTenant?.id === tenant.id ? (
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <input
+                                                type="text"
+                                                value={editName}
+                                                onChange={(e) => setEditName(e.target.value)}
+                                                className="flex-1 px-2 py-1 border border-blue-400 rounded-lg text-sm font-semibold bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                autoFocus
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') handleSaveEdit();
+                                                    if (e.key === 'Escape') setEditingTenant(null);
+                                                }}
+                                            />
+                                            <button
+                                                onClick={handleSaveEdit}
+                                                disabled={actionLoading === tenant.id}
+                                                className="p-1 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 rounded"
+                                                title="Guardar"
+                                            >
+                                                <Check className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => setEditingTenant(null)}
+                                                className="p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                                title="Cancelar"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <h4 className="font-semibold text-gray-900 dark:text-white mb-1 truncate">
+                                            {tenant.name}
+                                        </h4>
+                                    )}
                                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                                         Slug: <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{tenant.slug}</code>
                                     </p>
@@ -364,13 +500,51 @@ function TenantsTab({ tenants, despachoId, tipo }: { tenants: Tenant[]; despacho
                                     </p>
                                 </div>
                                 <span
-                                    className={`px-2 py-1 rounded-full text-xs font-medium ${tenant.is_active
+                                    className={`ml-2 shrink-0 px-2 py-1 rounded-full text-xs font-medium ${tenant.is_active
                                         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                        : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
                                         }`}
                                 >
                                     {tenant.is_active ? 'Activo' : 'Inactivo'}
                                 </span>
+                            </div>
+
+                            {/* Action buttons */}
+                            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                                <button
+                                    onClick={() => handleEdit(tenant)}
+                                    disabled={actionLoading === tenant.id}
+                                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 dark:text-blue-300 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
+                                    title="Editar nombre"
+                                >
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                    Editar
+                                </button>
+                                <button
+                                    onClick={() => handleToggleActive(tenant)}
+                                    disabled={actionLoading === tenant.id}
+                                    className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                                        tenant.is_active
+                                            ? 'text-orange-700 bg-orange-50 hover:bg-orange-100 dark:text-orange-300 dark:bg-orange-900/30 dark:hover:bg-orange-900/50'
+                                            : 'text-green-700 bg-green-50 hover:bg-green-100 dark:text-green-300 dark:bg-green-900/30 dark:hover:bg-green-900/50'
+                                    }`}
+                                    title={tenant.is_active ? 'Desactivar' : 'Activar'}
+                                >
+                                    <Power className="w-3.5 h-3.5" />
+                                    {tenant.is_active ? 'Desactivar' : 'Activar'}
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(tenant)}
+                                    disabled={actionLoading === tenant.id}
+                                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 dark:text-red-300 dark:bg-red-900/30 dark:hover:bg-red-900/50 rounded-lg transition-colors"
+                                    title="Eliminar"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    Eliminar
+                                </button>
+                                {actionLoading === tenant.id && (
+                                    <span className="ml-auto text-xs text-gray-400 animate-pulse">Procesando…</span>
+                                )}
                             </div>
                         </div>
                     ))}
