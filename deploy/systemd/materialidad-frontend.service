@@ -1,0 +1,32 @@
+[Unit]
+Description=Next.js frontend for Materialidad
+After=network.target materialidad-backend.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/materialidad/frontend
+EnvironmentFile=/srv/materialidad/frontend/.env.local
+Environment=NODE_ENV=production
+Environment=PORT=3100
+ExecStart=/usr/bin/node /srv/materialidad/frontend/node_modules/.bin/next start --hostname 127.0.0.1 --port 3100
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+StandardOutput=journal
+StandardError=journal
+
+# ── Hardening ─────────────────────────────────────────
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/srv/materialidad/frontend/.next
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+
+[Install]
+WantedBy=multi-user.target

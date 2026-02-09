@@ -200,7 +200,7 @@ export default function OrganizacionDetailPage() {
                 {/* Info Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <InfoCard
-                        title="Total Tenants"
+                        title={despacho.tipo === 'despacho' ? 'Clientes del Despacho' : 'Empresas del Grupo'}
                         value={stats?.total_tenants || 0}
                         subtitle="Activos"
                         icon={<Users className="w-6 h-6" />}
@@ -234,7 +234,7 @@ export default function OrganizacionDetailPage() {
                                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                                     }`}
                             >
-                                Tenants ({tenants.length})
+                                {despacho.tipo === 'despacho' ? 'Clientes' : 'Empresas'} ({tenants.length})
                             </button>
                             {despacho.tipo === 'corporativo' && (
                                 <button
@@ -253,7 +253,7 @@ export default function OrganizacionDetailPage() {
                     {/* Tab Content */}
                     <div className="p-6">
                         {activeTab === 'tenants' && (
-                            <TenantsTab tenants={tenants} despachoId={id} />
+                            <TenantsTab tenants={tenants} despachoId={id} tipo={despacho.tipo} />
                         )}
                         {activeTab === 'intercompany' && despacho.tipo === 'corporativo' && (
                             <IntercompanyTab despachoId={id} />
@@ -301,28 +301,31 @@ function InfoCard({ title, value, subtitle, icon, color, valueClass = 'text-2xl'
     );
 }
 
-function TenantsTab({ tenants, despachoId }: { tenants: Tenant[]; despachoId: string }) {
+function TenantsTab({ tenants, despachoId, tipo }: { tenants: Tenant[]; despachoId: string; tipo: 'despacho' | 'corporativo' }) {
+    const entityLabel = tipo === 'despacho' ? 'Cliente del Despacho' : 'Empresa del Grupo';
+    const pluralLabel = tipo === 'despacho' ? 'Clientes del Despacho' : 'Empresas del Grupo';
+
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Tenants Asociados
+                    {pluralLabel}
                 </h3>
                 <button
                     onClick={() =>
-                        (window.location.href = `/dashboard/admin/organizaciones/${despachoId}/tenants/new`)
+                        (window.location.href = `/dashboard/admin/organizaciones/${despachoId}/tenants/new?tipo=${tipo}`)
                     }
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                     <Plus className="w-4 h-4" />
-                    Nuevo Tenant
+                    {`Nuevo ${entityLabel}`}
                 </button>
             </div>
 
             {tenants.length === 0 ? (
                 <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                     <Building2 className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                    <p>No hay tenants asociados a esta organización</p>
+                    <p>{`No hay ${pluralLabel.toLowerCase()} en esta organización`}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

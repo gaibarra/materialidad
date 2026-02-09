@@ -218,7 +218,7 @@ export default function OrganizacionesPage() {
                         color="purple"
                     />
                     <StatCard
-                        title="Total Tenants"
+                        title="Clientes / Empresas"
                         value={stats.totalTenants}
                         icon={<Users className="w-8 h-8" />}
                         color="green"
@@ -280,7 +280,7 @@ export default function OrganizacionesPage() {
                                         Contacto
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                        Tenants
+                                        Clientes / Empresas
                                     </th>
                                     <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Acciones
@@ -529,8 +529,8 @@ function DespachoModal({ despacho, onClose, onSuccess }: any) {
                         </select>
                         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                             {formData.tipo === 'despacho'
-                                ? 'Los despachos tienen como tenants a cada uno de sus clientes.'
-                                : 'Los corporativos tienen como tenants a las empresas del grupo y permiten gestionar transacciones intercompañía.'}
+                                ? 'Los despachos agrupan a sus clientes. Cada cliente tendrá su espacio independiente.'
+                                : 'Los corporativos agrupan a las empresas del grupo y permiten gestionar transacciones intercompañía.'}
                         </p>
                     </div>
 

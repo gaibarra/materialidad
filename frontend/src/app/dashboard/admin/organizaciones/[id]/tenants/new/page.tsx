@@ -1,14 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Building2, Mail, Lock, Globe, Database } from 'lucide-react';
 import { loadSession } from '../../../../../../../lib/token-storage';
 
 export default function NewTenantPage() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const despachoId = params.id as string;
+    const tipo = searchParams.get('tipo') || 'despacho';
+    const entityLabel = tipo === 'corporativo' ? 'Empresa del Grupo' : 'Cliente del Despacho';
+    const nameLabel = tipo === 'corporativo' ? 'Nombre de la Empresa' : 'Nombre del Cliente';
 
     const [formData, setFormData] = useState({
         name: '',
@@ -103,10 +107,12 @@ export default function NewTenantPage() {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                Nuevo Tenant
+                                {`Nuevo ${entityLabel}`}
                             </h1>
                             <p className="text-gray-500 dark:text-gray-400">
-                                Registra un nuevo cliente/tenant para esta organización
+                                {tipo === 'corporativo'
+                                    ? 'Registra una nueva empresa para este grupo corporativo'
+                                    : 'Registra un nuevo cliente para este despacho'}
                             </p>
                         </div>
                     </div>
@@ -128,7 +134,7 @@ export default function NewTenantPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Nombre de la Empresa *
+                                    {`${nameLabel} *`}
                                 </label>
                                 <div className="relative">
                                     <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -215,7 +221,7 @@ export default function NewTenantPage() {
                                 disabled={loading}
                                 className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex justify-center"
                             >
-                                {loading ? 'Aprovisionando...' : 'Crear y Aprovisionar Tenant'}
+                                {loading ? 'Aprovisionando...' : `Crear y Aprovisionar ${entityLabel}`}
                             </button>
                         </div>
                     </form>
