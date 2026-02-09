@@ -7,7 +7,8 @@ from __future__ import annotations
 import secrets
 
 from django.conf import settings
-from django.db.models import Count, Q
+from django.db import IntegrityError
+from django.db.models import Count, ProtectedError, Q
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -207,15 +208,52 @@ class DespachoViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["delete"], url_path=r"tenants/(?P<tenant_id>\d+)/delete")
     def delete_tenant(self, request, pk=None, tenant_id=None):
-        """Eliminar un tenant (solo el registro, no la base de datos)."""
+        """Eliminar un tenant (solo el registro, no la base de datos).
+
+        Protecciones:
+        - El tenant debe estar desactivado antes de poder eliminarse.
+        - Se requiere query param ?confirm=true.
+        - Si existen usuarios u otros objetos protegidos, se desvinculan automáticamente.
+        """
         despacho = self.get_object()
         try:
             tenant = Tenant.objects.get(id=tenant_id, despacho=despacho)
         except Tenant.DoesNotExist:
             return Response({"detail": "Tenant no encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
+        # Guard 1: must be deactivated first
+        if tenant.is_active:
+            return Response(
+                {"detail": "Debes desactivar el tenant antes de eliminarlo."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Guard 2: explicit confirmation
+        if request.query_params.get("confirm") != "true":
+            return Response(
+                {"detail": "Se requiere confirmación. Envía ?confirm=true"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         tenant_name = tenant.name
-        tenant.delete()
+
+        try:
+            # Unlink users instead of failing on PROTECT
+            from accounts.models import User
+            User.objects.filter(tenant=tenant).update(tenant=None)
+
+            tenant.delete()
+        except ProtectedError as exc:
+            return Response(
+                {"detail": f"No se puede eliminar: existen registros vinculados ({exc})."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        except Exception as exc:
+            return Response(
+                {"detail": f"Error al eliminar: {exc}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
         return Response(
             {"detail": f"Tenant '{tenant_name}' eliminado exitosamente"},
             status=status.HTTP_200_OK,

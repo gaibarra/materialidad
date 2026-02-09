@@ -327,6 +327,8 @@ function TenantsTab({ tenants, despachoId, tipo, onRefresh }: { tenants: Tenant[
     const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
     const [editName, setEditName] = useState('');
     const [actionLoading, setActionLoading] = useState<number | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<Tenant | null>(null);
+    const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
     const getToken = () => {
         const session = loadSession();
@@ -393,15 +395,24 @@ function TenantsTab({ tenants, despachoId, tipo, onRefresh }: { tenants: Tenant[
         }
     };
 
-    const handleDelete = async (tenant: Tenant) => {
-        if (!confirm(`⚠️ ¿Eliminar permanentemente "${tenant.name}"?\n\nEsta acción no se puede deshacer. La base de datos del tenant NO será eliminada.`)) return;
-        setActionLoading(tenant.id);
+    const handleDeleteRequest = (tenant: Tenant) => {
+        if (tenant.is_active) {
+            alert('Debes desactivar el tenant antes de eliminarlo.');
+            return;
+        }
+        setDeleteTarget(tenant);
+        setDeleteConfirmText('');
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!deleteTarget) return;
+        setActionLoading(deleteTarget.id);
         try {
             const token = getToken();
             if (!token) throw new Error('Sin sesión');
 
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/tenancy/admin/despachos/${despachoId}/tenants/${tenant.id}/delete/`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/tenancy/admin/despachos/${despachoId}/tenants/${deleteTarget.id}/delete/?confirm=true`,
                 {
                     method: 'DELETE',
                     headers: { Authorization: `Bearer ${token}` },
@@ -411,6 +422,7 @@ function TenantsTab({ tenants, despachoId, tipo, onRefresh }: { tenants: Tenant[
                 const data = await res.json();
                 throw new Error(data.detail || 'Error al eliminar');
             }
+            setDeleteTarget(null);
             onRefresh();
         } catch (err: any) {
             alert(err.message);
@@ -533,21 +545,69 @@ function TenantsTab({ tenants, despachoId, tipo, onRefresh }: { tenants: Tenant[
                                     <Power className="w-3.5 h-3.5" />
                                     {tenant.is_active ? 'Desactivar' : 'Activar'}
                                 </button>
-                                <button
-                                    onClick={() => handleDelete(tenant)}
-                                    disabled={actionLoading === tenant.id}
-                                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 dark:text-red-300 dark:bg-red-900/30 dark:hover:bg-red-900/50 rounded-lg transition-colors"
-                                    title="Eliminar"
-                                >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                    Eliminar
-                                </button>
+                                {!tenant.is_active && (
+                                    <button
+                                        onClick={() => handleDeleteRequest(tenant)}
+                                        disabled={actionLoading === tenant.id}
+                                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 dark:text-red-300 dark:bg-red-900/30 dark:hover:bg-red-900/50 rounded-lg transition-colors"
+                                        title="Eliminar (requiere estar desactivado)"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                        Eliminar
+                                    </button>
+                                )}
                                 {actionLoading === tenant.id && (
                                     <span className="ml-auto text-xs text-gray-400 animate-pulse">Procesando…</span>
                                 )}
                             </div>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* Delete confirmation modal */}
+            {deleteTarget && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-red-100 dark:bg-red-900/40 rounded-lg">
+                                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                                Eliminar tenant
+                            </h3>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                            Esta acción es <strong>irreversible</strong>. Se eliminará el registro de <strong>{deleteTarget.name}</strong> del sistema.
+                            La base de datos del tenant <em>no</em> será eliminada.
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            Escribe <code className="bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded font-mono text-xs">ELIMINAR</code> para confirmar:
+                        </p>
+                        <input
+                            type="text"
+                            value={deleteConfirmText}
+                            onChange={(e) => setDeleteConfirmText(e.target.value)}
+                            placeholder="Escribe ELIMINAR"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 mb-4"
+                            autoFocus
+                        />
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setDeleteTarget(null)}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleDeleteConfirm}
+                                disabled={deleteConfirmText !== 'ELIMINAR' || actionLoading === deleteTarget.id}
+                                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                {actionLoading === deleteTarget.id ? 'Eliminando…' : 'Confirmar eliminación'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
