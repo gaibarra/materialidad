@@ -135,6 +135,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (response.ok) {
           const payload = (await response.json()) as UserProfile;
           setUser(payload);
+          if (!tenantSlug && payload.tenant_slug) {
+            setTenant(payload.tenant_slug);
+            const current = loadSession();
+            if (current) {
+              persistSession({
+                accessToken: current.accessToken,
+                refreshToken: current.refreshToken,
+                tenant: payload.tenant_slug,
+              });
+            }
+          }
         } else if (response.status === 401) {
           logout();
           return;

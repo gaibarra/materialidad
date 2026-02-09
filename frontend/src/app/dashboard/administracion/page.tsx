@@ -118,10 +118,16 @@ export default function AdminPage() {
     setActiveTab("usuarios");
   };
 
-  const resetUserForm = () => {
+  const resetUserForm = useCallback(() => {
     setEditingUserId(null);
     setUserForm(DEFAULT_USER_FORM);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && user?.is_staff) {
+      resetUserForm();
+    }
+  }, [isAuthenticated, user?.is_staff, resetUserForm]);
 
   const handleDeleteUser = async (entry: AdminUser) => {
     const confirmation = await confirmAction({
@@ -291,6 +297,7 @@ export default function AdminPage() {
   const renderUserForm = () => (
     <form
       onSubmit={handleUserSubmit}
+      autoComplete="off"
       className="space-y-5 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-inner shadow-black/20"
     >
       <div>
@@ -308,6 +315,7 @@ export default function AdminPage() {
             value={userForm.email}
             onChange={handleUserInput}
             required
+            autoComplete="off"
             className="mt-1 w-full rounded-2xl border border-white/20 bg-slate-950/50 px-4 py-2 text-white focus:border-emerald-300 focus:outline-none"
           />
         </label>
@@ -318,6 +326,7 @@ export default function AdminPage() {
             name="full_name"
             value={userForm.full_name}
             onChange={handleUserInput}
+            autoComplete="off"
             className="mt-1 w-full rounded-2xl border border-white/20 bg-slate-950/50 px-4 py-2 text-white focus:border-emerald-300 focus:outline-none"
           />
         </label>
@@ -329,6 +338,7 @@ export default function AdminPage() {
             value={userForm.password}
             onChange={handleUserInput}
             placeholder={editingUserId ? "Déjalo en blanco para conservar" : "Define al menos 8 caracteres"}
+            autoComplete="new-password"
             className="mt-1 w-full rounded-2xl border border-white/20 bg-slate-950/50 px-4 py-2 text-white focus:border-emerald-300 focus:outline-none"
             minLength={editingUserId ? undefined : 8}
           />
