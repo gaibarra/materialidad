@@ -49,6 +49,8 @@ type AuthContextValue = {
   tenant: string | null;
   user: UserProfile | null;
   isAuthenticated: boolean;
+  /** true once the initial profile fetch has completed (or was skipped) */
+  isProfileLoaded: boolean;
   login: (payload: LoginPayload) => Promise<void>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
@@ -76,12 +78,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [tenant, setTenant] = useState<string | null>(null);
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [isProfileLoaded, setIsProfileLoaded] = useState(false);
 
   const logout = useCallback(() => {
     setAccessToken(null);
     setRefreshToken(null);
     setTenant(null);
     setUser(null);
+    setIsProfileLoaded(false);
     removeSession();
     Cookies.remove("tenant");
   }, []);
@@ -92,11 +96,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (isTokenExpired(session.accessToken)) {
         removeSession();
         Cookies.remove("tenant");
+        setIsProfileLoaded(true);
         return;
       }
       setAccessToken(session.accessToken);
       setRefreshToken(session.refreshToken);
       setTenant(session.tenant);
+      // fetchProfile will set isProfileLoaded = true when done
+    } else {
+      // No session at all — mark as loaded so consumers don't wait forever
+      setIsProfileLoaded(true);
     }
   }, []);
 
@@ -116,15 +125,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
         headers["X-Tenant"] = tenantSlug;
       }
 
-      const response = await fetch(`${apiBaseUrl}/api/accounts/me/`, {
-        headers,
-        cache: "no-store",
-      });
-      if (response.ok) {
-        const payload = (await response.json()) as UserProfile;
-        setUser(payload);
-      } else if (response.status === 401) {
-        logout();
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/accounts/me/`, {
+          headers,
+          cache: "no-store",
+        });
+        if (response.ok) {
+          const payload = (await response.json()) as UserProfile;
+          setUser(payload);
+        } else if (response.status === 401) {
+          logout();
+          return;
+        }
+      } finally {
+        setIsProfileLoaded(true);
       }
     },
     [logout]
@@ -186,7 +200,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   const refreshProfile = useCallback(async () => {
-    if (accessToken && tenant && !isTokenExpired(accessToken)) {
+    if (accessToken && !isTokenExpired(accessToken)) {
       await fetchProfile(accessToken, tenant);
     } else if (accessToken && isTokenExpired(accessToken)) {
       logout();
@@ -201,11 +215,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       user,
       // Autenticado si hay token (tenant puede ser null para superusuarios)
       isAuthenticated: Boolean(accessToken),
+      isProfileLoaded,
       login,
       logout,
       refreshProfile,
     }),
-    [accessToken, tenant, user, login, logout, refreshProfile, refreshToken]
+    [accessToken, tenant, user, isProfileLoaded, login, logout, refreshProfile, refreshToken]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

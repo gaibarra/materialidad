@@ -195,7 +195,7 @@ const formatDelta = (current: number, previous: number) => {
 };
 
 export default function DashboardPage() {
-  const { isAuthenticated, user, tenant } = useAuthContext();
+  const { isAuthenticated, user, tenant, isProfileLoaded } = useAuthContext();
   const router = useRouter();
 
   // Detectar si es superusuario sin tenant (Modo Admin Global)
@@ -288,13 +288,15 @@ export default function DashboardPage() {
 
   // Efecto principal de carga de datos
   useEffect(() => {
+    // No cargar nada hasta que el perfil esté listo
+    if (!isProfileLoaded) return;
     // Si no está autenticado O es admin global, no cargar datos de tenant
     if (!isAuthenticated || isGlobalAdmin) return;
 
     void loadEmpresas();
     void loadMetrics();
     void loadHistory(historyDays);
-  }, [historyDays, isAuthenticated, isGlobalAdmin, loadEmpresas, loadMetrics, loadHistory]);
+  }, [historyDays, isAuthenticated, isGlobalAdmin, isProfileLoaded, loadEmpresas, loadMetrics, loadHistory]);
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = event.target;
@@ -482,6 +484,20 @@ export default function DashboardPage() {
     const to = new Date(historyRange.to).toLocaleDateString("es-MX", { dateStyle: "medium" });
     return `${from} · ${to}`;
   }, [historyRange]);
+
+  // Mostrar carga mientras se resuelve el perfil del usuario
+  if (!isProfileLoaded) {
+    return (
+      <DashboardShell>
+        <div className="flex items-center justify-center py-32">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-jade-200 border-t-jade-600" />
+            <p className="text-sm text-slate-500">Cargando perfil…</p>
+          </div>
+        </div>
+      </DashboardShell>
+    );
+  }
 
   // Renderizado especial para Super Admin Global
   if (isGlobalAdmin) {
