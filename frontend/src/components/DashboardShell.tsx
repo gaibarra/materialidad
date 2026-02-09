@@ -63,11 +63,18 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuthContext();
   const pathname = usePathname();
 
-  const roleLabel = user?.is_superuser ? "Superusuario" : user?.is_staff ? "Despacho" : "Cliente";
+  const isCorporativo = user?.despacho_tipo === "corporativo";
+  const roleLabel = user?.is_superuser
+    ? "Superusuario"
+    : user?.is_staff
+      ? isCorporativo
+        ? "Administrador"
+        : "Despacho"
+      : "Cliente";
   const orgLabel = user?.tenant_slug
-    ? `Cliente ${user.tenant_slug}`
+    ? `${isCorporativo ? "Empresa" : "Cliente"} ${user.tenant_slug}`
     : user?.despacho_slug
-      ? `Despacho ${user.despacho_slug}`
+      ? `${isCorporativo ? "Corporativo" : "Despacho"} ${user.despacho_slug}`
       : "Sin cliente asignado";
 
   return (

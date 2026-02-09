@@ -12,6 +12,7 @@ from .models import User
 class UserSerializer(serializers.ModelSerializer):
     tenant_slug = serializers.SerializerMethodField()
     despacho_slug = serializers.SerializerMethodField()
+    despacho_tipo = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -21,6 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
             "full_name",
             "tenant_slug",
             "despacho_slug",
+            "despacho_tipo",
             "is_active",
             "is_staff",
             "is_superuser",
@@ -34,6 +36,16 @@ class UserSerializer(serializers.ModelSerializer):
     def get_despacho_slug(self, obj: User) -> str | None:
         if obj.despacho:
             return obj.despacho.nombre
+        return None
+
+    def get_despacho_tipo(self, obj: User) -> str | None:
+        """Return the org type: 'despacho' or 'corporativo'."""
+        # Direct despacho on user
+        if obj.despacho:
+            return obj.despacho.tipo
+        # Or via tenant's parent despacho
+        if obj.tenant and obj.tenant.despacho:
+            return obj.tenant.despacho.tipo
         return None
 
 

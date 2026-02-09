@@ -39,6 +39,7 @@ export type UserProfile = {
   full_name: string | null;
   tenant_slug: string | null;
   despacho_slug: string | null;
+  despacho_tipo: "despacho" | "corporativo" | null;
   is_staff: boolean;
   is_superuser: boolean;
 };
