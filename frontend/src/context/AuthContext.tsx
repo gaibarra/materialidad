@@ -113,6 +113,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     async (token: string, tenantSlug: string | null) => {
       if (isTokenExpired(token)) {
         logout();
+        setIsProfileLoaded(true);
         return;
       }
 
