@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Building2, DollarSign, Calendar, FileText, ArrowRightLeft } from 'lucide-react';
+import { ArrowLeft, Building2, DollarSign, Calendar, FileText, ArrowRightLeft, Home } from 'lucide-react';
+import Link from 'next/link';
 import { loadSession } from '../../../../../../../lib/token-storage';
 
 interface Tenant {
@@ -119,6 +120,18 @@ export default function NewIntercompanyTransactionPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 p-8">
             <div className="max-w-3xl mx-auto">
+                {/* Home button */}
+                <div className="mb-4">
+                    <Link
+                        href="/dashboard"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-emerald-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-200/50 transition hover:-translate-y-0.5 hover:shadow-xl"
+                        title="Inicio – Inteligencia Fiscal"
+                    >
+                        <Home className="h-4 w-4" />
+                        Inicio
+                    </Link>
+                </div>
+
                 <button
                     onClick={() => router.back()}
                     className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors"

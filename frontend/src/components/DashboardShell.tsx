@@ -4,6 +4,7 @@ import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
+import { Home } from "lucide-react";
 
 import { useAuthContext } from "../context/AuthContext";
 
@@ -125,10 +126,20 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       <div className="flex flex-1 flex-col">
         <header className="border-b border-slate-100 bg-white/80 px-8 py-5 backdrop-blur-md shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-sm uppercase tracking-[0.35em] text-sky-500">Panel ejecutivo</p>
-              <h2 className="text-3xl font-semibold text-slate-900">Materialidad 360°</h2>
-              <p className="text-lg text-slate-600">Orquestación fiscal y ESG en un solo tablero.</p>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-emerald-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-200/50 transition hover:-translate-y-0.5 hover:shadow-xl"
+                title="Inicio – Inteligencia Fiscal"
+              >
+                <Home className="h-4 w-4" />
+                <span className="hidden sm:inline">Inicio</span>
+              </Link>
+              <div>
+                <p className="text-sm uppercase tracking-[0.35em] text-sky-500">Panel ejecutivo</p>
+                <h2 className="text-3xl font-semibold text-slate-900">Materialidad 360°</h2>
+                <p className="text-lg text-slate-600">Orquestación fiscal y ESG en un solo tablero.</p>
+              </div>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right text-base">
