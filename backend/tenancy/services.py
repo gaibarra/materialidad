@@ -93,12 +93,12 @@ def _upsert_admin_user(tenant: Tenant, email: str, password: str, full_name: str
         defaults={
             "full_name": full_name or email,
             "is_staff": True,
-            "is_superuser": True,
+            "is_superuser": False,
         },
     )
     user.full_name = full_name or user.full_name
     user.is_staff = True
-    user.is_superuser = True
+    # is_superuser is reserved for platform-level admins only
     user.tenant = tenant
     user.set_password(password)
     user.save(using=DEFAULT_DB_ALIAS)
