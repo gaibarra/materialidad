@@ -134,6 +134,30 @@ class ContratoTemplate(models.Model):
     orden = models.PositiveIntegerField(default=0)
     activo = models.BooleanField(default=True)
     metadata = models.JSONField(default=dict, blank=True)
+
+    # ── Contrato semilla: reutilizar contratos depurados como base ──
+    contrato_base = models.ForeignKey(
+        "Contrato",
+        on_delete=models.SET_NULL,
+        related_name="templates_derivados",
+        null=True,
+        blank=True,
+        help_text="Contrato depurado que sirve como base para futuras generaciones",
+    )
+    documento_base = models.ForeignKey(
+        "ContractDocument",
+        on_delete=models.SET_NULL,
+        related_name="templates_derivados",
+        null=True,
+        blank=True,
+        help_text="Versión específica del documento usada como referencia",
+    )
+    markdown_base = models.TextField(
+        blank=True,
+        default="",
+        help_text="Texto markdown depurado (anonimizado) que se inyecta como contexto al prompt AI",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -969,3 +993,83 @@ class TransaccionIntercompania(models.Model):
         if self.saldo_pendiente == 0 and not self.pk:
             self.saldo_pendiente = self.monto_principal
         super().save(*args, **kwargs)
+
+
+class ClauseTemplate(models.Model):
+    """Cláusula reutilizable para generación de contratos.
+
+    Migrada desde la biblioteca hardcoded, ahora almacenada en BD para
+    permitir CRUD por despachos y aprendizaje orgánico de cláusulas exitosas.
+    """
+
+    class NivelRiesgo(models.TextChoices):
+        BAJO = "BAJO", "Bajo"
+        MEDIO = "MEDIO", "Medio"
+        ALTO = "ALTO", "Alto"
+
+    slug = models.SlugField(max_length=128, unique=True)
+    titulo = models.CharField(max_length=255)
+    texto = models.TextField(help_text="Redacción de la cláusula lista para insertar en contratos")
+    resumen = models.TextField(blank=True, help_text="Descripción breve de qué cubre esta cláusula")
+    categorias = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Lista de categorías de contrato donde aplica (BASE_CORPORATIVA, PROVEEDORES, etc.)",
+    )
+    procesos = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Lista de procesos donde aplica (COMPRAS, OPERACIONES, etc.)",
+    )
+    nivel_riesgo = models.CharField(
+        max_length=8,
+        choices=NivelRiesgo.choices,
+        default=NivelRiesgo.MEDIO,
+    )
+    tips_redline = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Consejos para revisión de redlines",
+    )
+    palabras_clave = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Palabras clave para búsqueda y matching",
+    )
+    prioridad = models.PositiveIntegerField(default=3, help_text="Mayor = más relevante (1-10)")
+    version = models.PositiveIntegerField(default=1, help_text="Versión de la cláusula para trazabilidad")
+    es_curada = models.BooleanField(
+        default=False,
+        help_text="Cláusula curada por el equipo legal (visible para todos los tenants)",
+    )
+    contrato_origen = models.ForeignKey(
+        "Contrato",
+        on_delete=models.SET_NULL,
+        related_name="clausulas_derivadas",
+        null=True,
+        blank=True,
+        help_text="Contrato del cual se extrajo esta cláusula (aprendizaje orgánico)",
+    )
+    creado_por = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        help_text="Email o identificador del usuario que creó la cláusula",
+    )
+    activo = models.BooleanField(default=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "materialidad_clause_template"
+        verbose_name = "Plantilla de cláusula"
+        verbose_name_plural = "Plantillas de cláusula"
+        ordering = ("-prioridad", "titulo")
+        indexes = [
+            models.Index(fields=["nivel_riesgo", "activo"]),
+            models.Index(fields=["es_curada", "activo"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.titulo} (v{self.version})"

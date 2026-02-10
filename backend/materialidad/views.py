@@ -58,6 +58,7 @@ def _extract_document_text(uploaded_file) -> str:
 
 from .ai.client import OpenAIClientError
 from .ai.clause_library import suggest_clauses
+from .ai.clause_optimizer import optimize_clause, ClauseOptimizationError
 from .ai.contracts import generate_contract_document, generate_definitive_contract
 from .ai.citations import render_citations_markdown
 from .ai.redlines import analyze_redlines
@@ -66,6 +67,7 @@ from .models import (
     AuditLog,
     Checklist,
     ChecklistItem,
+    ClauseTemplate,
     ContractDocument,
     Contrato,
     ContratoTemplate,
@@ -86,8 +88,10 @@ from .models import (
 from .serializers import (
     ChecklistItemSerializer,
     ChecklistSerializer,
+    ClauseOptimizeSerializer,
     ClauseSuggestionQuerySerializer,
     ClauseSuggestionSerializer,
+    ClauseTemplateSerializer,
     CuentaBancariaSerializer,
     ContractDocumentCreateSerializer,
     ContractDocumentSerializer,
@@ -95,6 +99,7 @@ from .serializers import (
     ContratoDocxExportSerializer,
     ContratoSerializer,
     ContratoTemplateSerializer,
+    PromoverPlantillaSerializer,
     DashboardSnapshotSerializer,
     DeliverableRequirementSerializer,
     OperacionEntregableSerializer,
@@ -510,6 +515,81 @@ class ContratoViewSet(viewsets.ModelViewSet):
         except OpenAIClientError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
         return Response(analysis, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["post"], url_path="optimizar-clausula")
+    def optimizar_clausula(self, request, *args, **kwargs):
+        """Optimiza una cláusula individual usando IA."""
+        serializer = ClauseOptimizeSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        try:
+            result = optimize_clause(
+                texto_clausula=data["texto_clausula"],
+                contexto_contrato=data.get("contexto_contrato", ""),
+                objetivo=data.get("objetivo", "mejorar_fiscal"),
+                idioma=data.get("idioma", "es"),
+            )
+        except ClauseOptimizationError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except OpenAIClientError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        return Response(result, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path="promover-plantilla")
+    def promover_plantilla(self, request, *args, **kwargs):
+        """Promueve un contrato depurado a plantilla reutilizable."""
+        contrato = self.get_object()
+        serializer = PromoverPlantillaSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        # Obtener el markdown del documento o del request
+        markdown_base = data.get("markdown_base", "").strip()
+        documento_id = data.get("documento_id")
+        documento = None
+        if documento_id:
+            try:
+                documento = contrato.documentos.get(pk=documento_id)
+                if not markdown_base:
+                    markdown_base = documento.markdown_text or ""
+            except ContractDocument.DoesNotExist:
+                return Response(
+                    {"detail": "Documento no encontrado en este contrato"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+        if not markdown_base:
+            return Response(
+                {"detail": "No hay contenido markdown para crear la plantilla"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        clave = data.get("clave") or slugify(f"seed-{contrato.categoria}-{contrato.pk}")
+        nombre = data.get("nombre") or f"Plantilla desde: {contrato.nombre}"
+
+        template, created = ContratoTemplate.objects.update_or_create(
+            clave=clave,
+            defaults={
+                "nombre": nombre,
+                "categoria": contrato.categoria,
+                "proceso": contrato.proceso,
+                "tipo_empresa": contrato.tipo_empresa,
+                "descripcion": data.get("descripcion", contrato.descripcion or ""),
+                "contrato_base": contrato,
+                "documento_base": documento,
+                "markdown_base": markdown_base,
+                "activo": True,
+            },
+        )
+        _audit(self.request, "plantilla_promovida", template, changes={
+            "contrato_id": contrato.pk,
+            "documento_id": documento_id,
+            "created": created,
+        })
+        return Response(
+            ContratoTemplateSerializer(template).data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
 
 
 class LegalReferenceSourceViewSet(viewsets.ModelViewSet):
@@ -1083,3 +1163,27 @@ class DashboardSnapshotHistoryView(APIView):
         if parsed.tzinfo is None:
             parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
         return parsed
+
+
+# ---------------------------------------------------------------------------
+# Clause Templates CRUD
+# ---------------------------------------------------------------------------
+
+class ClauseTemplateViewSet(viewsets.ModelViewSet):
+    """CRUD for clause templates used by the contract generator."""
+
+    serializer_class = ClauseTemplateSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["titulo", "slug", "resumen", "texto"]
+    ordering_fields = ["prioridad", "nivel_riesgo", "created_at", "updated_at"]
+    ordering = ["-prioridad", "-es_curada", "titulo"]
+
+    def get_queryset(self):
+        qs = ClauseTemplate.objects.filter(activo=True)
+        nivel = self.request.query_params.get("nivel_riesgo")
+        if nivel:
+            qs = qs.filter(nivel_riesgo=nivel)
+        curada = self.request.query_params.get("es_curada")
+        if curada is not None:
+            qs = qs.filter(es_curada=curada.lower() in ("true", "1", "si"))
+        return qs

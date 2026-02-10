@@ -227,6 +227,35 @@ def _system_prompt(*, mode: str) -> str:
     raise ValueError(f"Modo inválido: {mode}")
 
 
+def _format_seed_contract(template: Optional[ContratoTemplate]) -> str:
+    """If the template has a seed contract (markdown_base), return it as context."""
+    if not template:
+        return ""
+    md = getattr(template, "markdown_base", None)
+    if not md or not md.strip():
+        return ""
+    # Truncate very long seeds to keep within token limits
+    seed = md.strip()
+    if len(seed) > 6000:
+        seed = seed[:6000] + "\n\n[… CONTRATO DE REFERENCIA TRUNCADO POR EXTENSIÓN …]"
+    return dedent(
+        f"""
+
+        CONTRATO DE REFERENCIA DEPURADO:
+        El siguiente es un contrato previamente generado, revisado y depurado para este mismo tipo de operación.
+        Úsalo como base estructural y de contenido. Adapta las cláusulas al nuevo contexto, pero preserva:
+        - La estructura general y numeración de artículos
+        - Las cláusulas de materialidad y cumplimiento fiscal ya validadas
+        - El nivel de detalle en entregables, evidencias y controles
+        - Los marcadores [INDICAR ...] cuando los datos específicos no se proporcionaron
+
+        ---REFERENCIA_INICIO---
+        {seed}
+        ---REFERENCIA_FIN---
+        """
+    ).strip()
+
+
 def build_contract_prompt(req: ContractDraftRequest) -> list[ChatMessage]:
     necesidades = (req.resumen_necesidades or "").strip() or "El usuario no proporcionó detalles adicionales."
     razon = (req.razon_negocio or "").strip() or "No proporcionada"
@@ -238,6 +267,8 @@ def build_contract_prompt(req: ContractDraftRequest) -> list[ChatMessage]:
                 ratio = (req.beneficio_economico_esperado / req.beneficio_fiscal_estimado).quantize(Decimal("0.01"))
         except Exception:
             ratio = None
+
+    seed_section = _format_seed_contract(req.template)
 
     user_content = dedent(
         f"""
@@ -276,6 +307,7 @@ def build_contract_prompt(req: ContractDraftRequest) -> list[ChatMessage]:
           (2) validación de razón de negocios,
           (3) facturación/CFDI/pagos (solo como checklist, sin inventar),
           (4) pasos sugeridos para obtener fecha cierta con fedatario si aplica.
+        {seed_section}
 
         Entrega un contrato completo en Markdown, sin bloques de código, sin comentarios meta.
         """

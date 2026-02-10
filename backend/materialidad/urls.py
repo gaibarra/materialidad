@@ -6,6 +6,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     ChecklistItemViewSet,
     ChecklistViewSet,
+    ClauseTemplateViewSet,
     ContratoTemplateViewSet,
     ContratoViewSet,
     DashboardMetricsView,
@@ -31,6 +32,7 @@ router = DefaultRouter()
 router.register("empresas", EmpresaViewSet, basename="empresa")
 router.register("proveedores", ProveedorViewSet, basename="proveedor")
 router.register("contrato-templates", ContratoTemplateViewSet, basename="contrato-template")
+router.register("clause-templates", ClauseTemplateViewSet, basename="clause-template")
 router.register("contratos", ContratoViewSet, basename="contrato")
 router.register("operaciones", OperacionViewSet, basename="operacion")
 router.register("audit-log", AuditLogViewSet, basename="audit-log")

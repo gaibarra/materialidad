@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from django.contrib import admin
 
-from .models import Contrato, Empresa, LegalReferenceSource, Operacion, Proveedor, TransaccionIntercompania
+from .models import (
+    ClauseTemplate,
+    Contrato,
+    ContratoTemplate,
+    Empresa,
+    LegalReferenceSource,
+    Operacion,
+    Proveedor,
+    TransaccionIntercompania,
+)
 
 
 @admin.register(Empresa)
@@ -158,5 +167,66 @@ class TransaccionIntercompaniaAdmin(admin.ModelAdmin):
                 "fields": ("metadata", "created_at", "updated_at"),
                 "classes": ("collapse",),
             },
+        ),
+    )
+
+
+@admin.register(ContratoTemplate)
+class ContratoTemplateAdmin(admin.ModelAdmin):
+    list_display = ("nombre", "clave", "categoria", "proceso", "tipo_empresa", "activo", "orden")
+    list_filter = ("categoria", "proceso", "tipo_empresa", "activo")
+    search_fields = ("nombre", "clave", "descripcion")
+    readonly_fields = ("created_at", "updated_at")
+    fieldsets = (
+        (
+            "Información General",
+            {"fields": ("clave", "nombre", "categoria", "proceso", "tipo_empresa", "descripcion", "orden", "activo")},
+        ),
+        (
+            "Configuración",
+            {"fields": ("es_marco", "requiere_proveedor", "campos_configurables")},
+        ),
+        (
+            "Contrato Semilla (reutilización de contratos depurados)",
+            {
+                "fields": ("contrato_base", "documento_base", "markdown_base"),
+                "classes": ("collapse",),
+                "description": "Permite reutilizar un contrato ya depurado como base para futuras generaciones AI.",
+            },
+        ),
+        (
+            "Metadata",
+            {"fields": ("metadata", "created_at", "updated_at"), "classes": ("collapse",)},
+        ),
+    )
+
+
+@admin.register(ClauseTemplate)
+class ClauseTemplateAdmin(admin.ModelAdmin):
+    list_display = ("titulo", "slug", "nivel_riesgo", "prioridad", "version", "es_curada", "activo")
+    list_filter = ("nivel_riesgo", "es_curada", "activo")
+    search_fields = ("titulo", "slug", "texto", "resumen")
+    readonly_fields = ("created_at", "updated_at")
+    prepopulated_fields = {"slug": ("titulo",)}
+    fieldsets = (
+        (
+            "Contenido",
+            {"fields": ("slug", "titulo", "texto", "resumen")},
+        ),
+        (
+            "Clasificación",
+            {"fields": ("categorias", "procesos", "nivel_riesgo", "palabras_clave", "prioridad")},
+        ),
+        (
+            "Gestión",
+            {"fields": ("version", "es_curada", "contrato_origen", "creado_por", "activo")},
+        ),
+        (
+            "Tips para Redline",
+            {"fields": ("tips_redline",), "classes": ("collapse",)},
+        ),
+        (
+            "Metadata",
+            {"fields": ("metadata", "created_at", "updated_at"), "classes": ("collapse",)},
         ),
     )

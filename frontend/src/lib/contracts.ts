@@ -306,3 +306,71 @@ export function analyzeRedlines(
     body: JSON.stringify(payload),
   });
 }
+
+/* ───── Clause Optimizer ───── */
+
+export type ClauseOptimizePayload = {
+  texto_clausula: string;
+  contexto_contrato?: string;
+  idioma?: "es" | "en";
+  objetivo?:
+    | "mejorar_fiscal"
+    | "simplificar"
+    | "reforzar_materialidad"
+    | "ampliar_proteccion"
+    | "adaptar_idioma";
+};
+
+export type ClauseOptimizeResponse = {
+  texto_mejorado: string;
+  justificacion: string;
+  cambios_principales: string[];
+  referencias_legales: string[];
+  modelo: string;
+};
+
+export function optimizeClause(
+  payload: ClauseOptimizePayload
+): Promise<ClauseOptimizeResponse> {
+  return apiFetch<ClauseOptimizeResponse>(
+    "/api/materialidad/contratos/optimizar-clausula/",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }
+  );
+}
+
+/* ───── Promover Plantilla (seed contract) ───── */
+
+export type PromoverPlantillaPayload = {
+  nombre: string;
+  clave?: string;
+  descripcion?: string;
+  categoria?: string;
+  proceso?: string;
+  tipo_empresa?: string;
+};
+
+export type PromoverPlantillaResponse = {
+  template_id: number;
+  nombre: string;
+  clave: string;
+  markdown_base_length: number;
+  mensaje: string;
+};
+
+export function promoverPlantilla(
+  contratoId: number,
+  payload: PromoverPlantillaPayload
+): Promise<PromoverPlantillaResponse> {
+  return apiFetch<PromoverPlantillaResponse>(
+    `/api/materialidad/contratos/${contratoId}/promover-plantilla/`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }
+  );
+}

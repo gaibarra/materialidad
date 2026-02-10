@@ -28,8 +28,10 @@ import {
   analyzeRedlines,
   RedlineAnalysis,
   DiffSegment,
+  optimizeClause,
 } from "lib/contracts";
 import { alertError, alertInfo, alertSuccess } from "lib/alerts";
+import { ContractEditor, type OptimizeRequest } from "components/ContractEditor";
 
 type Empresa = {
   id: number;
@@ -112,6 +114,8 @@ export default function ContratosPage() {
   const [uploadContratoId, setUploadContratoId] = useState<string>("");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [editableMarkdown, setEditableMarkdown] = useState("");
+  const [isOptimizing, setIsOptimizing] = useState(false);
 
   const selectedTemplate = useMemo(
     () => templates.find((template) => String(template.id) === formState.template) ?? null,
@@ -290,6 +294,7 @@ export default function ContratosPage() {
 
       const response = await generateContract(payload);
       setResult(response);
+      setEditableMarkdown(response.documento_markdown);
       setRedlineBase(response.documento_markdown);
       alertSuccess("Contrato generado", "Revisa la vista previa y personaliza lo necesario.");
     } catch (error) {
@@ -304,7 +309,8 @@ export default function ContratosPage() {
   const handleCopy = async () => {
     if (!result) return;
     try {
-      await navigator.clipboard.writeText(result.documento_markdown);
+      const textToCopy = editableMarkdown || result.documento_markdown;
+      await navigator.clipboard.writeText(textToCopy);
       alertSuccess("Contenido copiado", "Pega el borrador en tu herramienta favorita");
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo copiar";
@@ -339,6 +345,7 @@ export default function ContratosPage() {
         formState.idioma
       );
       setResult(corrected);
+      setEditableMarkdown(corrected.documento_markdown);
       setRedlineBase(corrected.documento_markdown);
       alertSuccess("Contrato corregido", "Revisa el borrador actualizado y expórtalo si es necesario.");
     } catch (error) {
@@ -365,7 +372,8 @@ export default function ContratosPage() {
       alertInfo("Genera un contrato primero");
       return;
     }
-    const blob = new Blob([result.documento_markdown], {
+    const markdownContent = editableMarkdown || result.documento_markdown;
+    const blob = new Blob([markdownContent], {
       type: "text/markdown;charset=utf-8",
     });
     triggerDownload(blob, `contrato-materialidad-${Date.now()}.md`);
@@ -379,7 +387,7 @@ export default function ContratosPage() {
     setIsExportingDocx(true);
     try {
       const exportResult = await exportContractDocx({
-        documento_markdown: result.documento_markdown,
+        documento_markdown: editableMarkdown || result.documento_markdown,
         idioma: result.idioma,
       });
 
@@ -430,9 +438,40 @@ export default function ContratosPage() {
       alertInfo("No hay borrador disponible", "Genera un contrato y luego reutilízalo aquí.");
       return;
     }
-    setRedlineBase(result.documento_markdown);
+    setRedlineBase(editableMarkdown || result.documento_markdown);
     alertSuccess("Listo", "Usaremos el borrador actual como base para el análisis");
   };
+
+  const handleOptimizeClause = useCallback(
+    async (request: OptimizeRequest) => {
+      setIsOptimizing(true);
+      try {
+        const response = await optimizeClause({
+          texto_clausula: request.selectedText,
+          contexto_contrato: request.fullContext,
+          idioma: formState.idioma,
+          objetivo: "mejorar_fiscal",
+        });
+        // Replace the selected text with the optimized version in the editor
+        const editorApi = (window as any).__contractEditorApi;
+        if (editorApi?.insertOptimizedText) {
+          editorApi.insertOptimizedText(response.texto_mejorado);
+        }
+        alertSuccess(
+          "Cláusula optimizada",
+          response.justificacion.length > 120
+            ? response.justificacion.slice(0, 120) + "…"
+            : response.justificacion
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Intenta nuevamente";
+        alertError("No pudimos optimizar la cláusula", message);
+      } finally {
+        setIsOptimizing(false);
+      }
+    },
+    [formState.idioma]
+  );
 
   const handleAnalyzeRedlines = async () => {
     if (!redlineBase.trim() || !redlineCandidate.trim()) {
@@ -617,6 +656,7 @@ export default function ContratosPage() {
                   onClick={() => {
                     setFormState(initialForm);
                     setResult(null);
+                    setEditableMarkdown("");
                   }}
                   className="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 hover:border-slate-300"
                 >
@@ -865,9 +905,14 @@ export default function ContratosPage() {
                       <span>Vista previa · {(result.idioma || formState.idioma || "es").toUpperCase()}</span>
                       <span>{selectedTemplate ? selectedTemplate.nombre : "Sin plantilla"}</span>
                     </div>
-                    <pre className="mt-3 max-h-[420px] overflow-auto whitespace-pre-wrap rounded-2xl bg-white p-4 text-xs text-slate-800">
-                      {result.documento_markdown}
-                    </pre>
+                    <div className="mt-3">
+                      <ContractEditor
+                        content={result.documento_markdown}
+                        onUpdate={(md) => setEditableMarkdown(md)}
+                        onOptimizeRequest={handleOptimizeClause}
+                        isOptimizing={isOptimizing}
+                      />
+                    </div>
                   </>
                 ) : (
                   <p className="text-sm text-slate-600">

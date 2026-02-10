@@ -10,6 +10,7 @@ from .models import (
     AuditLog,
     Checklist,
     ChecklistItem,
+    ClauseTemplate,
     ContractDocument,
     Contrato,
     ContratoTemplate,
@@ -1255,3 +1256,87 @@ class OperacionEntregableSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data = self._apply_realtime_rules(instance, validated_data)
         return super().update(instance, validated_data)
+
+
+# ── Clause optimization ──
+
+class ClauseOptimizeSerializer(serializers.Serializer):
+    texto_clausula = serializers.CharField(
+        max_length=4000,
+        help_text="Texto de la cláusula a optimizar",
+    )
+    contexto_contrato = serializers.CharField(
+        max_length=8000,
+        required=False,
+        allow_blank=True,
+        default="",
+        help_text="Resumen o markdown del contrato completo para contexto",
+    )
+    objetivo = serializers.ChoiceField(
+        choices=(
+            ("mejorar_fiscal", "Mejorar blindaje fiscal"),
+            ("simplificar", "Simplificar redacción"),
+            ("reforzar_materialidad", "Reforzar materialidad"),
+            ("compliance_integral", "Compliance integral"),
+        ),
+        default="mejorar_fiscal",
+    )
+    idioma = serializers.ChoiceField(choices=("es", "en"), default="es")
+
+
+class PromoverPlantillaSerializer(serializers.Serializer):
+    clave = serializers.SlugField(
+        max_length=64,
+        required=False,
+        allow_blank=True,
+        help_text="Clave única para la plantilla (se autogenera si no se proporciona)",
+    )
+    nombre = serializers.CharField(
+        max_length=255,
+        required=False,
+        allow_blank=True,
+        help_text="Nombre descriptivo de la plantilla",
+    )
+    descripcion = serializers.CharField(
+        max_length=2000,
+        required=False,
+        allow_blank=True,
+        default="",
+    )
+    documento_id = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        help_text="ID del ContractDocument a usar como base",
+    )
+    markdown_base = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        default="",
+        help_text="Markdown depurado; si no se envía, se toma del documento",
+    )
+
+
+class ClauseTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClauseTemplate
+        fields = (
+            "id",
+            "slug",
+            "titulo",
+            "texto",
+            "resumen",
+            "categorias",
+            "procesos",
+            "nivel_riesgo",
+            "tips_redline",
+            "palabras_clave",
+            "prioridad",
+            "version",
+            "es_curada",
+            "contrato_origen",
+            "creado_por",
+            "activo",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = ("created_at", "updated_at")
