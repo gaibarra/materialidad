@@ -392,16 +392,17 @@ class ContratoViewSet(viewsets.ModelViewSet):
         response["X-Contrato-Modelo"] = definitivo["modelo"]
         return response
 
-    @action(detail=True, methods=["get"], url_path="documentos")
-    def listar_documentos(self, request, *args, **kwargs):
+    @action(detail=True, methods=["get", "post"], url_path="documentos")
+    def documentos(self, request, *args, **kwargs):
         contrato = self.get_object()
-        documentos = contrato.documentos.all().order_by("-created_at")
-        data = ContractDocumentSerializer(documentos, many=True).data
-        return Response(data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], url_path="documentos")
-    def crear_documento(self, request, *args, **kwargs):
-        contrato = self.get_object()
+        # --- GET: listar documentos ---
+        if request.method == "GET":
+            docs = contrato.documentos.all().order_by("-created_at")
+            data = ContractDocumentSerializer(docs, many=True).data
+            return Response(data, status=status.HTTP_200_OK)
+
+        # --- POST: crear documento ---
         serializer = ContractDocumentCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         payload = serializer.validated_data
