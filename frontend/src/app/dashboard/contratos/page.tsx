@@ -117,6 +117,7 @@ export default function ContratosPage() {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [isLoadingContrato, setIsLoadingContrato] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editableMarkdown, setEditableMarkdown] = useState("");
   const [isOptimizing, setIsOptimizing] = useState(false);
 
@@ -935,6 +936,38 @@ export default function ContratosPage() {
                   className="flex-1 rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:opacity-50"
                 >
                   {isExportingDocx ? "Exportando..." : "Exportar .docx"}
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={!result || !contratoId || isSaving}
+                  onClick={async () => {
+                    if (!result || !contratoId) {
+                      alertInfo("Sin contrato", "Selecciona un contrato asociado para guardar el borrador.");
+                      return;
+                    }
+                    setIsSaving(true);
+                    try {
+                      const md = editableMarkdown || result.documento_markdown;
+                      const formData = new FormData();
+                      formData.append("markdown_text", md);
+                      formData.append("kind", "DEFINITIVO_AI");
+                      formData.append("source", "MANUAL");
+                      formData.append("idioma", result.idioma || "es");
+                      formData.append("tono", result.tono || "formal");
+                      await uploadContractDocument(Number(contratoId), formData);
+                      alertSuccess("Borrador guardado", "El documento editado se guardó en el expediente del contrato.");
+                    } catch (error) {
+                      const msg = error instanceof Error ? error.message : "Intenta nuevamente";
+                      alertError("No pudimos guardar", msg);
+                    } finally {
+                      setIsSaving(false);
+                    }
+                  }}
+                  className="flex-1 rounded-2xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-500 disabled:opacity-50"
+                >
+                  {isSaving ? "Guardando..." : "Guardar borrador"}
                 </button>
               </div>
 
