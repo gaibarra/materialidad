@@ -4,7 +4,7 @@
  */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, Building2, Users, Search, Edit2, Trash2, Eye, AlertTriangle, Home } from 'lucide-react';
 import Link from 'next/link';
 import { loadSession } from '../../../../lib/token-storage';
@@ -39,11 +39,7 @@ export default function OrganizacionesPage() {
     const [editingDespacho, setEditingDespacho] = useState<Despacho | null>(null);
     const [authError, setAuthError] = useState(false);
 
-    useEffect(() => {
-        fetchDespachos();
-    }, [filterTipo]);
-
-    const fetchDespachos = async () => {
+    const fetchDespachos = useCallback(async () => {
         try {
             setLoading(true);
             setAuthError(false);
@@ -94,7 +90,11 @@ export default function OrganizacionesPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filterTipo]);
+
+    useEffect(() => {
+        fetchDespachos();
+    }, [fetchDespachos]);
 
     const handleLogout = () => {
         localStorage.removeItem('access_token');

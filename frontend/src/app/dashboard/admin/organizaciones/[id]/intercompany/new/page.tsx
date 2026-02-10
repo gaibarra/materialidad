@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Building2, DollarSign, Calendar, FileText, ArrowRightLeft, Home } from 'lucide-react';
 import Link from 'next/link';
@@ -31,20 +31,10 @@ export default function NewIntercompanyTransactionPage() {
         notes: ''
     });
 
-    useEffect(() => {
-        if (despachoId) {
-            void fetchTenants();
-        }
-    }, [despachoId]);
-
-    const getAuthToken = () => {
-        const session = loadSession();
-        return session?.accessToken;
-    };
-
-    const fetchTenants = async () => {
+    const fetchTenants = useCallback(async () => {
         try {
-            const token = getAuthToken();
+            const session = loadSession();
+            const token = session?.accessToken;
             if (!token) throw new Error("No auth token");
 
             const response = await fetch(
@@ -66,6 +56,17 @@ export default function NewIntercompanyTransactionPage() {
         } finally {
             setLoading(false);
         }
+    }, [despachoId]);
+
+    useEffect(() => {
+        if (despachoId) {
+            void fetchTenants();
+        }
+    }, [despachoId, fetchTenants]);
+
+    const getAuthToken = () => {
+        const session = loadSession();
+        return session?.accessToken;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {

@@ -4,7 +4,7 @@
  */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
     ArrowLeft,
@@ -69,20 +69,12 @@ export default function OrganizacionDetailPage() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'tenants' | 'intercompany'>('tenants');
 
-    useEffect(() => {
-        if (id) {
-            void fetchDespachoDetail();
-            void fetchTenants();
-            void fetchStats();
-        }
-    }, [id]);
-
     const getAuthToken = () => {
         const session = loadSession();
         return session?.accessToken;
     };
 
-    const fetchDespachoDetail = async () => {
+    const fetchDespachoDetail = useCallback(async () => {
         try {
             const token = getAuthToken();
             if (!token) throw new Error("No auth token");
@@ -102,11 +94,11 @@ export default function OrganizacionDetailPage() {
             setDespacho(data);
         } catch (error) {
             console.error('Error:', error);
-            router.push('/login'); // Redirect on auth fail
+            router.push('/login');
         }
-    };
+    }, [id, router]);
 
-    const fetchTenants = async () => {
+    const fetchTenants = useCallback(async () => {
         try {
             const token = getAuthToken();
             if (!token) return;
@@ -129,9 +121,9 @@ export default function OrganizacionDetailPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id]);
 
-    const fetchStats = async () => {
+    const fetchStats = useCallback(async () => {
         try {
             const token = getAuthToken();
             if (!token) return;
@@ -152,7 +144,15 @@ export default function OrganizacionDetailPage() {
         } catch (error) {
             console.error('Error:', error);
         }
-    };
+    }, [id]);
+
+    useEffect(() => {
+        if (id) {
+            void fetchDespachoDetail();
+            void fetchTenants();
+            void fetchStats();
+        }
+    }, [id, fetchDespachoDetail, fetchTenants, fetchStats]);
 
     if (loading || !despacho) {
         return (
