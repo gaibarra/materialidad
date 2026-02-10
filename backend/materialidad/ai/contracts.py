@@ -215,8 +215,8 @@ def _format_clauses(clausulas: Optional[Iterable[str]]) -> str:
 
 def _tone_params(tono: str) -> tuple[float, int]:
     if tono == "formal":
-        return 0.25, 2600
-    return 0.35, 2600
+        return 0.25, 6000
+    return 0.35, 6000
 
 
 def _system_prompt(*, mode: str) -> str:
