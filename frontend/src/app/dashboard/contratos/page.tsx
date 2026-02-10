@@ -117,6 +117,7 @@ export default function ContratosPage() {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [isLoadingContrato, setIsLoadingContrato] = useState(false);
+  const [isDeletingContrato, setIsDeletingContrato] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editableMarkdown, setEditableMarkdown] = useState("");
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -610,6 +611,35 @@ export default function ContratosPage() {
                     className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50"
                   >
                     {isLoadingContrato ? "Cargando..." : "Recargar"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!contratoId || isDeletingContrato}
+                    onClick={async () => {
+                      if (!contratoId) return;
+                      const selContrato = contratos.find((c) => String(c.id) === contratoId);
+                      const label = selContrato ? `#${selContrato.id} · ${selContrato.nombre}` : `#${contratoId}`;
+                      if (!window.confirm(`¿Eliminar el contrato ${label}? Esta acción no se puede deshacer.`)) return;
+                      setIsDeletingContrato(true);
+                      try {
+                        await apiFetch(`/api/materialidad/contratos/${contratoId}/`, { method: "DELETE" });
+                        setContratos((prev) => prev.filter((c) => String(c.id) !== contratoId));
+                        setContratoId("");
+                        if (result?.contrato_id === Number(contratoId)) {
+                          setResult(null);
+                          setEditableMarkdown("");
+                        }
+                        alertSuccess("Contrato eliminado", `Se eliminó ${label}`);
+                      } catch (error) {
+                        const msg = error instanceof Error ? error.message : "Intenta nuevamente";
+                        alertError("No pudimos eliminar el contrato", msg);
+                      } finally {
+                        setIsDeletingContrato(false);
+                      }
+                    }}
+                    className="rounded-xl border border-red-300 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                  >
+                    {isDeletingContrato ? "Eliminando..." : "Eliminar"}
                   </button>
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
