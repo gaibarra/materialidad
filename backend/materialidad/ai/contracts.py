@@ -64,15 +64,31 @@ No incluyas comentarios meta ni instrucciones internas: solo el contenido final 
 
 DRAFT_EXTRA_RULES = dedent(
     """
-    Incluye una sección numerada titulada “Resumen ejecutivo” al inicio, con 5–10 viñetas que sinteticen: objeto, alcance, precio/forma de pago, plazos, entregables, aceptación, penalizaciones, garantías y riesgos principales.
+    INSTRUCCIÓN PRINCIPAL — GENERAR UN CONTRATO COMPLETO:
+    Tu entregable es un CONTRATO completo, formal y listo para revisión legal, NO un resumen, análisis ni reporte ejecutivo.
 
-Incluye una sección numerada titulada “Cláusulas clave”, en formato de lista, que destaque lo esencial del contrato (mínimo 8, máximo 15 puntos) con referencias a la sección/cláusula correspondiente.
+    Estructura OBLIGATORIA del contrato (en este orden exacto):
 
-Incluye secciones de firmas con campos completos y no inventados para ambas partes, con marcadores obligatorios cuando falten datos: [INDICAR NOMBRE/REPRESENTANTE/RFC/DOMICILIO/CARGO].
+    1. Encabezado con título en MAYÚSCULAS del tipo de contrato.
+    2. Identificación de las partes ("EL CLIENTE" y "EL PRESTADOR"/"EL PROVEEDOR"/"LA PARTE B", según corresponda), con marcadores [INDICAR …] para datos faltantes.
+    3. DECLARACIONES de cada parte.
+    4. CLÁUSULAS numeradas (mínimo 12 artículos con desarrollo sustantivo). Cada cláusula debe tener:
+       - Título descriptivo
+       - Párrafos con obligaciones concretas, plazos, criterios de aceptación, consecuencias por incumplimiento
+       - Subincisos cuando la complejidad lo requiera
+       Temas mínimos obligatorios (pueden combinarse o subdividirse):
+       Objeto · Vigencia · Contraprestación y forma de pago · Alcance y entregables · Obligaciones del Prestador · Obligaciones del Cliente · Confidencialidad · Propiedad Intelectual · Garantías · Facturación, impuestos y CFDI · Penalizaciones · Terminación anticipada · Legislación aplicable y jurisdicción · Protección de datos · Modificaciones y control de cambios
+    5. Sección de FIRMAS con campos para ambas partes y marcadores [INDICAR …] para datos faltantes.
+    6. ANEXOS: enumera los que apliquen o usa [ANEXO PENDIENTE: …].
+    7. Al final del contrato, agrega una sección "RESUMEN EJECUTIVO" con 5-10 viñetas que sinteticen: objeto, alcance, precio, plazos, entregables, penalizaciones, garantías y riesgos principales.
+    8. Después del resumen, agrega "RIESGOS Y MITIGACIONES" con los riesgos fiscales, documentales, operativos y contractuales detectados.
 
-Incluye un apartado de anexos cuando existan o sean necesarios para verificabilidad (alcance, cronograma, entregables, evidencias, precios, SLA, etc.), enumerándolos y describiendo su función. Si faltan, agrega [ANEXO PENDIENTE: …].
-
-Menciona legislación aplicable solo cuando sea pertinente para sustentar una obligación, riesgo o recomendación, en tono orientativo y sin citas excesivas; evita “name-dropping” legal. Si la aplicabilidad depende de hechos no proporcionados, decláralo: [SUJETO A CONFIRMACIÓN DE HECHOS].
+    IMPORTANTE:
+    - El cuerpo del contrato (puntos 1-6) es el contenido PRINCIPAL y debe ocupar la mayor parte del documento.
+    - El resumen ejecutivo y riesgos (puntos 7-8) son COMPLEMENTARIOS y van AL FINAL.
+    - NO entregues un resumen con viñetas como si fuera el contrato. Las cláusulas deben estar REDACTADAS en prosa legal completa.
+    - Menciona legislación aplicable solo cuando sea pertinente, sin "name-dropping" legal excesivo.
+    - Si la aplicabilidad depende de hechos no proporcionados, decláralo: [SUJETO A CONFIRMACIÓN DE HECHOS].
     """
 ).strip()
 
@@ -215,8 +231,8 @@ def _format_clauses(clausulas: Optional[Iterable[str]]) -> str:
 
 def _tone_params(tono: str) -> tuple[float, int]:
     if tono == "formal":
-        return 0.25, 6000
-    return 0.35, 6000
+        return 0.25, 10000
+    return 0.35, 10000
 
 
 def _system_prompt(*, mode: str) -> str:
