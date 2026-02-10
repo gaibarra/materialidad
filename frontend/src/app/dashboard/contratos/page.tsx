@@ -641,6 +641,35 @@ export default function ContratosPage() {
                   >
                     {isDeletingContrato ? "Eliminando..." : "Eliminar"}
                   </button>
+                  <button
+                    type="button"
+                    disabled={!contratoId}
+                    onClick={async () => {
+                      if (!contratoId) return;
+                      const current = contratos.find((c) => String(c.id) === contratoId);
+                      const nuevoNombre = window.prompt("Nuevo nombre del contrato:", current?.nombre || "");
+                      if (!nuevoNombre || nuevoNombre.trim() === "" || nuevoNombre.trim() === current?.nombre) return;
+                      try {
+                        await apiFetch(`/api/materialidad/contratos/${contratoId}/`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ nombre: nuevoNombre.trim() }),
+                        });
+                        setContratos((prev) =>
+                          prev.map((c) =>
+                            String(c.id) === contratoId ? { ...c, nombre: nuevoNombre.trim() } : c
+                          )
+                        );
+                        alertSuccess("Nombre actualizado", nuevoNombre.trim());
+                      } catch (error) {
+                        const msg = error instanceof Error ? error.message : "Intenta nuevamente";
+                        alertError("No pudimos renombrar", msg);
+                      }
+                    }}
+                    className="rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
+                  >
+                    Renombrar
+                  </button>
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
                   Elige un contrato para asociar el borrador, o haz clic en Recargar para ver su último documento.
