@@ -1,6 +1,7 @@
 # Guía Rápida: Genera tu Primer Contrato con IA
 
 > **Plataforma Materialidad** · Generador de Contratos  
+> Última actualización: febrero 2026  
 > Tiempo estimado: 5 minutos
 
 ---
@@ -16,8 +17,8 @@
 
 ## Paso 2 — Navega al Generador de Contratos
 
-1. En el menú lateral izquierdo, busca la sección **Contratos** (ícono de documento).
-2. Haz clic para abrir el **Generador de Contratos**.
+1. En el menú lateral izquierdo, busca la sección **Contratación**.
+2. Haz clic en **Generador de contratos**.
 
 ---
 
@@ -32,6 +33,13 @@ Verás un formulario titulado **"Datos para el borrador"**. Llena los campos:
 ### 3.2 Contrato asociado (opcional)
 - Si quieres que el borrador quede guardado dentro de un expediente de contrato existente, selecciónalo aquí.
 - Si lo dejas en **"Guardar como nuevo contrato automático"**, el sistema creará uno nuevo.
+- Junto al dropdown tienes tres botones de gestión:
+
+| Botón | Qué hace |
+|-------|----------|
+| ⟳ **Recargar** (verde) | Carga el último borrador guardado del contrato seleccionado en el editor |
+| ✕ **Eliminar** (rojo) | Elimina el contrato completo (pide confirmación antes de proceder) |
+| ✏️ **Renombrar** (gris) | Permite cambiar el nombre del contrato seleccionado |
 
 ### 3.3 Plantilla base (opcional pero recomendado)
 - Elige una plantilla según el tipo de contrato que necesitas:
@@ -82,8 +90,11 @@ Debajo del formulario verás la sección **"Cláusulas sugeridas"**:
 ## Paso 5 — Genera el contrato
 
 1. Haz clic en el botón verde **"Generar contrato"**.
-2. Verás tips de materialidad mientras la IA trabaja (20–40 segundos).
+2. Verás tips de materialidad mientras la IA trabaja (30–60 segundos).
 3. Cuando termine, aparecerá el mensaje **"Contrato generado"**.
+4. El contrato se asigna automáticamente a un expediente (visible en el dropdown de "Contrato asociado").
+
+> **Nota:** La IA genera un contrato completo con cláusulas en prosa legal, declaraciones, firmas y anexos — no un resumen ejecutivo. El resumen y análisis de riesgos aparecen como secciones complementarias al final del documento.
 
 ---
 
@@ -96,16 +107,18 @@ El borrador aparece en el panel derecho dentro del **Editor TipTap**:
 - Usa la barra de herramientas para:
   - **B** — Negrita
   - **I** — Cursiva
-  - **🖍** — Resaltar texto
+  - **H** — Resaltar texto (highlight)
   - **H1, H2, H3** — Cambiar niveles de título
   - **• Lista / 1. Lista** — Listas con viñetas o numeradas
   - **─** — Insertar línea horizontal
 
 ### Mejora cláusulas con IA ✦
 1. **Selecciona** con el mouse el texto de una cláusula que quieras mejorar.
-2. Haz clic en el botón morado **"✦ Mejorar con IA"** en la barra de herramientas.
-3. La IA optimizará la cláusula para reforzar el cumplimiento fiscal mexicano.
+2. El botón morado **"✦ Mejorar con IA"** se activará automáticamente al seleccionar texto.
+3. Haz clic en él. La IA optimizará la cláusula para reforzar el cumplimiento fiscal mexicano.
 4. El texto mejorado reemplazará automáticamente la selección.
+
+> **Tip:** Si no has seleccionado texto, el botón aparece deshabilitado. Basta con marcar una o varias cláusulas para que se active.
 
 ### Modos de vista
 - **Editor** — Edición interactiva con formato.
@@ -113,17 +126,23 @@ El borrador aparece en el panel derecho dentro del **Editor TipTap**:
 
 ---
 
-## Paso 7 — Exporta el contrato
+## Paso 7 — Guarda y exporta el contrato
 
-En el panel derecho encontrarás tres botones de acción:
+En el panel derecho encontrarás los botones de acción:
 
 | Botón | Acción |
 |-------|--------|
 | **Copiar borrador** | Copia el texto al portapapeles para pegarlo donde necesites |
 | **Descargar .md** | Descarga el archivo en formato Markdown |
 | **Exportar .docx** | Genera un documento Word listo para imprimir y firmar |
+| **Guardar borrador** | Guarda el contenido editado en el expediente del contrato para recuperarlo después |
 
-> **Importante:** Si editaste el contrato en el editor, las exportaciones incluirán tus cambios.
+> **Importante:** Si editaste el contrato en el editor, las exportaciones incluirán tus cambios. Usa **"Guardar borrador"** para no perder tus ediciones al cerrar o recargar la página.
+
+### Flujo recomendado: Guardar → Recargar
+1. Edita el contrato en el editor.
+2. Haz clic en **"Guardar borrador"** (botón azul).
+3. La próxima vez que abras la página, selecciona el contrato del dropdown y haz clic en **"Recargar"** para recuperar tu última versión guardada.
 
 ---
 
@@ -141,15 +160,56 @@ Debajo de las acciones de exportación verás la sección **"Referencias legales
 
 ---
 
-## Funciones adicionales
+## Paso 9 — Limpiar para empezar otro contrato
 
-### Cargar un contrato externo para corregirlo
-1. En la sección **"Contratos externos"**, selecciona el contrato destino.
-2. Adjunta un archivo PDF, DOCX o TXT con el contrato existente.
-3. Haz clic en **"Analizar y corregir contrato"**.
-4. La IA generará una versión corregida que cumple con materialidad fiscal.
+Cuando termines con un contrato y quieras empezar uno nuevo:
 
-### Comparar versiones (Redlines)
+1. Haz clic en **"Limpiar todo"** (junto al botón "Generar contrato").
+2. Se resetean todos los campos: formulario, editor, contrato asociado y redlines.
+3. Ya puedes configurar y generar un nuevo contrato desde cero.
+
+---
+
+## Importar contrato externo
+
+Si ya tienes un contrato vigente y quieres que la IA lo revise y corrija:
+
+1. En la sección **"Contratos externos"** (debajo del formulario de generación):
+   - Selecciona la **Empresa** a la que pertenece el contrato.
+   - Adjunta el archivo (PDF, DOCX o TXT).
+2. Haz clic en **"Importar y corregir contrato"**.
+3. El sistema:
+   - Crea automáticamente un nuevo expediente de contrato llamado *"Contrato externo importado — [Razón Social]"*.
+   - Extrae el texto completo del archivo (incluyendo tablas y encabezados).
+   - Genera una versión corregida que cumple con materialidad fiscal.
+4. La versión corregida aparece en el editor TipTap lista para revisar, editar y exportar.
+5. Puedes renombrarlo después con el botón **"Renombrar"**.
+
+> **Nota:** El flujo de importación es independiente del flujo de generación. No necesitas un contrato preexistente; el sistema lo crea automáticamente.
+
+---
+
+## Gestión de contratos
+
+### Renombrar un contrato
+1. Selecciona el contrato del dropdown "Contrato asociado".
+2. Haz clic en **"Renombrar"**.
+3. Escribe el nuevo nombre y confirma.
+
+### Eliminar un contrato
+1. Selecciona el contrato del dropdown.
+2. Haz clic en **"Eliminar"** (botón rojo).
+3. Confirma en el diálogo de confirmación.
+4. El contrato y todos sus documentos se eliminan permanentemente.
+
+### Recargar un contrato guardado
+1. Selecciona el contrato del dropdown.
+2. Haz clic en **"Recargar"** (botón verde).
+3. Se carga el último documento guardado (corregido o borrador) en el editor.
+
+---
+
+## Comparar versiones (Redlines)
 1. En el panel **"Compara versiones y resalta riesgos"**:
    - Pega el texto original en la columna izquierda.
    - Pega la versión con cambios en la columna derecha.
@@ -184,6 +244,9 @@ Los contratos generados usan marcadores entre corchetes cuando falta informació
 **¿Puedo regenerar el contrato con cambios?**  
 Sí. Modifica el resumen de necesidades o las cláusulas y vuelve a hacer clic en "Generar contrato". El historial anterior se conserva.
 
+**¿Cómo recupero un contrato que ya guardé?**  
+Selecciónalo del dropdown "Contrato asociado" y haz clic en **"Recargar"**. Se cargará el último borrador guardado.
+
 **¿El contrato tiene validez legal?**  
 El sistema genera un borrador profesional. Debe ser revisado por un abogado antes de la firma y, si aplica, obtener fecha cierta ante fedatario público.
 
@@ -192,6 +255,12 @@ Elige la que más se acerque al tipo de operación. Si no estás seguro, déjala
 
 **¿Puedo editar el contrato después de exportarlo?**  
 El archivo .docx es completamente editable en Word, Google Docs o LibreOffice.
+
+**¿Puedo importar un contrato que ya tengo firmado?**  
+Sí. Usa la sección "Contratos externos" para subir el PDF/DOCX. La IA lo revisará y generará una versión corregida con las mejores prácticas de materialidad fiscal.
+
+**¿Cómo elimino contratos que ya no necesito?**  
+Selecciónalo del dropdown y haz clic en el botón rojo "Eliminar". Se pedirá confirmación antes de eliminarlo.
 
 ---
 
