@@ -1279,7 +1279,7 @@ class ClauseOptimizeSerializer(serializers.Serializer):
         help_text="Texto de la cláusula a optimizar",
     )
     contexto_contrato = serializers.CharField(
-        max_length=8000,
+        max_length=32000,
         required=False,
         allow_blank=True,
         default="",
