@@ -1,6 +1,7 @@
 "use client";
 
 import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -80,6 +81,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [tenant, setTenant] = useState<string | null>(null);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
+  const router = useRouter();
 
   const logout = useCallback(() => {
     setAccessToken(null);
@@ -89,7 +91,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsProfileLoaded(false);
     removeSession();
     Cookies.remove("tenant");
-  }, []);
+    router.push("/login");
+  }, [router]);
 
   useEffect(() => {
     const session = loadSession();
