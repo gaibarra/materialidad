@@ -465,41 +465,6 @@ export default function ContratosPage() {
   return (
     <DashboardShell>
       <div className="space-y-10 text-slate-900">
-        <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-10 shadow-lg">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.18),_transparent_60%)]" />
-          <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-2xl space-y-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-700">Suite contractual · Beta privada</p>
-              <h1 className="text-4xl font-semibold text-slate-900">Crea borradores blindados en minutos</h1>
-              <p className="text-base text-slate-700">
-                Indica los datos clave y deja que GPT-5 mini prepare un borrador personalizable con cláusulas auditadas por el equipo fiscal.
-              </p>
-              <div className="flex flex-wrap gap-4 text-sm text-slate-700">
-                <span className="flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-4 py-2 shadow-sm">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                  95% ajustes aprobados sin retrabajos
-                </span>
-                <span className="flex items-center gap-2 rounded-full border border-sky-200 bg-white/80 px-4 py-2 shadow-sm">
-                  <span className="h-2 w-2 rounded-full bg-sky-500" />
-                  Biblioteca viva de cláusulas SAT-ready
-                </span>
-              </div>
-            </div>
-            <div className="grid gap-4 text-sm text-slate-700">
-              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Tiempo estimado</p>
-                <p className="text-2xl font-semibold text-slate-900">2 min</p>
-                <p className="text-xs text-slate-500">para obtener un borrador usable</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Cobertura</p>
-                <p className="text-2xl font-semibold text-slate-900">+200 plantillas</p>
-                <p className="text-xs text-slate-500">curadas para operaciones MX</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
           <section className="space-y-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-md">
             <div className="flex flex-wrap items-center justify-between gap-3">
