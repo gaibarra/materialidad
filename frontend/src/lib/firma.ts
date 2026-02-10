@@ -60,3 +60,9 @@ export async function actualizarFirmaLogistica(
     body: JSON.stringify(payload),
   });
 }
+
+export async function obtenerFirmaLogistica(
+  contratoId: number
+): Promise<ContratoLogistica> {
+  return apiFetch<ContratoLogistica>(`/api/materialidad/contratos/${contratoId}/firma-logistica/`);
+}

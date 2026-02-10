@@ -468,9 +468,15 @@ class ContratoViewSet(viewsets.ModelViewSet):
         definitivo["documento_id"] = nuevo.id
         return Response(definitivo, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], url_path="firma-logistica")
+    @action(detail=True, methods=["get", "post"], url_path="firma-logistica")
     def firma_logistica(self, request, *args, **kwargs):
         contrato = self.get_object()
+
+        # GET → return current logistics state
+        if request.method == "GET":
+            data_out = ContratoSerializer(contrato, context=self.get_serializer_context()).data
+            return Response(data_out, status=status.HTTP_200_OK)
+
         serializer = ContratoFirmaLogisticaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
