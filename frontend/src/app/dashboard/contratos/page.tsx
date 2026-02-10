@@ -300,6 +300,9 @@ export default function ContratosPage() {
       setResult(response);
       setEditableMarkdown(response.documento_markdown);
       setRedlineBase(response.documento_markdown);
+      if (response.contrato_id && !contratoId) {
+        setContratoId(String(response.contrato_id));
+      }
       alertSuccess("Contrato generado", "Revisa la vista previa y personaliza lo necesario.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Intenta nuevamente";
