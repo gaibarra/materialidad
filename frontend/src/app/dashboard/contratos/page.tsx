@@ -701,12 +701,18 @@ export default function ContratosPage() {
                   type="button"
                   onClick={() => {
                     setFormState(initialForm);
+                    setContratoId("");
                     setResult(null);
                     setEditableMarkdown("");
+                    setRedlineBase("");
+                    setRedlineCandidate("");
+                    setRedlineResult(null);
+                    setUploadEmpresaId("");
+                    setUploadFile(null);
                   }}
                   className="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 hover:border-slate-300"
                 >
-                  Limpiar formulario
+                  Limpiar todo
                 </button>
               </div>
             </form>
