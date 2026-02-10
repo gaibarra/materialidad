@@ -406,7 +406,7 @@ def generate_definitive_contract(markdown_borrador: str, *, idioma: str = "es") 
     document_text = client.generate_text(
         messages,
         temperature=0.30,
-        max_output_tokens=3600,
+        max_output_tokens=8000,
     )
     citations, citation_metadata = get_or_generate_citations(
         document_text=document_text,

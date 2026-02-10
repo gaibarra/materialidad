@@ -36,7 +36,51 @@ def _extract_document_text(uploaded_file) -> str:
             from docx import Document
 
             doc = Document(uploaded_file)
-            return "\n".join(p.text for p in doc.paragraphs if p.text)
+            parts: list[str] = []
+
+            # --- Headers from first section ---
+            try:
+                for section in doc.sections:
+                    header = section.header
+                    if header and not header.is_linked_to_previous:
+                        for p in header.paragraphs:
+                            if p.text.strip():
+                                parts.append(p.text.strip())
+                    break  # solo primera sección
+            except Exception:
+                pass
+
+            # --- Body: paragraphs + tables in document order ---
+            from docx.oxml.ns import qn
+
+            for element in doc.element.body:
+                tag = element.tag.split("}")[-1] if "}" in element.tag else element.tag
+                if tag == "p":
+                    text = element.text or ""
+                    # Reconstruir texto completo del párrafo (incluye runs)
+                    full = "".join(
+                        node.text or ""
+                        for node in element.iter(qn("w:t"))
+                    )
+                    if full.strip():
+                        parts.append(full.strip())
+                elif tag == "tbl":
+                    # Extraer tabla fila por fila
+                    rows: list[str] = []
+                    for tr in element.iter(qn("w:tr")):
+                        cells: list[str] = []
+                        for tc in tr.iter(qn("w:tc")):
+                            cell_text = " ".join(
+                                node.text or ""
+                                for node in tc.iter(qn("w:t"))
+                            ).strip()
+                            cells.append(cell_text)
+                        if any(cells):
+                            rows.append(" | ".join(cells))
+                    if rows:
+                        parts.append("\n".join(rows))
+
+            return "\n\n".join(parts)
         if extension in {"pdf"}:
             from pypdf import PdfReader
 
