@@ -251,6 +251,14 @@ export async function exportContractDocx(
   return { blob, filename, citas_legales, citas_legales_metadata };
 }
 
+export async function fetchContractDocuments(
+  contratoId: number
+): Promise<ContractDocument[]> {
+  return apiFetch<ContractDocument[]>(
+    `/api/materialidad/contratos/${contratoId}/documentos/`
+  );
+}
+
 export async function uploadContractDocument(
   contratoId: number,
   formData: FormData

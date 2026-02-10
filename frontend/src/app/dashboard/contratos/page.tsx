@@ -24,6 +24,7 @@ import {
   uploadContractDocument,
   correctContractDocument,
   importExternalContract,
+  fetchContractDocuments,
   ClauseSuggestion,
   fetchClauseSuggestions,
   analyzeRedlines,
@@ -115,6 +116,7 @@ export default function ContratosPage() {
   const [uploadEmpresaId, setUploadEmpresaId] = useState<string>("");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [isLoadingContrato, setIsLoadingContrato] = useState(false);
   const [editableMarkdown, setEditableMarkdown] = useState("");
   const [isOptimizing, setIsOptimizing] = useState(false);
 
@@ -546,25 +548,68 @@ export default function ContratosPage() {
 
               <div>
                 <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Contrato asociado (opcional)</label>
-                <select
-                  value={contratoId}
-                  onChange={(event) => setContratoId(event.target.value)}
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-                >
-                  <option value="">Guardar como nuevo contrato automático</option>
-                  {isLoadingContratos && <option value="">Cargando contratos...</option>}
-                  {!isLoadingContratos && contratos.length === 0 && (
-                    <option value="">Sin contratos registrados</option>
-                  )}
-                  {contratos.map((contrato) => (
-                    <option key={contrato.id} value={String(contrato.id)}>
-                      #{contrato.id} · {contrato.nombre}
-                      {contrato.proveedor_nombre ? ` · ${contrato.proveedor_nombre}` : ""}
-                    </option>
-                  ))}
-                </select>
+                <div className="mt-2 flex gap-2">
+                  <select
+                    value={contratoId}
+                    onChange={(event) => setContratoId(event.target.value)}
+                    className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                  >
+                    <option value="">Guardar como nuevo contrato automático</option>
+                    {isLoadingContratos && <option value="">Cargando contratos...</option>}
+                    {!isLoadingContratos && contratos.length === 0 && (
+                      <option value="">Sin contratos registrados</option>
+                    )}
+                    {contratos.map((contrato) => (
+                      <option key={contrato.id} value={String(contrato.id)}>
+                        #{contrato.id} · {contrato.nombre}
+                        {contrato.proveedor_nombre ? ` · ${contrato.proveedor_nombre}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    disabled={!contratoId || isLoadingContrato}
+                    onClick={async () => {
+                      if (!contratoId) return;
+                      setIsLoadingContrato(true);
+                      try {
+                        const docs = await fetchContractDocuments(Number(contratoId));
+                        const latest = docs.find(
+                          (d) => d.markdown_text && (d.kind === "CORREGIDO" || d.kind === "BORRADOR_AI" || d.kind === "DEFINITIVO_AI")
+                        );
+                        if (latest?.markdown_text) {
+                          const citas = latest.metadata?.citas_legales ?? [];
+                          const citasMeta = latest.metadata?.citas_legales_metadata ?? null;
+                          setResult({
+                            documento_markdown: latest.markdown_text,
+                            idioma: (latest.idioma as "es" | "en") || "es",
+                            tono: (latest.tono as "formal" | "neutral") || "formal",
+                            modelo: latest.modelo || "",
+                            citas_legales: citas,
+                            citas_legales_metadata: citasMeta,
+                            contrato_id: Number(contratoId),
+                            documento_id: latest.id,
+                          });
+                          setEditableMarkdown(latest.markdown_text);
+                          setRedlineBase(latest.markdown_text);
+                          alertSuccess("Contrato cargado", `Se cargó el documento #${latest.id} (${latest.kind})`);
+                        } else {
+                          alertInfo("Sin borrador", "Este contrato no tiene documentos con texto generado.");
+                        }
+                      } catch (error) {
+                        const msg = error instanceof Error ? error.message : "Error al cargar";
+                        alertError("No pudimos cargar el contrato", msg);
+                      } finally {
+                        setIsLoadingContrato(false);
+                      }
+                    }}
+                    className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50"
+                  >
+                    {isLoadingContrato ? "Cargando..." : "Recargar"}
+                  </button>
+                </div>
                 <p className="mt-1 text-xs text-slate-500">
-                  Si eliges un contrato, el borrador quedará guardado en su expediente.
+                  Elige un contrato para asociar el borrador, o haz clic en Recargar para ver su último documento.
                 </p>
               </div>
 
