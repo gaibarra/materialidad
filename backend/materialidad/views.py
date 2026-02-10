@@ -20,6 +20,42 @@ from tenancy.context import TenantContext
 
 logger = logging.getLogger(__name__)
 
+
+def _extract_document_text(uploaded_file) -> str:
+    if not uploaded_file:
+        return ""
+    filename = (uploaded_file.name or "").lower()
+    extension = filename.split(".")[-1] if "." in filename else ""
+    try:
+        if extension in {"md", "txt"}:
+            content = uploaded_file.read()
+            if isinstance(content, bytes):
+                return content.decode("utf-8", errors="ignore")
+            return str(content)
+        if extension in {"docx"}:
+            from docx import Document
+
+            doc = Document(uploaded_file)
+            return "\n".join(p.text for p in doc.paragraphs if p.text)
+        if extension in {"pdf"}:
+            from pypdf import PdfReader
+
+            reader = PdfReader(uploaded_file)
+            chunks: list[str] = []
+            for page in reader.pages:
+                text = page.extract_text() or ""
+                if text:
+                    chunks.append(text)
+            return "\n".join(chunks)
+    except Exception as exc:
+        logger.warning("No se pudo extraer texto del archivo %s: %s", filename, exc)
+    finally:
+        try:
+            uploaded_file.seek(0)
+        except Exception:
+            pass
+    return ""
+
 from .ai.client import OpenAIClientError
 from .ai.clause_library import suggest_clauses
 from .ai.contracts import generate_contract_document, generate_definitive_contract
@@ -27,24 +63,25 @@ from .ai.citations import render_citations_markdown
 from .ai.redlines import analyze_redlines
 from .exporters import build_operacion_dossier_zip, markdown_to_docx_bytes
 from .models import (
+    AuditLog,
     Checklist,
     ChecklistItem,
-    CuentaBancaria,
+    ContractDocument,
     Contrato,
     ContratoTemplate,
+    CuentaBancaria,
     DashboardSnapshot,
     DeliverableRequirement,
-    EstadoCuenta,
-    OperacionEntregable,
     Empresa,
+    EstadoCuenta,
     LegalConsultation,
     LegalReferenceSource,
+    MovimientoBancario,
     Operacion,
     OperacionConciliacion,
-    RazonNegocioAprobacion,
-    MovimientoBancario,
+    OperacionEntregable,
     Proveedor,
-    AuditLog,
+    RazonNegocioAprobacion,
 )
 from .serializers import (
     ChecklistItemSerializer,
@@ -52,6 +89,8 @@ from .serializers import (
     ClauseSuggestionQuerySerializer,
     ClauseSuggestionSerializer,
     CuentaBancariaSerializer,
+    ContractDocumentCreateSerializer,
+    ContractDocumentSerializer,
     ContratoGeneracionSerializer,
     ContratoDocxExportSerializer,
     ContratoSerializer,
@@ -201,10 +240,31 @@ class ContratoViewSet(viewsets.ModelViewSet):
         serializer = ContratoGeneracionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+        contrato = data.get("contrato")
+        template = data.get("template")
+        if contrato is None:
+            categoria = template.categoria if template else Contrato.Categoria.BASE_CORPORATIVA
+            proceso = template.proceso if template else Contrato.ProcesoNegocio.OPERACIONES
+            tipo_empresa = template.tipo_empresa if template else Contrato.TipoEmpresa.MIXTA
+            nombre_base = template.nombre if template else "Contrato generado"
+            contrato = Contrato.objects.create(
+                empresa=data["empresa"],
+                template=template,
+                nombre=f"{nombre_base} - {data['empresa'].razon_social}",
+                categoria=categoria,
+                proceso=proceso,
+                tipo_empresa=tipo_empresa,
+                descripcion=(data.get("resumen_necesidades") or (template.descripcion if template else "")),
+                razon_negocio=data.get("razon_negocio", ""),
+                beneficio_economico_esperado=data.get("beneficio_economico_esperado"),
+                beneficio_fiscal_estimado=data.get("beneficio_fiscal_estimado"),
+                fecha_cierta_requerida=data.get("fecha_cierta_requerida", False),
+                metadata={"generado_por": "ai"},
+            )
         try:
             resultado = generate_contract_document(
                 empresa=data["empresa"],
-                template=data.get("template"),
+                template=template,
                 razon_negocio=data.get("razon_negocio"),
                 beneficio_economico_esperado=data.get("beneficio_economico_esperado"),
                 beneficio_fiscal_estimado=data.get("beneficio_fiscal_estimado"),
@@ -214,6 +274,21 @@ class ContratoViewSet(viewsets.ModelViewSet):
                 idioma=data.get("idioma", "es"),
                 tono=data.get("tono", "formal"),
             )
+            documento = ContractDocument.objects.create(
+                contrato=contrato,
+                kind=ContractDocument.Kind.BORRADOR_AI,
+                source=ContractDocument.Source.AI,
+                idioma=resultado.get("idioma", "es"),
+                tono=resultado.get("tono", "formal"),
+                modelo=resultado.get("modelo", ""),
+                markdown_text=resultado.get("documento_markdown", ""),
+                metadata={
+                    "citas_legales": resultado.get("citas_legales") or [],
+                    "citas_legales_metadata": resultado.get("citas_legales_metadata") or {},
+                },
+            )
+            resultado["contrato_id"] = contrato.id
+            resultado["documento_id"] = documento.id
         except ImproperlyConfigured as exc:
             return Response(
                 {"detail": str(exc)},
@@ -265,9 +340,82 @@ class ContratoViewSet(viewsets.ModelViewSet):
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         response["Content-Length"] = str(len(file_bytes))
         response["X-Contrato-Modelo"] = definitivo["modelo"]
-        response["X-Contrato-Citas"] = json.dumps(citas_legales, ensure_ascii=True)
-        response["X-Contrato-Citas-Metadata"] = json.dumps(citas_metadata, ensure_ascii=True)
         return response
+
+    @action(detail=True, methods=["get"], url_path="documentos")
+    def listar_documentos(self, request, *args, **kwargs):
+        contrato = self.get_object()
+        documentos = contrato.documentos.all().order_by("-created_at")
+        data = ContractDocumentSerializer(documentos, many=True).data
+        return Response(data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path="documentos")
+    def crear_documento(self, request, *args, **kwargs):
+        contrato = self.get_object()
+        serializer = ContractDocumentCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        payload = serializer.validated_data
+        archivo = payload.get("archivo")
+        markdown_text = (payload.get("markdown_text") or "").strip()
+        extracted_text = _extract_document_text(archivo) if archivo else ""
+        archivo_nombre = archivo.name if archivo else ""
+
+        documento = ContractDocument.objects.create(
+            contrato=contrato,
+            kind=payload["kind"],
+            source=payload["source"],
+            idioma=payload["idioma"],
+            tono=payload["tono"],
+            modelo=payload.get("modelo", ""),
+            archivo=archivo,
+            archivo_nombre=archivo_nombre,
+            markdown_text=markdown_text,
+            extracted_text=extracted_text.strip(),
+        )
+        data = ContractDocumentSerializer(documento).data
+        return Response(data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"], url_path=r"documentos/(?P<documento_id>\d+)/corregir")
+    def corregir_documento(self, request, *args, **kwargs):
+        contrato = self.get_object()
+        documento_id = kwargs.get("documento_id")
+        try:
+            documento = contrato.documentos.get(pk=documento_id)
+        except ContractDocument.DoesNotExist:
+            return Response({"detail": "Documento no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        base_text = (documento.markdown_text or documento.extracted_text or "").strip()
+        if not base_text:
+            return Response({"detail": "El documento no contiene texto legible"}, status=status.HTTP_400_BAD_REQUEST)
+
+        idioma = request.data.get("idioma", "es")
+        try:
+            definitivo = generate_definitive_contract(base_text, idioma=idioma)
+        except ImproperlyConfigured as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except OpenAIClientError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+        nuevo = ContractDocument.objects.create(
+            contrato=contrato,
+            kind=ContractDocument.Kind.CORREGIDO,
+            source=ContractDocument.Source.AI,
+            idioma=idioma,
+            tono="formal",
+            modelo=definitivo.get("modelo", ""),
+            markdown_text=definitivo.get("documento_markdown", ""),
+            metadata={
+                "documento_origen_id": documento.id,
+                "citas_legales": definitivo.get("citas_legales") or [],
+                "citas_legales_metadata": definitivo.get("citas_legales_metadata") or {},
+            },
+        )
+
+        definitivo["idioma"] = idioma
+        definitivo["tono"] = "formal"
+        definitivo["contrato_id"] = contrato.id
+        definitivo["documento_id"] = nuevo.id
+        return Response(definitivo, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"], url_path="firma-logistica")
     def firma_logistica(self, request, *args, **kwargs):

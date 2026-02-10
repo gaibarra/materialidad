@@ -7,24 +7,25 @@ from django.utils.text import slugify
 from rest_framework import serializers
 
 from .models import (
+    AuditLog,
     Checklist,
     ChecklistItem,
-    CuentaBancaria,
+    ContractDocument,
     Contrato,
     ContratoTemplate,
-    EstadoCuenta,
+    CuentaBancaria,
     DashboardSnapshot,
     DeliverableRequirement,
     Empresa,
+    EstadoCuenta,
     LegalConsultation,
     LegalReferenceSource,
-    Operacion,
-    OperacionEntregable,
-    OperacionConciliacion,
-    RazonNegocioAprobacion,
     MovimientoBancario,
+    Operacion,
+    OperacionConciliacion,
+    OperacionEntregable,
     Proveedor,
-    AuditLog,
+    RazonNegocioAprobacion,
 )
 from .services import trigger_proveedor_validacion, trigger_validacion_proveedor
 
@@ -780,6 +781,11 @@ class ContratoTemplateSerializer(serializers.ModelSerializer):
 
 
 class ContratoGeneracionSerializer(serializers.Serializer):
+    contrato = serializers.PrimaryKeyRelatedField(
+        queryset=Contrato.objects.all(),
+        required=False,
+        allow_null=True,
+    )
     empresa = serializers.PrimaryKeyRelatedField(queryset=Empresa.objects.all())
     template = serializers.PrimaryKeyRelatedField(
         queryset=ContratoTemplate.objects.filter(activo=True),
@@ -820,6 +826,46 @@ class ContratoDocxExportSerializer(serializers.Serializer):
     documento_markdown = serializers.CharField()
     nombre_archivo = serializers.CharField(max_length=128, required=False, allow_blank=True)
     idioma = serializers.ChoiceField(choices=("es", "en"), default="es")
+
+
+class ContractDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractDocument
+        fields = (
+            "id",
+            "contrato",
+            "kind",
+            "source",
+            "idioma",
+            "tono",
+            "modelo",
+            "archivo",
+            "archivo_nombre",
+            "markdown_text",
+            "extracted_text",
+            "metadata",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = ("created_at", "updated_at")
+
+
+class ContractDocumentCreateSerializer(serializers.Serializer):
+    kind = serializers.ChoiceField(choices=ContractDocument.Kind.choices, default=ContractDocument.Kind.SUBIDO)
+    source = serializers.ChoiceField(choices=ContractDocument.Source.choices, default=ContractDocument.Source.UPLOAD)
+    idioma = serializers.ChoiceField(choices=("es", "en"), default="es")
+    tono = serializers.ChoiceField(choices=("formal", "neutral"), default="formal")
+    modelo = serializers.CharField(max_length=128, required=False, allow_blank=True)
+    archivo = serializers.FileField(required=False)
+    markdown_text = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        archivo = attrs.get("archivo")
+        markdown_text = attrs.get("markdown_text", "")
+        if not archivo and not markdown_text.strip():
+            raise serializers.ValidationError("Debes enviar un archivo o un texto en Markdown")
+        return attrs
 
 
 class ClauseSuggestionQuerySerializer(serializers.Serializer):

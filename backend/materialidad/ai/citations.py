@@ -100,8 +100,11 @@ CITATION_SYSTEM_PROMPT = dedent(
       (por ejemplo Fiscal, Legal Corporativo, PLD, Seguridad Social).
     - Cuando asocies un criterio del SAT, incluye su referencia oficial, estatus y notas que
       aclaren si es controvertido.
-    - Prefiere enlaces oficiales (DOF, SAT, Suprema Corte). Si no existe URL pública, menciona el
-      documento fuente en texto.
+        - Prefiere enlaces oficiales (DOF, SAT, Suprema Corte, IMSS). Si no existe URL pública, menciona el
+            documento fuente en texto.
+        - No inventes fuentes: si no estás seguro, omite la cita.
+        - Evita citas tangenciales: prioriza las que impactan obligaciones fiscales, validez y ejecución.
+        - Procura que la mayoría de citas tengan fuente oficial verificable.
     - Devuelve únicamente JSON válido con la forma indicada. No añadas comentarios ni texto extra.
     """
 )

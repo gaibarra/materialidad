@@ -41,6 +41,7 @@ export type CitationCacheMetadata = {
 };
 
 export type ContractGenerationPayload = {
+  contrato?: number | null;
   empresa: number;
   template?: number | null;
   razon_negocio?: string;
@@ -60,6 +61,25 @@ export type ContractGenerationResponse = {
   modelo: string;
   citas_legales: LegalCitation[];
   citas_legales_metadata?: CitationCacheMetadata | null;
+  contrato_id?: number;
+  documento_id?: number;
+};
+
+export type ContractDocument = {
+  id: number;
+  contrato: number;
+  kind: string;
+  source: string;
+  idioma: string;
+  tono: string;
+  modelo: string;
+  archivo?: string | null;
+  archivo_nombre?: string | null;
+  markdown_text?: string;
+  extracted_text?: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
 };
 
 export type ContractDocxExportPayload = {
@@ -229,6 +249,32 @@ export async function exportContractDocx(
 
   const blob = await response.blob();
   return { blob, filename, citas_legales, citas_legales_metadata };
+}
+
+export async function uploadContractDocument(
+  contratoId: number,
+  formData: FormData
+): Promise<ContractDocument> {
+  const response = await apiFetchRaw(`/api/materialidad/contratos/${contratoId}/documentos/`, {
+    method: "POST",
+    body: formData,
+  });
+  return (await response.json()) as ContractDocument;
+}
+
+export async function correctContractDocument(
+  contratoId: number,
+  documentoId: number,
+  idioma: "es" | "en" = "es"
+): Promise<ContractGenerationResponse> {
+  return apiFetch<ContractGenerationResponse>(
+    `/api/materialidad/contratos/${contratoId}/documentos/${documentoId}/corregir/`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idioma }),
+    }
+  );
 }
 
 export async function fetchClauseSuggestions(

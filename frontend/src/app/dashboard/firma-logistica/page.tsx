@@ -1,15 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { DashboardShell } from "../../../components/DashboardShell";
 import { alertError, alertSuccess } from "../../../lib/alerts";
+import { apiFetch } from "../../../lib/api";
 import {
   actualizarFirmaLogistica,
   ContratoLogistica,
   EstadoLogistica,
   FirmaModalidad,
 } from "../../../lib/firma";
+
+type PaginatedResponse<T> = {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+};
+
+type ContratoLite = {
+  id: number;
+  nombre: string;
+  proveedor_nombre?: string | null;
+};
 
 const MODALIDADES: Array<{ value: FirmaModalidad; label: string; hint: string }> = [
   { value: "NOTARIAL", label: "Notarial (fecha cierta)", hint: "Protocolización con fedatario" },
@@ -38,6 +52,8 @@ function Pill({ label, tone = "emerald" }: { label: string; tone?: "emerald" | "
 
 export default function FirmaLogisticaPage() {
   const [contratoId, setContratoId] = useState<string>("");
+  const [contratos, setContratos] = useState<ContratoLite[]>([]);
+  const [loadingContratos, setLoadingContratos] = useState(false);
   const [firmaModalidad, setFirmaModalidad] = useState<FirmaModalidad>("NOTARIAL");
   const [logisticaEstado, setLogisticaEstado] = useState<EstadoLogistica>("PENDIENTE");
   const [fechaCita, setFechaCita] = useState<string>("");
@@ -58,6 +74,35 @@ export default function FirmaLogisticaPage() {
   const [notas, setNotas] = useState<string>("");
   const [resultado, setResultado] = useState<ContratoLogistica | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadContratos = async () => {
+      setLoadingContratos(true);
+      try {
+        const payload = await apiFetch<PaginatedResponse<ContratoLite> | ContratoLite[]>(
+          "/api/materialidad/contratos/?ordering=-created_at"
+        );
+        const list = Array.isArray(payload) ? payload : payload.results ?? [];
+        if (mounted) {
+          setContratos(list);
+        }
+      } catch (err) {
+        if (mounted) {
+          await alertError("No pudimos cargar contratos", (err as Error).message);
+        }
+      } finally {
+        if (mounted) {
+          setLoadingContratos(false);
+        }
+      }
+    };
+
+    void loadContratos();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleSubmit = async () => {
     const idNumber = Number(contratoId);
@@ -130,6 +175,23 @@ export default function FirmaLogisticaPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <p className="text-xs text-slate-300">ID de contrato</p>
+                <select
+                  className="mt-1 w-full rounded-2xl border border-white/20 bg-slate-900/60 px-3 py-2 text-white"
+                  value={contratoId}
+                  onChange={(e) => setContratoId(e.target.value)}
+                >
+                  <option value="">Selecciona un contrato</option>
+                  {loadingContratos && <option value="">Cargando contratos...</option>}
+                  {!loadingContratos && contratos.length === 0 && (
+                    <option value="">Sin contratos disponibles</option>
+                  )}
+                  {contratos.map((contrato) => (
+                    <option key={contrato.id} value={String(contrato.id)}>
+                      #{contrato.id} · {contrato.nombre}
+                      {contrato.proveedor_nombre ? ` · ${contrato.proveedor_nombre}` : ""}
+                    </option>
+                  ))}
+                </select>
                 <input
                   className="mt-1 w-full rounded-2xl border border-white/20 bg-slate-950/60 px-3 py-2 text-white"
                   placeholder="Ej. 42"

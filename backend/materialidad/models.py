@@ -537,6 +537,50 @@ class ContractCitationCache(models.Model):
         return f"Citas {self.documento_hash[:8]}"
 
 
+class ContractDocument(models.Model):
+    class Kind(models.TextChoices):
+        BORRADOR_AI = "BORRADOR_AI", "Borrador AI"
+        DEFINITIVO_AI = "DEFINITIVO_AI", "Definitivo AI"
+        SUBIDO = "SUBIDO", "Subido"
+        CORREGIDO = "CORREGIDO", "Corregido"
+
+    class Source(models.TextChoices):
+        AI = "AI", "Generado por IA"
+        UPLOAD = "UPLOAD", "Cargado por usuario"
+        MANUAL = "MANUAL", "Captura manual"
+
+    contrato = models.ForeignKey(
+        "Contrato",
+        on_delete=models.CASCADE,
+        related_name="documentos",
+    )
+    kind = models.CharField(max_length=32, choices=Kind.choices, default=Kind.BORRADOR_AI)
+    source = models.CharField(max_length=16, choices=Source.choices, default=Source.AI)
+    idioma = models.CharField(max_length=8, default="es")
+    tono = models.CharField(max_length=16, default="formal")
+    modelo = models.CharField(max_length=128, blank=True, default="")
+    archivo = models.FileField(upload_to="contratos/documentos/%Y/%m/", null=True, blank=True)
+    archivo_nombre = models.CharField(max_length=255, blank=True, default="")
+    markdown_text = models.TextField(blank=True, default="")
+    extracted_text = models.TextField(blank=True, default="")
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "materialidad_contract_document"
+        verbose_name = "Documento de contrato"
+        verbose_name_plural = "Documentos de contrato"
+        ordering = ("-created_at",)
+        indexes = [
+            models.Index(fields=["contrato", "kind"]),
+            models.Index(fields=["created_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"Documento {self.pk} {self.get_kind_display()}"
+
+
 class DashboardSnapshot(models.Model):
     tenant_slug = models.SlugField(max_length=255, db_index=True)
     payload = models.JSONField(default=dict, blank=True)

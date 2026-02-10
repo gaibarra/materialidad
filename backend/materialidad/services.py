@@ -121,21 +121,35 @@ def get_dashboard_metrics() -> dict[str, Any]:
 
     empresas_total = Empresa.objects.count()
     empresas_activas = Empresa.objects.filter(activo=True).count()
+    contratos_sin_vigencia = (
+        Contrato.objects.filter(activo=True)
+        .filter(Q(vigencia_inicio__isnull=True) | Q(vigencia_fin__isnull=True))
+        .count()
+    )
+    contratos_vigentes_qs = Contrato.objects.filter(
+        activo=True,
+        vigencia_inicio__isnull=False,
+        vigencia_fin__isnull=False,
+        vigencia_inicio__lte=today,
+        vigencia_fin__gte=today,
+    )
     empresas_con_contrato = (
-        Empresa.objects.filter(activo=True, contratos__activo=True).distinct().count()
+        Empresa.objects.filter(activo=True, contratos__in=contratos_vigentes_qs)
+        .distinct()
+        .count()
     )
 
-    contratos_vigentes = (
-        Contrato.objects.filter(activo=True)
-        .filter(Q(vigencia_fin__isnull=True) | Q(vigencia_fin__gte=today))
-        .count()
-    )
-    contratos_por_vencer = (
-        Contrato.objects.filter(activo=True, vigencia_fin__gte=today, vigencia_fin__lte=horizon)
-        .count()
-    )
+    contratos_vigentes = contratos_vigentes_qs.count()
+    contratos_por_vencer = contratos_vigentes_qs.filter(
+        vigencia_fin__gte=today, vigencia_fin__lte=horizon
+    ).count()
     contratos_vencidos = (
-        Contrato.objects.filter(activo=True, vigencia_fin__lt=today).count()
+        Contrato.objects.filter(
+            activo=True,
+            vigencia_inicio__isnull=False,
+            vigencia_fin__isnull=False,
+            vigencia_fin__lt=today,
+        ).count()
     )
 
     pendientes_estatus = [
@@ -180,6 +194,15 @@ def get_dashboard_metrics() -> dict[str, Any]:
                 "message": f"{contratos_por_vencer} contratos expiran en los próximos 30 días.",
             }
         )
+    if contratos_sin_vigencia:
+        insights.append(
+            {
+                "id": "contratos_sin_vigencia",
+                "title": "Contratos sin vigencia",
+                "severity": "info",
+                "message": f"{contratos_sin_vigencia} contratos no cuentan por falta de vigencia (inicio/fin).",
+            }
+        )
     if operaciones_pendientes:
         insights.append(
             {
@@ -221,6 +244,7 @@ def get_dashboard_metrics() -> dict[str, Any]:
             "vigentes": contratos_vigentes,
             "por_vencer_30": contratos_por_vencer,
             "vencidos": contratos_vencidos,
+            "sin_vigencia": contratos_sin_vigencia,
         },
         "operaciones": {
             "pendientes_validacion": operaciones_pendientes,

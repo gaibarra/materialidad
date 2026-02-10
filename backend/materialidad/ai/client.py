@@ -14,6 +14,9 @@ from openai import (
     NotFoundError,
     OpenAIError,
 )
+import logging
+
+logger = logging.getLogger("materialidad.ai")
 
 __all__ = [
     "ChatMessage",
@@ -198,6 +201,10 @@ class OpenAIClient:
         temperature: float,
         max_output_tokens: int,
     ) -> str:
+        def _supports_default_temperature_only(error: Exception) -> bool:
+            message = str(error).lower()
+            return "temperature" in message and "only the default" in message
+
         try:
             response = self._client.responses.create(
                 model=model_name,
@@ -210,24 +217,76 @@ class OpenAIClient:
                 f"Modelo {model_name} no disponible: {exc}"
             ) from exc
         except (APIError, APIConnectionError, APITimeoutError, OpenAIError) as exc:
-            raise OpenAIClientError(
-                f"Error al invocar el modelo de OpenAI: {exc}"
-            ) from exc
+            if _supports_default_temperature_only(exc):
+                try:
+                    response = self._client.responses.create(
+                        model=model_name,
+                        input=payload,
+                        max_output_tokens=max_output_tokens,
+                    )
+                except NotFoundError as nested_exc:
+                    raise OpenAIModelNotFoundError(
+                        f"Modelo {model_name} no disponible: {nested_exc}"
+                    ) from nested_exc
+                except (APIError, APIConnectionError, APITimeoutError, OpenAIError) as nested_exc:
+                    raise OpenAIClientError(
+                        f"Error al invocar el modelo de OpenAI: {nested_exc}"
+                    ) from nested_exc
+            else:
+                raise OpenAIClientError(
+                    f"Error al invocar el modelo de OpenAI: {exc}"
+                ) from exc
 
         text = getattr(response, "output_text", None)
         if text:
             return text.strip()
 
+        def _extract_text(value: object) -> list[str]:
+            parts: list[str] = []
+            if isinstance(value, str):
+                if value.strip():
+                    parts.append(value)
+                return parts
+            if isinstance(value, dict):
+                text_value = value.get("text") or value.get("output_text")
+                if isinstance(text_value, str) and text_value.strip():
+                    parts.append(text_value)
+                content_value = value.get("content")
+                if isinstance(content_value, list):
+                    for item in content_value:
+                        parts.extend(_extract_text(item))
+                return parts
+            text_value = getattr(value, "text", None)
+            if isinstance(text_value, str) and text_value.strip():
+                parts.append(text_value)
+            content_value = getattr(value, "content", None)
+            if isinstance(content_value, list):
+                for item in content_value:
+                    parts.extend(_extract_text(item))
+            return parts
+
         chunks: list[str] = []
         for item in getattr(response, "output", []) or []:
-            if getattr(item, "type", None) != "message":
+            item_type = getattr(item, "type", None) or (item.get("type") if isinstance(item, dict) else None)
+            if item_type and item_type != "message":
                 continue
-            for content in getattr(item, "content", []) or []:
-                chunk = getattr(content, "text", None)
-                if chunk:
-                    chunks.append(chunk)
+            content = getattr(item, "content", None) if not isinstance(item, dict) else item.get("content")
+            if isinstance(content, list):
+                for content_item in content:
+                    chunks.extend(_extract_text(content_item))
+            else:
+                chunks.extend(_extract_text(item))
 
         if not chunks:
+            try:
+                response_summary = {
+                    "type": type(response).__name__,
+                    "has_output_text": bool(getattr(response, "output_text", None)),
+                    "output_len": len(getattr(response, "output", []) or []),
+                }
+                logger.warning("OpenAI response sin texto utilizable: %s", response_summary)
+            except Exception:
+                logger.warning("OpenAI response sin texto utilizable y sin resumen")
             raise OpenAIClientError(
                 "La respuesta de OpenAI no incluyó texto utilizable"
             )
@@ -242,6 +301,14 @@ class OpenAIClient:
         temperature: float,
         max_output_tokens: int,
     ) -> str:
+        def _supports_max_completion_tokens_error(error: Exception) -> bool:
+            message = str(error).lower()
+            return "max_tokens" in message and "max_completion_tokens" in message
+
+        def _supports_default_temperature_only(error: Exception) -> bool:
+            message = str(error).lower()
+            return "temperature" in message and "only the default" in message
+
         try:
             response = self._client.chat.completions.create(
                 model=model_name,
@@ -254,9 +321,57 @@ class OpenAIClient:
                 f"Modelo {model_name} no disponible: {exc}"
             ) from exc
         except (APIError, APIConnectionError, APITimeoutError, OpenAIError) as exc:
-            raise OpenAIClientError(
-                f"Error al invocar el modelo de OpenAI: {exc}"
-            ) from exc
+            if _supports_max_completion_tokens_error(exc):
+                try:
+                    response = self._client.chat.completions.create(
+                        model=model_name,
+                        messages=payload,
+                        temperature=temperature,
+                        max_completion_tokens=max_output_tokens,
+                    )
+                except NotFoundError as nested_exc:
+                    raise OpenAIModelNotFoundError(
+                        f"Modelo {model_name} no disponible: {nested_exc}"
+                    ) from nested_exc
+                except (APIError, APIConnectionError, APITimeoutError, OpenAIError) as nested_exc:
+                    if _supports_default_temperature_only(nested_exc):
+                        try:
+                            response = self._client.chat.completions.create(
+                                model=model_name,
+                                messages=payload,
+                                max_completion_tokens=max_output_tokens,
+                            )
+                        except NotFoundError as temp_exc:
+                            raise OpenAIModelNotFoundError(
+                                f"Modelo {model_name} no disponible: {temp_exc}"
+                            ) from temp_exc
+                        except (APIError, APIConnectionError, APITimeoutError, OpenAIError) as temp_exc:
+                            raise OpenAIClientError(
+                                f"Error al invocar el modelo de OpenAI: {temp_exc}"
+                            ) from temp_exc
+                    else:
+                        raise OpenAIClientError(
+                            f"Error al invocar el modelo de OpenAI: {nested_exc}"
+                        ) from nested_exc
+            elif _supports_default_temperature_only(exc):
+                try:
+                    response = self._client.chat.completions.create(
+                        model=model_name,
+                        messages=payload,
+                        max_tokens=max_output_tokens,
+                    )
+                except NotFoundError as nested_exc:
+                    raise OpenAIModelNotFoundError(
+                        f"Modelo {model_name} no disponible: {nested_exc}"
+                    ) from nested_exc
+                except (APIError, APIConnectionError, APITimeoutError, OpenAIError) as nested_exc:
+                    raise OpenAIClientError(
+                        f"Error al invocar el modelo de OpenAI: {nested_exc}"
+                    ) from nested_exc
+            else:
+                raise OpenAIClientError(
+                    f"Error al invocar el modelo de OpenAI: {exc}"
+                ) from exc
 
         choices = getattr(response, "choices", None) or []
         if not choices:
@@ -275,12 +390,24 @@ class OpenAIClient:
             text_parts: list[str] = []
             for item in content or []:
                 if isinstance(item, dict):
-                    value = item.get("text")
+                    value = item.get("text") or item.get("output_text")
+                    if value:
+                        text_parts.append(value)
+                else:
+                    value = getattr(item, "text", None)
                     if value:
                         text_parts.append(value)
             text = "".join(text_parts)
 
         if not text:
+            try:
+                content_summary = {
+                    "content_type": type(content).__name__,
+                    "content_len": len(content) if hasattr(content, "__len__") else None,
+                }
+                logger.warning("OpenAI chat sin texto utilizable: %s", content_summary)
+            except Exception:
+                logger.warning("OpenAI chat sin texto utilizable y sin resumen")
             raise OpenAIClientError(
                 "La respuesta de OpenAI no incluyó texto utilizable"
             )

@@ -44,6 +44,7 @@ type DashboardMetrics = {
     vigentes: number;
     por_vencer_30: number;
     vencidos: number;
+    sin_vigencia: number;
   };
   operaciones: {
     pendientes_validacion: number;
@@ -414,14 +415,18 @@ export default function DashboardPage() {
         id: "cobertura",
         title: "Cobertura contractual",
         value: formatPercentage(metrics.empresas.cobertura_contractual),
-        helper: `${metrics.empresas.con_contrato || 0}/${metrics.empresas.activas || 0} empresas con contratos vigentes`,
+        helper: `${metrics.empresas.con_contrato || 0}/${metrics.empresas.activas || 0} empresas con contratos vigentes${
+          metrics.contratos.sin_vigencia ? ` · ${metrics.contratos.sin_vigencia} sin vigencia` : ""
+        }`,
         tone: coverageTone,
       },
       {
         id: "contratos_vencer",
         title: "Contratos por vencer (30d)",
         value: formatNumber(metrics.contratos.por_vencer_30),
-        helper: `${formatNumber(metrics.contratos.vigentes)} vigentes`,
+        helper: `${formatNumber(metrics.contratos.vigentes)} vigentes${
+          metrics.contratos.sin_vigencia ? ` · ${formatNumber(metrics.contratos.sin_vigencia)} sin vigencia` : ""
+        }`,
         tone: metrics.contratos.por_vencer_30 > 0 ? "alert" : "positive",
       },
       {
