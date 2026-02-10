@@ -99,6 +99,7 @@ from .serializers import (
     ContratoDocxExportSerializer,
     ContratoSerializer,
     ContratoTemplateSerializer,
+    ImportarExternoSerializer,
     PromoverPlantillaSerializer,
     DashboardSnapshotSerializer,
     DeliverableRequirementSerializer,
@@ -534,6 +535,93 @@ class ContratoViewSet(viewsets.ModelViewSet):
         except OpenAIClientError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
         return Response(result, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["post"], url_path="importar-externo")
+    def importar_externo(self, request, *args, **kwargs):
+        """Importa un contrato externo: crea Contrato, sube archivo y corrige con IA."""
+        serializer = ImportarExternoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        empresa = data["empresa"]
+        template = data.get("template")
+        idioma = data.get("idioma", "es")
+        tono = data.get("tono", "formal")
+        archivo = data["archivo"]
+
+        # --- Auto-crear Contrato ---
+        categoria = template.categoria if template else Contrato.Categoria.BASE_CORPORATIVA
+        proceso = template.proceso if template else Contrato.ProcesoNegocio.OPERACIONES
+        tipo_empresa = template.tipo_empresa if template else Contrato.TipoEmpresa.MIXTA
+        contrato = Contrato.objects.create(
+            empresa=empresa,
+            template=template,
+            nombre=f"Contrato externo importado \u2014 {empresa.razon_social}",
+            categoria=categoria,
+            proceso=proceso,
+            tipo_empresa=tipo_empresa,
+            descripcion="Importado desde archivo externo para revisión AI",
+            metadata={"generado_por": "importar_externo"},
+        )
+
+        # --- Subir documento ---
+        extracted_text = _extract_document_text(archivo)
+        if not extracted_text.strip():
+            return Response(
+                {"detail": "No pudimos extraer texto del archivo. Verifica que no esté vacío o sea imagen."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        doc_subido = ContractDocument.objects.create(
+            contrato=contrato,
+            kind=ContractDocument.Kind.SUBIDO,
+            source=ContractDocument.Source.UPLOAD,
+            idioma=idioma,
+            tono=tono,
+            archivo=archivo,
+            archivo_nombre=archivo.name if archivo else "",
+            extracted_text=extracted_text.strip(),
+        )
+
+        # --- Corregir con IA ---
+        try:
+            definitivo = generate_definitive_contract(extracted_text.strip(), idioma=idioma)
+        except ImproperlyConfigured as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except OpenAIClientError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+        doc_corregido = ContractDocument.objects.create(
+            contrato=contrato,
+            kind=ContractDocument.Kind.CORREGIDO,
+            source=ContractDocument.Source.AI,
+            idioma=idioma,
+            tono=tono,
+            modelo=definitivo.get("modelo", ""),
+            markdown_text=definitivo.get("documento_markdown", ""),
+            metadata={
+                "documento_origen_id": doc_subido.id,
+                "citas_legales": definitivo.get("citas_legales") or [],
+                "citas_legales_metadata": definitivo.get("citas_legales_metadata") or {},
+            },
+        )
+
+        resultado = {
+            "documento_markdown": definitivo.get("documento_markdown", ""),
+            "idioma": idioma,
+            "tono": tono,
+            "modelo": definitivo.get("modelo", ""),
+            "citas_legales": definitivo.get("citas_legales") or [],
+            "citas_legales_metadata": definitivo.get("citas_legales_metadata") or {},
+            "contrato_id": contrato.id,
+            "documento_id": doc_corregido.id,
+        }
+        _audit(request, "contrato_externo_importado", contrato, changes={
+            "archivo": archivo.name,
+            "doc_subido_id": doc_subido.id,
+            "doc_corregido_id": doc_corregido.id,
+        })
+        return Response(resultado, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["post"], url_path="promover-plantilla")
     def promover_plantilla(self, request, *args, **kwargs):

@@ -869,6 +869,19 @@ class ContractDocumentCreateSerializer(serializers.Serializer):
         return attrs
 
 
+class ImportarExternoSerializer(serializers.Serializer):
+    """Importa un contrato externo: crea Contrato + sube archivo + corrige con IA."""
+    empresa = serializers.PrimaryKeyRelatedField(queryset=Empresa.objects.all())
+    template = serializers.PrimaryKeyRelatedField(
+        queryset=ContratoTemplate.objects.filter(activo=True),
+        required=False,
+        allow_null=True,
+    )
+    archivo = serializers.FileField()
+    idioma = serializers.ChoiceField(choices=("es", "en"), default="es")
+    tono = serializers.ChoiceField(choices=("formal", "neutral"), default="formal")
+
+
 class ClauseSuggestionQuerySerializer(serializers.Serializer):
     categoria = serializers.ChoiceField(
         choices=Contrato.Categoria.choices,

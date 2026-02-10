@@ -23,6 +23,7 @@ import {
   CitationCacheMetadata,
   uploadContractDocument,
   correctContractDocument,
+  importExternalContract,
   ClauseSuggestion,
   fetchClauseSuggestions,
   analyzeRedlines,
@@ -111,7 +112,7 @@ export default function ContratosPage() {
   const [isAnalyzingRedlines, setIsAnalyzingRedlines] = useState(false);
   const [redlineResult, setRedlineResult] = useState<RedlineAnalysis | null>(null);
   const [optionsErrorHint, setOptionsErrorHint] = useState<string | null>(null);
-  const [uploadContratoId, setUploadContratoId] = useState<string>("");
+  const [uploadEmpresaId, setUploadEmpresaId] = useState<string>("");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [editableMarkdown, setEditableMarkdown] = useState("");
@@ -319,9 +320,8 @@ export default function ContratosPage() {
   };
 
   const handleImportExternal = async () => {
-    const contratoSeleccionado = uploadContratoId || contratoId;
-    if (!contratoSeleccionado) {
-      alertInfo("Falta contrato", "Selecciona el contrato al que quieres asociar el documento.");
+    if (!uploadEmpresaId) {
+      alertInfo("Falta empresa", "Selecciona la empresa a la que pertenece el contrato.");
       return;
     }
     if (!uploadFile) {
@@ -332,22 +332,22 @@ export default function ContratosPage() {
     setIsImporting(true);
     try {
       const formData = new FormData();
+      formData.append("empresa", uploadEmpresaId);
       formData.append("archivo", uploadFile);
-      formData.append("kind", "SUBIDO");
-      formData.append("source", "UPLOAD");
       formData.append("idioma", formState.idioma);
       formData.append("tono", formState.tono);
 
-      const documento = await uploadContractDocument(Number(contratoSeleccionado), formData);
-      const corrected = await correctContractDocument(
-        Number(contratoSeleccionado),
-        documento.id,
-        formState.idioma
-      );
+      const corrected = await importExternalContract(formData);
       setResult(corrected);
       setEditableMarkdown(corrected.documento_markdown);
       setRedlineBase(corrected.documento_markdown);
-      alertSuccess("Contrato corregido", "Revisa el borrador actualizado y expórtalo si es necesario.");
+      if (corrected.contrato_id) {
+        setContratoId(String(corrected.contrato_id));
+      }
+      alertSuccess(
+        "Contrato importado y corregido",
+        "Se creó un nuevo contrato y se generó la versión corregida. Revisa el borrador y expórtalo."
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : "Intenta nuevamente";
       alertError("No pudimos procesar el contrato externo", message);
@@ -668,28 +668,23 @@ export default function ContratosPage() {
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex flex-col gap-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">Contratos externos</p>
-                <h3 className="text-lg font-semibold text-slate-900">Cargar contrato vigente y corregirlo</h3>
+                <h3 className="text-lg font-semibold text-slate-900">Importar contrato externo</h3>
                 <p className="text-sm text-slate-600">
-                  Sube un contrato externo (PDF/DOCX/TXT) para revisarlo y generar una versión que cumpla con materialidad.
+                  Sube un contrato externo (PDF/DOCX/TXT) y crearemos automáticamente un nuevo expediente con la versión corregida por IA.
                 </p>
               </div>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Contrato destino</label>
+                  <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Empresa</label>
                   <select
-                    value={uploadContratoId}
-                    onChange={(event) => setUploadContratoId(event.target.value)}
+                    value={uploadEmpresaId}
+                    onChange={(event) => setUploadEmpresaId(event.target.value)}
                     className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                   >
-                    <option value="">Selecciona un contrato</option>
-                    {isLoadingContratos && <option value="">Cargando contratos...</option>}
-                    {!isLoadingContratos && contratos.length === 0 && (
-                      <option value="">Sin contratos registrados</option>
-                    )}
-                    {contratos.map((contrato) => (
-                      <option key={contrato.id} value={String(contrato.id)}>
-                        #{contrato.id} · {contrato.nombre}
-                        {contrato.proveedor_nombre ? ` · ${contrato.proveedor_nombre}` : ""}
+                    <option value="">Selecciona una empresa</option>
+                    {empresas.map((empresa) => (
+                      <option key={empresa.id} value={String(empresa.id)}>
+                        {empresa.razon_social} ({empresa.rfc})
                       </option>
                     ))}
                   </select>
@@ -711,7 +706,7 @@ export default function ContratosPage() {
                   disabled={isImporting}
                   className="flex-1 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
                 >
-                  {isImporting ? "Procesando..." : "Analizar y corregir contrato"}
+                  {isImporting ? "Importando y corrigiendo..." : "Importar y corregir contrato"}
                 </button>
               </div>
             </div>

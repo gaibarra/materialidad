@@ -374,3 +374,18 @@ export function promoverPlantilla(
     }
   );
 }
+
+/* ───── Importar Contrato Externo ───── */
+
+export async function importExternalContract(
+  formData: FormData
+): Promise<ContractGenerationResponse> {
+  const response = await apiFetchRaw(
+    "/api/materialidad/contratos/importar-externo/",
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
+  return (await response.json()) as ContractGenerationResponse;
+}
