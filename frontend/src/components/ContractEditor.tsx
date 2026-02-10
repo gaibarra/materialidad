@@ -114,6 +114,7 @@ export function ContractEditor({
   className,
 }: ContractEditorProps) {
   const [mode, setMode] = useState<"editor" | "preview">("editor");
+  const [hasSelection, setHasSelection] = useState(false);
 
   const initialHtml = useMemo(() => markdownToHtml(content), [content]);
 
@@ -135,6 +136,9 @@ export function ContractEditor({
         const md = htmlToMarkdown(ed.getHTML());
         onUpdate(md);
       }
+    },
+    onSelectionUpdate: ({ editor: ed }) => {
+      setHasSelection(!ed.state.selection.empty);
     },
     editorProps: {
       attributes: {
@@ -327,7 +331,7 @@ export function ContractEditor({
           <button
             type="button"
             onClick={handleOptimize}
-            disabled={readOnly || isOptimizing || editor.state.selection.empty}
+            disabled={readOnly || isOptimizing || !hasSelection}
             title="Selecciona texto y haz clic para mejorar la cláusula con IA"
             className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:from-violet-400 hover:to-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed"
           >
