@@ -120,6 +120,7 @@ from .models import (
     DeliverableRequirement,
     Empresa,
     EstadoCuenta,
+    Fedatario,
     LegalConsultation,
     LegalReferenceSource,
     MovimientoBancario,
@@ -143,6 +144,7 @@ from .serializers import (
     ContratoDocxExportSerializer,
     ContratoSerializer,
     ContratoTemplateSerializer,
+    FedatarioSerializer,
     ImportarExternoSerializer,
     PromoverPlantillaSerializer,
     DashboardSnapshotSerializer,
@@ -205,6 +207,14 @@ class EmpresaViewSet(viewsets.ModelViewSet):
     search_fields = ("razon_social", "rfc")
     ordering_fields = ("razon_social", "created_at")
     filterset_fields = ("regimen_fiscal", "activo", "pais")
+
+
+class FedatarioViewSet(viewsets.ModelViewSet):
+    serializer_class = FedatarioSerializer
+    queryset = Fedatario.objects.all().order_by("nombre")
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    search_fields = ("nombre", "numero_notaria", "estado", "ciudad", "email")
+    ordering_fields = ("nombre", "estado", "created_at")
 
 
 class ProveedorViewSet(viewsets.ModelViewSet):

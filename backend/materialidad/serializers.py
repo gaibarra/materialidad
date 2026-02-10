@@ -19,6 +19,7 @@ from .models import (
     DeliverableRequirement,
     Empresa,
     EstadoCuenta,
+    Fedatario,
     LegalConsultation,
     LegalReferenceSource,
     MovimientoBancario,
@@ -96,6 +97,40 @@ class EmpresaSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         )
+
+
+class FedatarioSerializer(serializers.ModelSerializer):
+    display_label = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Fedatario
+        fields = (
+            "id",
+            "nombre",
+            "tipo",
+            "numero_notaria",
+            "estado",
+            "ciudad",
+            "direccion",
+            "telefono",
+            "telefono_alterno",
+            "email",
+            "rfc",
+            "cedula_profesional",
+            "horario_atencion",
+            "contacto_asistente",
+            "contacto_asistente_tel",
+            "contacto_asistente_email",
+            "notas",
+            "activo",
+            "display_label",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = ("created_at", "updated_at", "display_label")
+
+    def get_display_label(self, obj) -> str:
+        return str(obj)
 
 
 class ProveedorSerializer(serializers.ModelSerializer):

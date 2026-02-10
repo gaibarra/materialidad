@@ -7,6 +7,7 @@ from .models import (
     Contrato,
     ContratoTemplate,
     Empresa,
+    Fedatario,
     LegalReferenceSource,
     Operacion,
     Proveedor,
@@ -27,6 +28,14 @@ class ProveedorAdmin(admin.ModelAdmin):
     list_display = ("razon_social", "rfc", "pais", "estatus_sat", "estatus_69b", "riesgo_fiscal")
     search_fields = ("razon_social", "rfc")
     list_filter = ("pais", "estatus_sat", "estatus_69b", "riesgo_fiscal")
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(Fedatario)
+class FedatarioAdmin(admin.ModelAdmin):
+    list_display = ("nombre", "tipo", "numero_notaria", "estado", "ciudad", "telefono", "email", "activo")
+    search_fields = ("nombre", "numero_notaria", "estado", "ciudad", "email")
+    list_filter = ("tipo", "estado", "activo")
     readonly_fields = ("created_at", "updated_at")
 
 

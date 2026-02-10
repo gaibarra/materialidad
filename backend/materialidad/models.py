@@ -119,6 +119,53 @@ class Proveedor(models.Model):
         return self.razon_social
 
 
+class Fedatario(models.Model):
+    """Catálogo de fedatarios (notarios / corredores públicos)."""
+
+    class TipoFedatario(models.TextChoices):
+        NOTARIO = "NOTARIO", "Notario público"
+        CORREDOR = "CORREDOR", "Corredor público"
+        OTRO = "OTRO", "Otro fedatario"
+
+    nombre = models.CharField(max_length=255, help_text="Nombre completo del fedatario")
+    tipo = models.CharField(
+        max_length=16,
+        choices=TipoFedatario.choices,
+        default=TipoFedatario.NOTARIO,
+    )
+    numero_notaria = models.CharField(max_length=32, blank=True, help_text="Número de notaría o correduría")
+    estado = models.CharField(max_length=128, help_text="Entidad federativa")
+    ciudad = models.CharField(max_length=128, blank=True)
+    direccion = models.TextField(blank=True, help_text="Dirección completa de la notaría")
+    telefono = models.CharField(max_length=64, blank=True)
+    telefono_alterno = models.CharField(max_length=64, blank=True)
+    email = models.EmailField(blank=True)
+    rfc = models.CharField(max_length=13, blank=True)
+    cedula_profesional = models.CharField(max_length=32, blank=True)
+    horario_atencion = models.CharField(max_length=128, blank=True, help_text="Ej. L-V 9:00-18:00")
+    contacto_asistente = models.CharField(max_length=255, blank=True, help_text="Nombre del asistente o contacto alterno")
+    contacto_asistente_tel = models.CharField(max_length=64, blank=True)
+    contacto_asistente_email = models.EmailField(blank=True)
+    notas = models.TextField(blank=True, help_text="Observaciones, experiencia previa, recomendaciones")
+    activo = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "materialidad_fedatario"
+        ordering = ("nombre",)
+        verbose_name = "Fedatario"
+        verbose_name_plural = "Fedatarios"
+
+    def __str__(self) -> str:
+        label = self.nombre
+        if self.numero_notaria:
+            label += f" — Notaría {self.numero_notaria}"
+        if self.estado:
+            label += f", {self.estado}"
+        return label
+
+
 class ContratoTemplate(models.Model):
     clave = models.CharField(max_length=64, unique=True)
     nombre = models.CharField(max_length=255)
@@ -234,6 +281,14 @@ class Contrato(models.Model):
     fecha_cierta_obtenida = models.BooleanField(default=False)
     fecha_ratificacion = models.DateField(null=True, blank=True)
     fedatario_nombre = models.CharField(max_length=255, blank=True)
+    fedatario = models.ForeignKey(
+        "Fedatario",
+        on_delete=models.SET_NULL,
+        related_name="contratos",
+        null=True,
+        blank=True,
+        help_text="Fedatario seleccionado del catálogo",
+    )
     numero_instrumento = models.CharField(max_length=50, blank=True)
     archivo_notariado = models.FileField(upload_to="contratos/notariados/", null=True, blank=True)
     archivo_notariado_url = models.URLField(blank=True)

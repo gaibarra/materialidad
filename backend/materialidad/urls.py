@@ -13,6 +13,7 @@ from .views import (
     DashboardSnapshotHistoryView,
     CFDISPEIValidationView,
     EmpresaViewSet,
+    FedatarioViewSet,
     DeliverableRequirementViewSet,
     OperacionEntregableViewSet,
     CuentaBancariaViewSet,
@@ -31,6 +32,7 @@ from .views import (
 router = DefaultRouter()
 router.register("empresas", EmpresaViewSet, basename="empresa")
 router.register("proveedores", ProveedorViewSet, basename="proveedor")
+router.register("fedatarios", FedatarioViewSet, basename="fedatario")
 router.register("contrato-templates", ContratoTemplateViewSet, basename="contrato-template")
 router.register("clause-templates", ClauseTemplateViewSet, basename="clause-template")
 router.register("contratos", ContratoViewSet, basename="contrato")

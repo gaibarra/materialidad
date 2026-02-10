@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { DashboardShell } from "../../../components/DashboardShell";
+import { FedatarioModal } from "../../../components/FedatarioModal";
 import { alertError, alertSuccess } from "../../../lib/alerts";
 import { apiFetch } from "../../../lib/api";
+import { fetchFedatarios, Fedatario as FedatarioType } from "../../../lib/fedatarios";
 import {
   actualizarFirmaLogistica,
   obtenerFirmaLogistica,
@@ -75,6 +77,15 @@ export default function FirmaLogisticaPage() {
   const [notas, setNotas] = useState<string>("");
   const [resultado, setResultado] = useState<ContratoLogistica | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fedatarioModalOpen, setFedatarioModalOpen] = useState(false);
+  const [fedatarioCatalog, setFedatarioCatalog] = useState<FedatarioType[]>([]);
+
+  const loadFedatarioCatalog = useCallback(async () => {
+    try {
+      const list = await fetchFedatarios();
+      setFedatarioCatalog(list);
+    } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -100,10 +111,11 @@ export default function FirmaLogisticaPage() {
     };
 
     void loadContratos();
+    void loadFedatarioCatalog();
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [loadFedatarioCatalog]);
 
   /* ── Auto-load contract data when a contract is selected ── */
   const handleContratoChange = useCallback(async (id: string) => {
@@ -328,13 +340,28 @@ export default function FirmaLogisticaPage() {
 
               <div className="mt-4 grid gap-4 md:grid-cols-3">
                 <div>
-                  <label className="text-xs font-medium text-slate-500">Fedatario</label>
-                  <input
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium text-slate-500">Fedatario</label>
+                    <button
+                      type="button"
+                      onClick={() => setFedatarioModalOpen(true)}
+                      className="text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 transition"
+                    >
+                      Gestionar catálogo
+                    </button>
+                  </div>
+                  <select
                     className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-                    placeholder="Nombre del fedatario"
                     value={fedatario}
                     onChange={(e) => setFedatario(e.target.value)}
-                  />
+                  >
+                    <option value="">Selecciona un fedatario</option>
+                    {fedatarioCatalog.map((f) => (
+                      <option key={f.id} value={f.nombre}>
+                        {f.display_label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="text-xs font-medium text-slate-500">No. de instrumento</label>
@@ -494,6 +521,12 @@ export default function FirmaLogisticaPage() {
           </aside>
         </div>
       </div>
+
+      <FedatarioModal
+        open={fedatarioModalOpen}
+        onClose={() => setFedatarioModalOpen(false)}
+        onChanged={() => void loadFedatarioCatalog()}
+      />
     </DashboardShell>
   );
 }
