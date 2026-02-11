@@ -61,3 +61,8 @@ export async function confirmAction(options: {
     focusCancel: true,
   });
 }
+
+export async function alertConfirm(title: string, text?: string): Promise<boolean> {
+  const result = await confirmAction({ title, text, icon: "warning" });
+  return result.isConfirmed;
+}
