@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import io
 import json
 import logging
 from typing import Any
@@ -11,6 +12,55 @@ from django.conf import settings
 from openai import OpenAI
 
 logger = logging.getLogger("materialidad.ai")
+
+
+def _pdf_to_images_b64(pdf_bytes: bytes) -> list[str]:
+    """Convierte un PDF a una lista de imágenes base64 (JPEG).
+
+    Intenta usar pdf2image (poppler) primero, luego pypdf como fallback.
+    Retorna lista de data URLs listos para OpenAI Vision.
+    """
+    # Intento 1: pdf2image (mejor calidad)
+    try:
+        from pdf2image import convert_from_bytes  # type: ignore
+
+        images = convert_from_bytes(pdf_bytes, dpi=200, first_page=1, last_page=3)
+        result = []
+        for img in images:
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG", quality=90)
+            b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+            result.append(f"data:image/jpeg;base64,{b64}")
+        return result
+    except ImportError:
+        logger.debug("pdf2image no disponible, usando pypdf")
+    except Exception as exc:
+        logger.warning("pdf2image falló: %s, intentando pypdf", exc)
+
+    # Intento 2: pypdf — extraer imágenes embebidas
+    try:
+        from pypdf import PdfReader
+
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        result = []
+        for page in reader.pages[:3]:  # máximo 3 páginas
+            for image_obj in page.images:
+                b64 = base64.b64encode(image_obj.data).decode("utf-8")
+                # Detectar formato
+                if image_obj.name.lower().endswith(".png"):
+                    mime = "image/png"
+                else:
+                    mime = "image/jpeg"
+                result.append(f"data:{mime};base64,{b64}")
+        if result:
+            return result
+    except Exception as exc:
+        logger.warning("pypdf extracción de imágenes falló: %s", exc)
+
+    raise RuntimeError(
+        "No se pudo convertir el PDF a imagen. "
+        "Instale poppler-utils y pdf2image, o suba directamente una imagen (JPG/PNG)."
+    )
 
 CSF_EXTRACTION_PROMPT = """Analiza esta imagen de una Constancia de Situación Fiscal (CSF) del SAT de México.
 Extrae TODOS los datos visibles y devuélvelos en formato JSON con EXACTAMENTE estas claves:
@@ -61,21 +111,31 @@ def extract_csf_data(file_content: bytes, filename: str = "csf.pdf") -> dict[str
         raise RuntimeError("OPENAI_API_KEY no está configurada")
 
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    is_pdf = ext == "pdf"
 
-    # Determinar MIME type
-    if ext in ("jpg", "jpeg"):
-        mime = "image/jpeg"
-    elif ext == "png":
-        mime = "image/png"
-    elif ext == "pdf":
-        mime = "application/pdf"
-    elif ext == "webp":
-        mime = "image/webp"
+    # Para PDFs, convertir a imágenes primero
+    if is_pdf:
+        image_urls = _pdf_to_images_b64(file_content)
     else:
-        mime = "application/octet-stream"
+        # Determinar MIME type para imágenes
+        if ext in ("jpg", "jpeg"):
+            mime = "image/jpeg"
+        elif ext == "png":
+            mime = "image/png"
+        elif ext == "webp":
+            mime = "image/webp"
+        else:
+            mime = "image/jpeg"  # fallback
+        b64 = base64.b64encode(file_content).decode("utf-8")
+        image_urls = [f"data:{mime};base64,{b64}"]
 
-    b64 = base64.b64encode(file_content).decode("utf-8")
-    data_url = f"data:{mime};base64,{b64}"
+    # Construir contenido del mensaje con todas las imágenes
+    content: list[dict] = [{"type": "text", "text": CSF_EXTRACTION_PROMPT}]
+    for url in image_urls:
+        content.append({
+            "type": "image_url",
+            "image_url": {"url": url, "detail": "high"},
+        })
 
     client = OpenAI(api_key=api_key, timeout=60)
 
@@ -85,13 +145,7 @@ def extract_csf_data(file_content: bytes, filename: str = "csf.pdf") -> dict[str
             messages=[
                 {
                     "role": "user",
-                    "content": [
-                        {"type": "text", "text": CSF_EXTRACTION_PROMPT},
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": data_url, "detail": "high"},
-                        },
-                    ],
+                    "content": content,
                 }
             ],
             max_tokens=2000,
