@@ -148,10 +148,19 @@ else
     --create-db
 fi
 
-echo "[4/4] Migrando base del tenant"
+echo "[4/7] Migrando base del tenant"
 "$PYTHON_BIN" backend/manage.py migrate_tenant --slug "$SLUG"
 
-echo "[5/4] Ajustando despacho y moneda"
+echo "[5/7] Ajustando permisos de BD para $DB_USER en $DB_NAME"
+sudo -u postgres psql -d "$DB_NAME" -c "
+  GRANT ALL PRIVILEGES ON ALL TABLES    IN SCHEMA public TO \"$DB_USER\";
+  GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO \"$DB_USER\";
+  GRANT USAGE ON SCHEMA public TO \"$DB_USER\";
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES    TO \"$DB_USER\";
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO \"$DB_USER\";
+" 2>/dev/null || echo "⚠ No se pudieron ajustar permisos automáticamente"
+
+echo "[6/7] Ajustando despacho y moneda"
 TENANT_SLUG_ENV="$SLUG" \
 TENANT_DESPACHO_ID_ENV="$DESPACHO_ID" \
 TENANT_CURRENCY_ENV="$CURRENCY" \
@@ -174,7 +183,7 @@ tenant.save(update_fields=["default_currency", "despacho", "updated_at"])
 print(f"Tenant {tenant.slug} actualizado con moneda {tenant.default_currency} y despacho {tenant.despacho_id}")
 PY
 
-echo "[6/4] Creando/actualizando superusuario del tenant"
+echo "[7/7] Creando/actualizando superusuario del tenant"
 TENANT_SLUG_ENV="$SLUG" \
 TENANT_ADMIN_EMAIL_ENV="$ADMIN_EMAIL" \
 TENANT_ADMIN_PASSWORD_ENV="$ADMIN_PASS" \
