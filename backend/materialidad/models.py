@@ -32,16 +32,62 @@ class ContratoTipoEmpresaChoices(models.TextChoices):
     MIXTA = "MIXTA", "Mixta"
 
 
+class TipoPersonaChoices(models.TextChoices):
+    MORAL = "MORAL", "Persona moral"
+    FISICA = "FISICA", "Persona física"
+
+
 class Empresa(models.Model):
-    razon_social = models.CharField(max_length=255)
+    # ── Tipo de persona ──
+    tipo_persona = models.CharField(
+        max_length=8,
+        choices=TipoPersonaChoices.choices,
+        default=TipoPersonaChoices.MORAL,
+        help_text="Persona moral o persona física",
+    )
+
+    # ── Datos generales (siempre presentes) ──
+    razon_social = models.CharField(
+        max_length=255,
+        help_text="Razón social (PM) o nombre completo (PF)",
+    )
     rfc = models.CharField(max_length=13, unique=True)
     regimen_fiscal = models.CharField(max_length=128)
-    fecha_constitucion = models.DateField()
-    pais = models.CharField(max_length=128)
+    actividad_economica = models.CharField(max_length=255, blank=True, help_text="Actividad económica principal SAT")
+    fecha_constitucion = models.DateField(null=True, blank=True, help_text="Fecha de constitución (PM) o inicio de actividades (PF)")
+
+    # ── Campos exclusivos persona física ──
+    nombre = models.CharField(max_length=128, blank=True, help_text="Nombre(s) — solo persona física")
+    apellido_paterno = models.CharField(max_length=128, blank=True)
+    apellido_materno = models.CharField(max_length=128, blank=True)
+    curp = models.CharField(max_length=18, blank=True, help_text="CURP — solo persona física")
+
+    # ── Domicilio fiscal (extraído de CSF) ──
+    calle = models.CharField(max_length=255, blank=True)
+    no_exterior = models.CharField(max_length=32, blank=True)
+    no_interior = models.CharField(max_length=32, blank=True)
+    colonia = models.CharField(max_length=128, blank=True)
+    codigo_postal = models.CharField(max_length=10, blank=True)
+    municipio = models.CharField(max_length=128, blank=True)
     estado = models.CharField(max_length=128)
-    ciudad = models.CharField(max_length=128)
+    ciudad = models.CharField(max_length=128, blank=True)
+    pais = models.CharField(max_length=128, default="México")
+
+    # ── Contacto principal ──
+    contacto_nombre = models.CharField(max_length=255, blank=True, help_text="Nombre del contacto principal")
+    contacto_puesto = models.CharField(max_length=128, blank=True)
+    contacto_email = models.EmailField(blank=True)
+    contacto_telefono = models.CharField(max_length=32, blank=True)
+
+    # ── Datos legacy (mantener compatibilidad) ──
     email_contacto = models.EmailField(blank=True)
     telefono_contacto = models.CharField(max_length=32, blank=True)
+
+    # ── Constancia de Situación Fiscal ──
+    csf_archivo = models.FileField(upload_to="empresas/csf/%Y/%m/", null=True, blank=True, help_text="PDF de Constancia de Situación Fiscal")
+    csf_datos_extraidos = models.JSONField(default=dict, blank=True, help_text="Datos extraídos automáticamente del PDF")
+    csf_fecha_emision = models.DateField(null=True, blank=True, help_text="Fecha de emisión de la CSF")
+
     activo = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -53,7 +99,41 @@ class Empresa(models.Model):
         verbose_name_plural = "Empresas"
 
     def __str__(self) -> str:
+        if self.tipo_persona == TipoPersonaChoices.FISICA and self.nombre:
+            parts = [self.nombre, self.apellido_paterno, self.apellido_materno]
+            return " ".join(p for p in parts if p)
         return self.razon_social
+
+    @property
+    def es_persona_fisica(self) -> bool:
+        return self.tipo_persona == TipoPersonaChoices.FISICA
+
+    @property
+    def nombre_completo_pf(self) -> str:
+        """Nombre completo para persona física."""
+        parts = [self.nombre, self.apellido_paterno, self.apellido_materno]
+        return " ".join(p for p in parts if p)
+
+    @property
+    def domicilio_fiscal(self) -> str:
+        """Domicilio fiscal formateado."""
+        parts = []
+        if self.calle:
+            d = self.calle
+            if self.no_exterior:
+                d += f" #{self.no_exterior}"
+            if self.no_interior:
+                d += f" Int. {self.no_interior}"
+            parts.append(d)
+        if self.colonia:
+            parts.append(f"Col. {self.colonia}")
+        if self.codigo_postal:
+            parts.append(f"C.P. {self.codigo_postal}")
+        if self.municipio:
+            parts.append(self.municipio)
+        if self.estado:
+            parts.append(self.estado)
+        return ", ".join(parts)
 
 
 class Proveedor(models.Model):
@@ -67,12 +147,48 @@ class Proveedor(models.Model):
         MEDIO = "MEDIO", "Medio"
         ALTO = "ALTO", "Alto"
 
-    razon_social = models.CharField(max_length=255)
+    # ── Tipo de persona ──
+    tipo_persona = models.CharField(
+        max_length=8,
+        choices=TipoPersonaChoices.choices,
+        default=TipoPersonaChoices.MORAL,
+    )
+
+    razon_social = models.CharField(
+        max_length=255,
+        help_text="Razón social (PM) o nombre completo (PF)",
+    )
     rfc = models.CharField(max_length=13, unique=True)
-    pais = models.CharField(max_length=128)
+
+    # ── Campos exclusivos persona física ──
+    nombre = models.CharField(max_length=128, blank=True, help_text="Nombre(s) — solo persona física")
+    apellido_paterno = models.CharField(max_length=128, blank=True)
+    apellido_materno = models.CharField(max_length=128, blank=True)
+    curp = models.CharField(max_length=18, blank=True)
+
+    # ── Domicilio fiscal ──
+    calle = models.CharField(max_length=255, blank=True)
+    no_exterior = models.CharField(max_length=32, blank=True)
+    no_interior = models.CharField(max_length=32, blank=True)
+    colonia = models.CharField(max_length=128, blank=True)
+    codigo_postal = models.CharField(max_length=10, blank=True)
+    municipio = models.CharField(max_length=128, blank=True)
+    pais = models.CharField(max_length=128, default="México")
     estado = models.CharField(max_length=128, blank=True)
     ciudad = models.CharField(max_length=128, blank=True)
     actividad_principal = models.CharField(max_length=255, blank=True)
+    regimen_fiscal = models.CharField(max_length=128, blank=True)
+
+    # ── Contacto principal ──
+    contacto_nombre = models.CharField(max_length=255, blank=True, help_text="Nombre del contacto principal")
+    contacto_puesto = models.CharField(max_length=128, blank=True)
+    contacto_email = models.EmailField(blank=True)
+    contacto_telefono = models.CharField(max_length=32, blank=True)
+
+    # ── Constancia de Situación Fiscal ──
+    csf_archivo = models.FileField(upload_to="proveedores/csf/%Y/%m/", null=True, blank=True)
+    csf_datos_extraidos = models.JSONField(default=dict, blank=True)
+    csf_fecha_emision = models.DateField(null=True, blank=True)
     estatus_sat = models.CharField(max_length=64, blank=True)
     estatus_69b = models.CharField(
         max_length=32,
@@ -116,7 +232,14 @@ class Proveedor(models.Model):
         verbose_name_plural = "Proveedores"
 
     def __str__(self) -> str:
+        if self.tipo_persona == TipoPersonaChoices.FISICA and self.nombre:
+            parts = [self.nombre, self.apellido_paterno, self.apellido_materno]
+            return " ".join(p for p in parts if p)
         return self.razon_social
+
+    @property
+    def es_persona_fisica(self) -> bool:
+        return self.tipo_persona == TipoPersonaChoices.FISICA
 
 
 class Fedatario(models.Model):

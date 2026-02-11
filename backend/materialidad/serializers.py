@@ -68,35 +68,63 @@ GENERIC_CONCEPT_WHITELIST = {
 
 
 class EmpresaSerializer(serializers.ModelSerializer):
+    display_name = serializers.SerializerMethodField()
+    domicilio_fiscal = serializers.CharField(read_only=True)
+
     class Meta:
         model = Empresa
         fields = (
             "id",
+            "tipo_persona",
             "razon_social",
             "rfc",
             "regimen_fiscal",
+            "actividad_economica",
             "fecha_constitucion",
-            "pais",
+            # PF
+            "nombre",
+            "apellido_paterno",
+            "apellido_materno",
+            "curp",
+            # Domicilio
+            "calle",
+            "no_exterior",
+            "no_interior",
+            "colonia",
+            "codigo_postal",
+            "municipio",
             "estado",
             "ciudad",
+            "pais",
+            # Contacto
+            "contacto_nombre",
+            "contacto_puesto",
+            "contacto_email",
+            "contacto_telefono",
+            # Legacy
             "email_contacto",
             "telefono_contacto",
+            # CSF
+            "csf_archivo",
+            "csf_datos_extraidos",
+            "csf_fecha_emision",
+            # Computed
+            "display_name",
+            "domicilio_fiscal",
             "activo",
             "created_at",
             "updated_at",
         )
         read_only_fields = (
-            "empresa_nombre",
-            "proveedor_nombre",
-            "template_clave",
-            "template_nombre",
-            "campos_configurables",
-            "requiere_proveedor",
-            "campos_faltantes",
-            "estado_configuracion",
+            "csf_datos_extraidos",
+            "display_name",
+            "domicilio_fiscal",
             "created_at",
             "updated_at",
         )
+
+    def get_display_name(self, obj) -> str:
+        return str(obj)
 
 
 class FedatarioSerializer(serializers.ModelSerializer):
@@ -134,28 +162,53 @@ class FedatarioSerializer(serializers.ModelSerializer):
 
 
 class ProveedorSerializer(serializers.ModelSerializer):
+    display_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Proveedor
         fields = (
             "id",
+            "tipo_persona",
             "razon_social",
             "rfc",
+            # PF
+            "nombre",
+            "apellido_paterno",
+            "apellido_materno",
+            "curp",
+            # Domicilio
+            "calle",
+            "no_exterior",
+            "no_interior",
+            "colonia",
+            "codigo_postal",
+            "municipio",
             "pais",
             "estado",
             "ciudad",
             "actividad_principal",
+            "regimen_fiscal",
+            # Contacto
+            "contacto_nombre",
+            "contacto_puesto",
+            "contacto_email",
+            "contacto_telefono",
+            # CSF
+            "csf_archivo",
+            "csf_datos_extraidos",
+            "csf_fecha_emision",
+            # Validación
             "estatus_sat",
             "estatus_69b",
             "riesgo_fiscal",
             "ultima_validacion_sat",
             "ultima_validacion_69b",
             "detalle_validacion",
-            "razon_negocio_estado",
-            "razon_negocio_ultimo_rol",
-            "razon_negocio_aprobado_en",
             "riesgos_detectados",
+            # Legacy contacto
             "correo_contacto",
             "telefono_contacto",
+            # Capacidad
             "reps_registro",
             "imss_patronal",
             "activos_relevantes",
@@ -165,10 +218,15 @@ class ProveedorSerializer(serializers.ModelSerializer):
             "sitio_web",
             "sitio_web_capturas",
             "notas_capacidad",
+            # Computed
+            "display_name",
             "created_at",
             "updated_at",
         )
-        read_only_fields = ("created_at", "updated_at")
+        read_only_fields = ("csf_datos_extraidos", "display_name", "created_at", "updated_at")
+
+    def get_display_name(self, obj) -> str:
+        return str(obj)
 
 
 class ContratoSerializer(serializers.ModelSerializer):

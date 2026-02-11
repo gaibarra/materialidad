@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { DashboardShell } from "../../../components/DashboardShell";
 import { alertError, alertInfo, alertSuccess } from "../../../lib/alerts";
 import {
   EmpresaLite,
   Proveedor,
+  TipoPersona,
   fetchEmpresas,
   fetchProviders,
   createProveedor,
   updateProveedor,
   requestProveedorValidacion,
+  uploadCSFProveedor,
 } from "../../../lib/providers";
 
 const STATUS_STYLES: Record<string, string> = {
@@ -44,13 +46,31 @@ export default function ProveedoresPage() {
   const [requestingId, setRequestingId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<Proveedor | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<Partial<Proveedor>>({
+    tipo_persona: "MORAL",
     razon_social: "",
     rfc: "",
-    pais: "",
+    nombre: "",
+    apellido_paterno: "",
+    apellido_materno: "",
+    curp: "",
+    calle: "",
+    no_exterior: "",
+    no_interior: "",
+    colonia: "",
+    codigo_postal: "",
+    municipio: "",
+    pais: "México",
     estado: "",
     ciudad: "",
     actividad_principal: "",
+    regimen_fiscal: "",
+    contacto_nombre: "",
+    contacto_puesto: "",
+    contacto_email: "",
+    contacto_telefono: "",
     correo_contacto: "",
     telefono_contacto: "",
     reps_registro: "",
@@ -62,6 +82,8 @@ export default function ProveedoresPage() {
     sitio_web_capturas: [],
     notas_capacidad: "",
   });
+
+  const isPF = form.tipo_persona === "FISICA";
 
   const load = async () => {
     setIsLoading(true);
@@ -89,12 +111,28 @@ export default function ProveedoresPage() {
   const resetForm = () => {
     setEditing(null);
     setForm({
+      tipo_persona: "MORAL",
       razon_social: "",
       rfc: "",
-      pais: "",
+      nombre: "",
+      apellido_paterno: "",
+      apellido_materno: "",
+      curp: "",
+      calle: "",
+      no_exterior: "",
+      no_interior: "",
+      colonia: "",
+      codigo_postal: "",
+      municipio: "",
+      pais: "México",
       estado: "",
       ciudad: "",
       actividad_principal: "",
+      regimen_fiscal: "",
+      contacto_nombre: "",
+      contacto_puesto: "",
+      contacto_email: "",
+      contacto_telefono: "",
       correo_contacto: "",
       telefono_contacto: "",
       reps_registro: "",
@@ -111,12 +149,28 @@ export default function ProveedoresPage() {
   const handleEdit = (prov: Proveedor) => {
     setEditing(prov);
     setForm({
+      tipo_persona: prov.tipo_persona || "MORAL",
       razon_social: prov.razon_social,
       rfc: prov.rfc,
-      pais: prov.pais,
+      nombre: prov.nombre || "",
+      apellido_paterno: prov.apellido_paterno || "",
+      apellido_materno: prov.apellido_materno || "",
+      curp: prov.curp || "",
+      calle: prov.calle || "",
+      no_exterior: prov.no_exterior || "",
+      no_interior: prov.no_interior || "",
+      colonia: prov.colonia || "",
+      codigo_postal: prov.codigo_postal || "",
+      municipio: prov.municipio || "",
+      pais: prov.pais || "México",
       estado: prov.estado || "",
       ciudad: prov.ciudad || "",
       actividad_principal: prov.actividad_principal || "",
+      regimen_fiscal: prov.regimen_fiscal || "",
+      contacto_nombre: prov.contacto_nombre || "",
+      contacto_puesto: prov.contacto_puesto || "",
+      contacto_email: prov.contacto_email || "",
+      contacto_telefono: prov.contacto_telefono || "",
       correo_contacto: prov.correo_contacto || "",
       telefono_contacto: prov.telefono_contacto || "",
       reps_registro: prov.reps_registro || "",
@@ -144,6 +198,45 @@ export default function ProveedoresPage() {
         .map((v) => v.trim())
         .filter(Boolean),
     }));
+  };
+
+  const handleCSFUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const res = await uploadCSFProveedor(file, editing?.id);
+      if (res.datos_extraidos) {
+        const d = res.datos_extraidos;
+        setForm((prev) => ({
+          ...prev,
+          tipo_persona: (d.tipo_persona as TipoPersona) || prev.tipo_persona,
+          razon_social: d.razon_social || prev.razon_social,
+          rfc: d.rfc || prev.rfc,
+          nombre: d.nombre || prev.nombre,
+          apellido_paterno: d.apellido_paterno || prev.apellido_paterno,
+          apellido_materno: d.apellido_materno || prev.apellido_materno,
+          curp: d.curp || prev.curp,
+          regimen_fiscal: d.regimen_fiscal || prev.regimen_fiscal,
+          actividad_principal: d.actividad_economica || prev.actividad_principal,
+          calle: d.calle || prev.calle,
+          no_exterior: d.no_exterior || prev.no_exterior,
+          no_interior: d.no_interior || prev.no_interior,
+          colonia: d.colonia || prev.colonia,
+          codigo_postal: d.codigo_postal || prev.codigo_postal,
+          municipio: d.municipio || prev.municipio,
+          estado: d.estado || prev.estado,
+          ciudad: d.ciudad || prev.ciudad,
+        }));
+        await alertSuccess("CSF procesada", "Datos extraídos automáticamente de la Constancia de Situación Fiscal");
+      }
+      if (editing && res.registro) {
+        setProveedores((prev) => prev.map((p) => (p.id === editing.id ? res.registro! : p)));
+      }
+    } catch (e) {
+      await alertError("Error al procesar CSF", (e as Error).message);
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -195,7 +288,7 @@ export default function ProveedoresPage() {
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-emerald-500">Capacidad del proveedor</p>
               <h2 className="text-2xl font-semibold text-slate-900">
-                {editing ? `Editar ${editing.razon_social}` : "Nuevo proveedor"}
+                {editing ? `Editar ${editing.display_name || editing.razon_social}` : "Nuevo proveedor"}
               </h2>
               <p className="text-sm text-slate-500">Captura datos de capacidad operativa y presencia.</p>
             </div>
@@ -210,20 +303,110 @@ export default function ProveedoresPage() {
             )}
           </div>
 
+          {/* ── Tipo de persona ── */}
+          <div className="flex items-center gap-1 rounded-full bg-slate-100 p-1 w-fit">
+            {(["MORAL", "FISICA"] as TipoPersona[]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setForm((p) => ({ ...p, tipo_persona: t }))}
+                className={`rounded-full px-5 py-2 text-xs font-semibold transition ${
+                  form.tipo_persona === t
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                {t === "MORAL" ? "Persona Moral" : "Persona Física"}
+              </button>
+            ))}
+          </div>
+
+          {/* ── CSF upload ── */}
+          <div
+            className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 p-6 text-center transition hover:border-emerald-300 cursor-pointer"
+            onClick={() => fileRef.current?.click()}
+          >
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".pdf,image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void handleCSFUpload(f);
+              }}
+            />
+            {uploading ? (
+              <p className="text-sm text-emerald-600 animate-pulse">Procesando Constancia de Situación Fiscal…</p>
+            ) : (
+              <>
+                <p className="text-sm font-medium text-slate-700">📄 Subir Constancia de Situación Fiscal</p>
+                <p className="mt-1 text-xs text-slate-400">PDF o imagen — los datos se extraerán automáticamente</p>
+              </>
+            )}
+          </div>
+
           <div className="grid gap-6 lg:grid-cols-2">
+            {/* ── Datos generales ── */}
             <div className="rounded-3xl border border-slate-100 bg-slate-50/70 p-5">
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Información general</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                {isPF ? "Datos de la persona física" : "Datos de la persona moral"}
+              </p>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <label className="text-sm text-slate-600">
-                  Razón social
-                  <input
-                    name="razon_social"
-                    value={form.razon_social || ""}
-                    onChange={handleChange}
-                    required
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
-                  />
-                </label>
+                {!isPF && (
+                  <label className="text-sm text-slate-600 md:col-span-2">
+                    Razón social
+                    <input
+                      name="razon_social"
+                      value={form.razon_social || ""}
+                      onChange={handleChange}
+                      required={!isPF}
+                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                    />
+                  </label>
+                )}
+                {isPF && (
+                  <>
+                    <label className="text-sm text-slate-600">
+                      Nombre(s)
+                      <input
+                        name="nombre"
+                        value={form.nombre || ""}
+                        onChange={handleChange}
+                        required
+                        className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                      />
+                    </label>
+                    <label className="text-sm text-slate-600">
+                      Apellido paterno
+                      <input
+                        name="apellido_paterno"
+                        value={form.apellido_paterno || ""}
+                        onChange={handleChange}
+                        required
+                        className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                      />
+                    </label>
+                    <label className="text-sm text-slate-600">
+                      Apellido materno
+                      <input
+                        name="apellido_materno"
+                        value={form.apellido_materno || ""}
+                        onChange={handleChange}
+                        className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                      />
+                    </label>
+                    <label className="text-sm text-slate-600">
+                      CURP
+                      <input
+                        name="curp"
+                        value={form.curp || ""}
+                        onChange={handleChange}
+                        className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 uppercase shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+                      />
+                    </label>
+                  </>
+                )}
                 <label className="text-sm text-slate-600">
                   RFC
                   <input
@@ -244,48 +427,10 @@ export default function ProveedoresPage() {
                   />
                 </label>
                 <label className="text-sm text-slate-600">
-                  País
+                  Régimen fiscal
                   <input
-                    name="pais"
-                    value={form.pais || ""}
-                    onChange={handleChange}
-                    required
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
-                  />
-                </label>
-                <label className="text-sm text-slate-600">
-                  Estado
-                  <input
-                    name="estado"
-                    value={form.estado || ""}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
-                  />
-                </label>
-                <label className="text-sm text-slate-600">
-                  Ciudad
-                  <input
-                    name="ciudad"
-                    value={form.ciudad || ""}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
-                  />
-                </label>
-                <label className="text-sm text-slate-600">
-                  Correo de contacto
-                  <input
-                    type="email"
-                    name="correo_contacto"
-                    value={form.correo_contacto || ""}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
-                  />
-                </label>
-                <label className="text-sm text-slate-600">
-                  Teléfono
-                  <input
-                    name="telefono_contacto"
-                    value={form.telefono_contacto || ""}
+                    name="regimen_fiscal"
+                    value={form.regimen_fiscal || ""}
                     onChange={handleChange}
                     className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
                   />
@@ -293,6 +438,71 @@ export default function ProveedoresPage() {
               </div>
             </div>
 
+            {/* ── Domicilio fiscal ── */}
+            <div className="rounded-3xl border border-slate-100 bg-slate-50/70 p-5">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Domicilio fiscal</p>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <label className="text-sm text-slate-600 md:col-span-2">
+                  Calle
+                  <input name="calle" value={form.calle || ""} onChange={handleChange} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60" />
+                </label>
+                <label className="text-sm text-slate-600">
+                  No. exterior
+                  <input name="no_exterior" value={form.no_exterior || ""} onChange={handleChange} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60" />
+                </label>
+                <label className="text-sm text-slate-600">
+                  No. interior
+                  <input name="no_interior" value={form.no_interior || ""} onChange={handleChange} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60" />
+                </label>
+                <label className="text-sm text-slate-600">
+                  Colonia
+                  <input name="colonia" value={form.colonia || ""} onChange={handleChange} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60" />
+                </label>
+                <label className="text-sm text-slate-600">
+                  C.P.
+                  <input name="codigo_postal" value={form.codigo_postal || ""} onChange={handleChange} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60" />
+                </label>
+                <label className="text-sm text-slate-600">
+                  Municipio / Alcaldía
+                  <input name="municipio" value={form.municipio || ""} onChange={handleChange} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60" />
+                </label>
+                <label className="text-sm text-slate-600">
+                  Estado
+                  <input name="estado" value={form.estado || ""} onChange={handleChange} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60" />
+                </label>
+                <label className="text-sm text-slate-600">
+                  País
+                  <input name="pais" value={form.pais || ""} onChange={handleChange} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60" />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Contacto principal ── */}
+          <div className="rounded-3xl border border-slate-100 bg-slate-50/70 p-5">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Contacto principal</p>
+            <div className="mt-4 grid gap-4 md:grid-cols-4">
+              <label className="text-sm text-slate-600">
+                Nombre
+                <input name="contacto_nombre" value={form.contacto_nombre || ""} onChange={handleChange} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60" />
+              </label>
+              <label className="text-sm text-slate-600">
+                Puesto
+                <input name="contacto_puesto" value={form.contacto_puesto || ""} onChange={handleChange} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60" />
+              </label>
+              <label className="text-sm text-slate-600">
+                Email
+                <input type="email" name="contacto_email" value={form.contacto_email || ""} onChange={handleChange} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60" />
+              </label>
+              <label className="text-sm text-slate-600">
+                Teléfono
+                <input name="contacto_telefono" value={form.contacto_telefono || ""} onChange={handleChange} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60" />
+              </label>
+            </div>
+          </div>
+
+          {/* ── Capacidad, Presencia, Evidencias (collapsible) ── */}
+          <div className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-4">
               <details open className="group rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
                 <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-slate-800">
@@ -462,7 +672,16 @@ export default function ProveedoresPage() {
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-lg font-semibold text-slate-900">{prov.razon_social}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-lg font-semibold text-slate-900">{prov.display_name || prov.razon_social}</p>
+                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide ${
+                        prov.tipo_persona === "FISICA"
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-sky-100 text-sky-700"
+                      }`}>
+                        {prov.tipo_persona === "FISICA" ? "PF" : "PM"}
+                      </span>
+                    </div>
                     <p className="text-xs text-slate-500">RFC {prov.rfc}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">

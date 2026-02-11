@@ -200,7 +200,115 @@ def _audit(request, action: str, obj, changes: dict | None = None):
     )
 
 
-class EmpresaViewSet(viewsets.ModelViewSet):
+from .ai.csf_extractor import extract_csf_data
+
+
+class _CSFUploadMixin:
+    """Mixin que agrega acción upload_csf a un ViewSet de Empresa o Proveedor."""
+
+    @action(detail=False, methods=["post"], url_path="upload-csf")
+    def upload_csf(self, request, *args, **kwargs):
+        """Sube un PDF/imagen de CSF y extrae datos con OpenAI Vision.
+
+        Puede recibir opcionalmente un `id` para actualizar un registro existente.
+        Si no se envía `id`, solo devuelve los datos extraídos para pre-llenar el form.
+        """
+        archivo = request.FILES.get("archivo")
+        if not archivo:
+            return Response(
+                {"detail": "Se requiere un archivo (PDF o imagen) en el campo 'archivo'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Leer contenido
+        content = archivo.read()
+        try:
+            datos = extract_csf_data(content, archivo.name)
+        except RuntimeError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+        # Si se envía un ID, actualizar el registro existente
+        record_id = request.data.get("id")
+        if record_id:
+            try:
+                instance = self.get_queryset().get(pk=record_id)
+            except self.get_queryset().model.DoesNotExist:
+                return Response({"detail": "Registro no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+            # Guardar archivo y datos extraídos
+            instance.csf_archivo.save(archivo.name, archivo, save=False)
+            instance.csf_datos_extraidos = datos
+
+            # Aplicar campos extraídos
+            _apply_csf_fields(instance, datos)
+            instance.save()
+
+            serializer = self.get_serializer(instance)
+            return Response({"datos_extraidos": datos, "registro": serializer.data})
+
+        return Response({"datos_extraidos": datos})
+
+
+def _apply_csf_fields(instance, datos: dict) -> None:
+    """Aplica los campos extraídos de la CSF al modelo."""
+    field_map = {
+        "tipo_persona": "tipo_persona",
+        "rfc": "rfc",
+        "razon_social": "razon_social",
+        "nombre": "nombre",
+        "apellido_paterno": "apellido_paterno",
+        "apellido_materno": "apellido_materno",
+        "curp": "curp",
+        "regimen_fiscal": "regimen_fiscal",
+        "calle": "calle",
+        "no_exterior": "no_exterior",
+        "no_interior": "no_interior",
+        "colonia": "colonia",
+        "codigo_postal": "codigo_postal",
+        "municipio": "municipio",
+        "estado": "estado",
+        "ciudad": "ciudad",
+    }
+    # Campos que solo existen en ciertos modelos
+    optional_fields = {
+        "actividad_economica": "actividad_economica",
+        "actividad_principal": "actividad_principal",  # Proveedor usa este nombre
+    }
+
+    for src_key, model_field in field_map.items():
+        value = datos.get(src_key, "")
+        if value and hasattr(instance, model_field):
+            setattr(instance, model_field, value)
+
+    for src_key, model_field in optional_fields.items():
+        value = datos.get(src_key, "")
+        if value and hasattr(instance, model_field):
+            setattr(instance, model_field, value)
+
+    # Fecha de emisión
+    csf_fecha = datos.get("csf_fecha_emision", "")
+    if csf_fecha:
+        try:
+            from datetime import date as date_type
+            parts = csf_fecha.split("-")
+            if len(parts) == 3:
+                instance.csf_fecha_emision = date_type(int(parts[0]), int(parts[1]), int(parts[2]))
+        except (ValueError, TypeError):
+            pass
+
+    # Fecha de constitución / inicio actividades
+    fecha_const = datos.get("fecha_constitucion", "")
+    if fecha_const and hasattr(instance, "fecha_constitucion"):
+        try:
+            from datetime import date as date_type
+            parts = fecha_const.split("-")
+            if len(parts) == 3:
+                instance.fecha_constitucion = date_type(int(parts[0]), int(parts[1]), int(parts[2]))
+        except (ValueError, TypeError):
+            pass
+
+
+class EmpresaViewSet(_CSFUploadMixin, viewsets.ModelViewSet):
     serializer_class = EmpresaSerializer
     queryset = Empresa.objects.all().order_by("razon_social")
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
@@ -217,7 +325,7 @@ class FedatarioViewSet(viewsets.ModelViewSet):
     ordering_fields = ("nombre", "estado", "created_at")
 
 
-class ProveedorViewSet(viewsets.ModelViewSet):
+class ProveedorViewSet(_CSFUploadMixin, viewsets.ModelViewSet):
     serializer_class = ProveedorSerializer
     queryset = Proveedor.objects.all().order_by("razon_social")
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
