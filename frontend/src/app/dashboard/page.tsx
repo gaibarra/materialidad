@@ -480,7 +480,7 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm uppercase tracking-widest text-jade-600">Herramientas con IA</p>
-              <h2 className="text-2xl font-semibold text-ink-500">Genera contratos con GPT-5 mini</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold text-ink-500">Genera contratos con GPT-5 mini</h2>
               <p className="mt-1 text-sm text-slate-600">
                 Captura los datos clave y obtén un borrador editable con referencias fiscales sugeridas.
               </p>
@@ -498,7 +498,7 @@ export default function DashboardPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm uppercase tracking-widest text-slate-500">Salud fiscal</p>
-              <h2 className="text-2xl font-semibold text-ink-500">KPIs para anticipar auditorías del SAT</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold text-ink-500">KPIs para anticipar auditorías del SAT</h2>
               {metricsTimestamp && (
                 <p className="text-xs text-slate-500">Actualizado {metricsTimestamp}</p>
               )}
@@ -506,7 +506,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={handleRefresh}
-              className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-ink-500 transition hover:border-jade-400 hover:text-jade-600"
+              className="min-h-[44px] rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-ink-500 transition hover:border-jade-400 hover:text-jade-600"
             >
               Actualizar KPIs
             </button>
@@ -581,7 +581,7 @@ export default function DashboardPage() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">Tendencia histórica</p>
-              <h2 className="text-2xl font-semibold text-white">Preparación ante fiscalizaciones</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold text-white">Preparación ante fiscalizaciones</h2>
               {historyRangeLabel && <p className="text-sm text-slate-400">{historyRangeLabel}</p>}
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -737,12 +737,12 @@ export default function DashboardPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm text-slate-500">Empresas de tu organización</p>
-              <h2 className="text-2xl font-semibold text-ink-500">Empresas activas</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold text-ink-500">Empresas activas</h2>
             </div>
             <div className="flex gap-2">
               <Link
                 href="/dashboard/empresas"
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-ink-500 hover:border-jade-400 hover:text-jade-600"
+                className="min-h-[44px] inline-flex items-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-ink-500 hover:border-jade-400 hover:text-jade-600"
               >
                 Gestionar empresas
               </Link>
@@ -750,13 +750,13 @@ export default function DashboardPage() {
                 onClick={() => {
                   handleRefresh();
                 }}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-ink-500 hover:border-jade-400 hover:text-jade-600"
+                className="min-h-[44px] rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-ink-500 hover:border-jade-400 hover:text-jade-600"
               >
                 Actualizar
               </button>
             </div>
           </div>
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                 <tr>
@@ -842,16 +842,16 @@ export default function DashboardPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm text-slate-500">Proveedores de tu organización</p>
-              <h2 className="text-2xl font-semibold text-ink-500">Proveedores activos</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold text-ink-500">Proveedores activos</h2>
             </div>
             <Link
               href="/dashboard/proveedores"
-              className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-ink-500 hover:border-jade-400 hover:text-jade-600"
+              className="min-h-[44px] inline-flex items-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-ink-500 hover:border-jade-400 hover:text-jade-600"
             >
               Gestionar proveedores
             </Link>
           </div>
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                 <tr>

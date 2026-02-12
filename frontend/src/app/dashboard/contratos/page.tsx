@@ -516,7 +516,7 @@ export default function ContratosPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Configura el contexto</p>
-                <h2 className="text-2xl font-semibold text-slate-900">Datos para el borrador</h2>
+                <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">Datos para el borrador</h2>
               </div>
               {isLoadingOptions && <p className="text-sm text-slate-500">Cargando catálogos…</p>}
             </div>
@@ -553,7 +553,7 @@ export default function ContratosPage() {
 
               <div>
                 <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Contrato asociado (opcional)</label>
-                <div className="mt-2 flex gap-2">
+                <div className="mt-2 flex flex-wrap gap-2">
                   <select
                     value={contratoId}
                     onChange={(event) => setContratoId(event.target.value)}
@@ -608,7 +608,7 @@ export default function ContratosPage() {
                         setIsLoadingContrato(false);
                       }
                     }}
-                    className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50"
+                    className="inline-flex min-h-[44px] items-center rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50"
                   >
                     {isLoadingContrato ? "Cargando..." : "Recargar"}
                   </button>
@@ -637,7 +637,7 @@ export default function ContratosPage() {
                         setIsDeletingContrato(false);
                       }
                     }}
-                    className="rounded-xl border border-red-300 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                    className="inline-flex min-h-[44px] items-center rounded-xl border border-red-300 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
                   >
                     {isDeletingContrato ? "Eliminando..." : "Eliminar"}
                   </button>
@@ -666,7 +666,7 @@ export default function ContratosPage() {
                         alertError("No pudimos renombrar", msg);
                       }
                     }}
-                    className="rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
+                    className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
                   >
                     Renombrar
                   </button>
@@ -887,7 +887,7 @@ export default function ContratosPage() {
                   type="button"
                   onClick={handleUseCurrentDraft}
                   disabled={!result}
-                  className="rounded-2xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:border-emerald-300 disabled:opacity-40"
+                  className="inline-flex min-h-[44px] items-center rounded-2xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:border-emerald-300 disabled:opacity-40"
                 >
                   Usar borrador actual
                 </button>
@@ -951,7 +951,7 @@ export default function ContratosPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Estado del generador</p>
-                  <h3 className="text-2xl font-semibold text-slate-900">
+                  <h3 className="text-xl font-semibold text-slate-900 sm:text-2xl">
                     {isGenerating ? "Generando borrador" : result ? "Borrador listo" : "Aún sin generación"}
                   </h3>
                   <p className="text-sm text-slate-600">Seguimiento en tiempo real de cada iteración.</p>
@@ -985,7 +985,7 @@ export default function ContratosPage() {
                   type="button"
                   onClick={handleCopy}
                   disabled={!result}
-                  className="flex-1 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-800 hover:border-emerald-300 disabled:opacity-40"
+                  className="flex-1 inline-flex min-h-[44px] items-center justify-center rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-800 hover:border-emerald-300 disabled:opacity-40"
                 >
                   Copiar borrador
                 </button>
@@ -993,7 +993,7 @@ export default function ContratosPage() {
                   type="button"
                   onClick={handleMarkdownDownload}
                   disabled={!result}
-                  className="flex-1 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-800 hover:border-emerald-300 disabled:opacity-40"
+                  className="flex-1 inline-flex min-h-[44px] items-center justify-center rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-800 hover:border-emerald-300 disabled:opacity-40"
                 >
                   Descargar .md
                 </button>
@@ -1001,7 +1001,7 @@ export default function ContratosPage() {
                   type="button"
                   onClick={handleDocxDownload}
                   disabled={!result || isExportingDocx}
-                  className="flex-1 rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:opacity-50"
+                  className="flex-1 inline-flex min-h-[44px] items-center justify-center rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:opacity-50"
                 >
                   {isExportingDocx ? "Exportando..." : "Exportar .docx"}
                 </button>
@@ -1033,7 +1033,7 @@ export default function ContratosPage() {
                       setIsSaving(false);
                     }
                   }}
-                  className="flex-1 rounded-2xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-500 disabled:opacity-50"
+                  className="flex-1 inline-flex min-h-[44px] items-center justify-center rounded-2xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-500 disabled:opacity-50"
                 >
                   {isSaving ? "Guardando..." : "Guardar borrador"}
                 </button>

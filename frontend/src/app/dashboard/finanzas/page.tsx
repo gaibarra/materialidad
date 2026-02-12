@@ -228,7 +228,7 @@ export default function FinanzasPage() {
         <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">Finanzas</p>
-            <h1 className="text-2xl font-semibold text-white">Bancarización y conciliación</h1>
+            <h1 className="text-xl sm:text-2xl font-semibold text-white">Bancarización y conciliación</h1>
             <p className="text-sm text-slate-300">Adjunta cuentas, estados, movimientos y monitorea conciliaciones con alertas.</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-slate-200">
@@ -343,11 +343,11 @@ export default function FinanzasPage() {
                 <input className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white" placeholder="Monto mín" value={filters.min_monto || ""} onChange={(e) => setFilters((p) => ({ ...p, min_monto: e.target.value }))} />
                 <input className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white" placeholder="Monto máx" value={filters.max_monto || ""} onChange={(e) => setFilters((p) => ({ ...p, max_monto: e.target.value }))} />
                 <input className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white" placeholder="Ref SPEI" value={filters.spei_referencia || ""} onChange={(e) => setFilters((p) => ({ ...p, spei_referencia: e.target.value }))} />
-                <button onClick={() => void applyFilters()} className="rounded-xl bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20">Aplicar</button>
+                <button onClick={() => void applyFilters()} className="rounded-xl bg-white/10 px-4 py-2 min-h-[44px] text-xs font-semibold text-white hover:bg-white/20">Aplicar</button>
               </div>
             </div>
 
-            <div className="max-h-[260px] overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/40">
+            <div className="max-h-[260px] overflow-y-auto overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/40">
               <table className="min-w-full divide-y divide-white/10 text-sm text-slate-100">
                 <thead className="bg-white/5 text-xs uppercase tracking-wide text-slate-300">
                   <tr>
@@ -384,7 +384,7 @@ export default function FinanzasPage() {
                 <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Conciliaciones</p>
                 <h2 className="text-lg font-semibold text-white">Auto / manual</h2>
               </div>
-              <button onClick={() => void refreshConciliaciones()} className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/20">Refrescar</button>
+              <button onClick={() => void refreshConciliaciones()} className="rounded-xl bg-white/10 px-3 py-2 min-h-[44px] text-xs font-semibold text-white hover:bg-white/20">Refrescar</button>
             </div>
             <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
               {conciliaciones.length === 0 && <p className="text-sm text-slate-300">Sin conciliaciones aún.</p>}

@@ -182,7 +182,7 @@ export default function ChecklistsPage() {
       <div className="space-y-6">
         <header className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900/40 to-emerald-900/20 p-6 shadow-2xl shadow-emerald-500/20">
           <p className="text-xs uppercase tracking-[0.4em] text-emerald-300">Checklist</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Pilares de cumplimiento</h1>
+          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-white">Pilares de cumplimiento</h1>
           <p className="mt-2 text-sm text-slate-300">Controla entregables por gasto y marca avance por pilar.</p>
         </header>
 
@@ -252,7 +252,7 @@ export default function ChecklistsPage() {
                   type="button"
                   disabled={isSavingDeliverable}
                   onClick={() => void handleCreateDeliverable()}
-                  className="rounded-xl border border-emerald-400/60 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-xl border border-emerald-400/60 bg-emerald-500/10 px-3 py-2 min-h-[44px] text-xs font-semibold text-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSavingDeliverable ? "Guardando…" : "Guardar en catálogo"}
                 </button>
@@ -268,7 +268,7 @@ export default function ChecklistsPage() {
                       </div>
                       <button
                         type="button"
-                        className="rounded-lg border border-emerald-300/60 px-3 py-1 text-[11px] font-semibold text-emerald-200 hover:border-emerald-200"
+                        className="rounded-lg border border-emerald-300/60 px-3 py-1 min-h-[44px] text-[11px] font-semibold text-emerald-200 hover:border-emerald-200"
                         onClick={() => addDeliverableToDraft(ent)}
                       >
                         Añadir al checklist

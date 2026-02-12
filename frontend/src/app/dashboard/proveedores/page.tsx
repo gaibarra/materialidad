@@ -287,7 +287,7 @@ export default function ProveedoresPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-emerald-500">Capacidad del proveedor</p>
-              <h2 className="text-2xl font-semibold text-slate-900">
+              <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">
                 {editing ? `Editar ${editing.display_name || editing.razon_social}` : "Nuevo proveedor"}
               </h2>
               <p className="text-sm text-slate-500">Captura datos de capacidad operativa y presencia.</p>
@@ -296,7 +296,7 @@ export default function ProveedoresPage() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-600"
+                className="min-h-[44px] rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-600"
               >
                 Cancelar edición
               </button>
@@ -481,7 +481,7 @@ export default function ProveedoresPage() {
           {/* ── Contacto principal ── */}
           <div className="rounded-3xl border border-slate-100 bg-slate-50/70 p-5">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Contacto principal</p>
-            <div className="mt-4 grid gap-4 md:grid-cols-4">
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <label className="text-sm text-slate-600">
                 Nombre
                 <input name="contacto_nombre" value={form.contacto_nombre || ""} onChange={handleChange} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200/60" />
@@ -626,11 +626,11 @@ export default function ProveedoresPage() {
 
         <header className="rounded-3xl border border-slate-100 bg-white p-6 shadow-2xl shadow-slate-200/60">
           <p className="text-xs uppercase tracking-[0.35em] text-emerald-500">Due diligence</p>
-          <h1 className="mt-2 text-3xl font-semibold text-slate-900">Proveedores y alertas 69-B</h1>
+          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-slate-900">Proveedores y alertas 69-B</h1>
           <p className="mt-2 text-sm text-slate-500">
             Consulta estatus SAT, alertas del artículo 69-B y envía validaciones al flujo n8n.
           </p>
-          <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm">
               <p className="text-slate-500">Proveedores registrados</p>
               <p className="text-2xl font-semibold text-slate-900">{proveedores.length}</p>
@@ -750,14 +750,14 @@ export default function ProveedoresPage() {
                     type="button"
                     onClick={() => void handleValidar(prov)}
                     disabled={requestingId === prov.id}
-                    className="rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 transition hover:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="min-h-[44px] rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 transition hover:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {requestingId === prov.id ? "Enviando…" : "Solicitar validación"}
                   </button>
                   <button
                     type="button"
                     onClick={() => handleEdit(prov)}
-                    className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-600"
+                    className="min-h-[44px] rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-600"
                   >
                     Editar
                   </button>

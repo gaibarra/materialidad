@@ -55,7 +55,7 @@ export default function AuditoriaPage() {
         <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">Auditoría</p>
-            <h1 className="text-2xl font-semibold text-white">Bitácora de acciones</h1>
+            <h1 className="text-xl sm:text-2xl font-semibold text-white">Bitácora de acciones</h1>
             <p className="text-sm text-slate-300">Quién crea, modifica o firma evidencias/contratos.</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-slate-200">
@@ -146,7 +146,7 @@ export default function AuditoriaPage() {
             <p>Resultados</p>
             <div className="flex items-center gap-2">
               <button
-                className="rounded-full border border-white/10 px-3 py-1 text-xs text-white hover:border-emerald-300 disabled:opacity-50"
+                className="min-h-[44px] rounded-full border border-white/10 px-3 py-1 text-xs text-white hover:border-emerald-300 disabled:opacity-50"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1 || loading}
               >
@@ -154,7 +154,7 @@ export default function AuditoriaPage() {
               </button>
               <span className="text-xs text-slate-300">Página {page} / {totalPages}</span>
               <button
-                className="rounded-full border border-white/10 px-3 py-1 text-xs text-white hover:border-emerald-300 disabled:opacity-50"
+                className="min-h-[44px] rounded-full border border-white/10 px-3 py-1 text-xs text-white hover:border-emerald-300 disabled:opacity-50"
                 onClick={() => setPage((p) => p + 1)}
                 disabled={loading || page >= totalPages}
               >

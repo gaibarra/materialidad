@@ -227,7 +227,7 @@ export default function OperacionesPage() {
         <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">Operaciones</p>
-            <h1 className="text-2xl font-semibold text-white">Trazabilidad de entregables</h1>
+            <h1 className="text-xl sm:text-2xl font-semibold text-white">Trazabilidad de entregables</h1>
             <p className="text-sm text-slate-300">
               Lista operaciones, agrega entregables y liga evidencia para avanzar a Entregado / Recibido.
             </p>
@@ -290,7 +290,7 @@ export default function OperacionesPage() {
                                     void aplicarSugerenciaConcepto(op);
                                   }}
                                   disabled={updatingConceptId === op.id}
-                                  className="mt-1 rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-semibold text-white hover:bg-emerald-600 disabled:opacity-60"
+                                  className="mt-1 rounded-full bg-emerald-500 px-3 py-1 min-h-[44px] text-[11px] font-semibold text-white hover:bg-emerald-600 disabled:opacity-60"
                                 >
                                   {updatingConceptId === op.id ? "Aplicando..." : "Aplicar sugerencia"}
                                 </button>
@@ -558,7 +558,7 @@ export default function OperacionesPage() {
                             <div className="flex flex-wrap gap-2">
                               <button
                                 type="button"
-                                className="rounded-full border border-amber-300/50 px-3 py-1 text-xs font-semibold text-amber-200 hover:bg-amber-300/10"
+                                className="rounded-full border border-amber-300/50 px-3 py-1 min-h-[44px] text-xs font-semibold text-amber-200 hover:bg-amber-300/10"
                                 onClick={() => {
                                   void avanzarEstado(item, "ENTREGADO");
                                 }}
@@ -567,7 +567,7 @@ export default function OperacionesPage() {
                               </button>
                               <button
                                 type="button"
-                                className="rounded-full border border-emerald-300/50 px-3 py-1 text-xs font-semibold text-emerald-200 hover:bg-emerald-300/10"
+                                className="rounded-full border border-emerald-300/50 px-3 py-1 min-h-[44px] text-xs font-semibold text-emerald-200 hover:bg-emerald-300/10"
                                 onClick={() => {
                                   void avanzarEstado(item, "RECIBIDO");
                                 }}

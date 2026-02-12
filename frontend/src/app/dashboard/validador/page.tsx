@@ -51,7 +51,7 @@ export default function ValidadorCFDISPEI() {
       <div className="space-y-6 text-slate-900">
         <header className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 shadow-lg">
           <p className="text-xs uppercase tracking-[0.35em] text-emerald-700">Validador</p>
-          <h1 className="mt-2 text-3xl font-semibold text-slate-900">CFDI / SPEI</h1>
+          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-slate-900">CFDI / SPEI</h1>
           <p className="mt-2 text-sm text-slate-600">Verifica UUID de CFDI y referencia SPEI en un solo paso.</p>
         </header>
 

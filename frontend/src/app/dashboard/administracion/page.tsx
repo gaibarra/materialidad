@@ -241,7 +241,7 @@ export default function AdminPage() {
         <button
           type="button"
           onClick={() => void loadUsers()}
-          className="rounded-full border border-white/30 px-4 py-2 text-xs font-semibold text-white transition hover:border-emerald-300"
+          className="rounded-full border border-white/30 px-4 py-2 min-h-[44px] text-xs font-semibold text-white transition hover:border-emerald-300"
         >
           Refrescar
         </button>
@@ -275,14 +275,14 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={() => handleEditUser(entry)}
-                  className="rounded-full border border-white/30 px-4 py-2 text-xs font-semibold text-white transition hover:border-emerald-300"
+                  className="rounded-full border border-white/30 px-4 py-2 min-h-[44px] text-xs font-semibold text-white transition hover:border-emerald-300"
                 >
                   Editar
                 </button>
                 <button
                   type="button"
                   onClick={() => void handleDeleteUser(entry)}
-                  className="rounded-full border border-flame-400/40 px-4 py-2 text-xs font-semibold text-flame-100 transition hover:border-flame-300 hover:text-white"
+                  className="rounded-full border border-flame-400/40 px-4 py-2 min-h-[44px] text-xs font-semibold text-flame-100 transition hover:border-flame-300 hover:text-white"
                 >
                   Eliminar
                 </button>
@@ -464,22 +464,22 @@ export default function AdminPage() {
       <div className="space-y-8">
         <header className="rounded-3xl border border-white/10 bg-gradient-to-r from-slate-900/80 via-slate-900/40 to-emerald-900/20 p-6 shadow-2xl shadow-emerald-500/20">
           <p className="text-xs uppercase tracking-[0.4em] text-emerald-300">Centro de control</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Administración del cliente</h1>
+          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-white">Administración del cliente</h1>
           <p className="mt-2 text-sm text-slate-300">
             Gestiona accesos de usuarios y define qué proveedor de IA impulsa las automatizaciones legales.
           </p>
           <div className="mt-4 grid gap-4 text-sm text-white sm:grid-cols-3">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-xs uppercase tracking-[0.35em] text-slate-300">Usuarios activos</p>
-              <p className="mt-2 text-2xl font-semibold">{userStats.active}</p>
+              <p className="mt-2 text-xl sm:text-2xl font-semibold">{userStats.active}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-xs uppercase tracking-[0.35em] text-slate-300">Administradores</p>
-              <p className="mt-2 text-2xl font-semibold">{userStats.staff}</p>
+              <p className="mt-2 text-xl sm:text-2xl font-semibold">{userStats.staff}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-xs uppercase tracking-[0.35em] text-slate-300">Usuarios inactivos</p>
-              <p className="mt-2 text-2xl font-semibold">{userStats.inactive}</p>
+              <p className="mt-2 text-xl sm:text-2xl font-semibold">{userStats.inactive}</p>
             </div>
           </div>
         </header>

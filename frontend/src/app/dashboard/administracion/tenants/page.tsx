@@ -152,7 +152,7 @@ export default function TenantProvisionPage() {
             <button
               type="button"
               onClick={() => void loadLimits()}
-              className="rounded-full border border-white/30 px-3 py-1 text-xs font-semibold text-white transition hover:border-emerald-300"
+              className="min-h-[44px] rounded-full border border-white/30 px-3 py-1 text-xs font-semibold text-white transition hover:border-emerald-300"
             >
               Actualizar
             </button>
@@ -175,7 +175,7 @@ export default function TenantProvisionPage() {
           <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">
             Administración corporativa
           </p>
-          <h1 className="text-2xl font-semibold text-white">Aprovisionar cliente</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-white">Aprovisionar cliente</h1>
           <p className="text-sm text-slate-300">
             Crea la base dedicada, ejecuta migraciones y genera la cuenta admin inicial.
           </p>

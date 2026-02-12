@@ -217,7 +217,7 @@ export default function FirmaLogisticaPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Fecha cierta</p>
-                <h2 className="text-2xl font-semibold text-slate-900">Firma y logística</h2>
+                <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">Firma y logística</h2>
                 <p className="mt-1 text-sm text-slate-500">
                   Programa la firma, registra fedatario e instrumentación para acreditar fecha cierta.
                 </p>
@@ -340,14 +340,14 @@ export default function FirmaLogisticaPage() {
                 </label>
               </div>
 
-              <div className="mt-4 grid gap-4 md:grid-cols-3">
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <div>
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-medium text-slate-500">Fedatario</label>
                     <button
                       type="button"
                       onClick={() => setFedatarioModalOpen(true)}
-                      className="text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 transition"
+                      className="min-h-[44px] text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 transition"
                     >
                       Gestionar catálogo
                     </button>
@@ -429,7 +429,7 @@ export default function FirmaLogisticaPage() {
                     <button
                       type="button"
                       onClick={() => setSelloTiempoFecha(new Date().toISOString().slice(0, 16))}
-                      className="whitespace-nowrap rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition"
+                      className="min-h-[44px] whitespace-nowrap rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition"
                     >
                       Marcar ahora
                     </button>

@@ -327,18 +327,18 @@ export default function LegalLibraryPage() {
       <div className="space-y-8 text-slate-900">
         <header className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 shadow-lg">
           <p className="text-xs uppercase tracking-[0.4em] text-emerald-700">Biblioteca legal</p>
-          <h1 className="mt-2 text-3xl font-semibold text-slate-900">Repositorio de respaldo normativo</h1>
+          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-slate-900">Repositorio de respaldo normativo</h1>
           <p className="mt-2 text-sm text-slate-600">
             Consulta artículos de la LISR y agrega nuevas leyes para respaldar tus contratos y análisis fiscales.
           </p>
           <div className="mt-4 grid gap-4 text-sm text-slate-800 sm:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Fragmentos indexados</p>
-              <p className="mt-2 text-2xl font-semibold text-slate-900">{stats.count}</p>
+              <p className="mt-2 text-xl sm:text-2xl font-semibold text-slate-900">{stats.count}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Cobertura actual</p>
-              <p className="mt-2 text-2xl font-semibold text-slate-900">{lawOptions.length || 1} leyes</p>
+              <p className="mt-2 text-xl sm:text-2xl font-semibold text-slate-900">{lawOptions.length || 1} leyes</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Descripción</p>
@@ -399,7 +399,7 @@ export default function LegalLibraryPage() {
                 type="button"
                 onClick={() => handlePageChange("prev")}
                 disabled={!stats.previous || filters.page === 1 || isLoading}
-                className="rounded-full border border-slate-200 px-3 py-1 text-slate-800 transition hover:border-emerald-300 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full border border-slate-200 px-3 py-1 min-h-[44px] text-slate-800 transition hover:border-emerald-300 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 ← Anteriores
               </button>
@@ -407,7 +407,7 @@ export default function LegalLibraryPage() {
                 type="button"
                 onClick={() => handlePageChange("next")}
                 disabled={!stats.next || isLoading}
-                className="rounded-full border border-slate-200 px-3 py-1 text-slate-800 transition hover:border-emerald-300 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full border border-slate-200 px-3 py-1 min-h-[44px] text-slate-800 transition hover:border-emerald-300 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Siguientes →
               </button>
@@ -474,14 +474,14 @@ export default function LegalLibraryPage() {
                       <button
                         type="button"
                         onClick={() => toggleSource(source.id)}
-                        className="rounded-full border border-slate-200 px-3 py-1 text-slate-800 transition hover:border-emerald-300 hover:text-emerald-700"
+                        className="rounded-full border border-slate-200 px-3 py-1 min-h-[44px] text-slate-800 transition hover:border-emerald-300 hover:text-emerald-700"
                       >
                         {isOpen ? "Ocultar texto" : "Ver texto completo"}
                       </button>
                       <button
                         type="button"
                         onClick={() => void handleCopy(source.contenido)}
-                        className="rounded-full border border-slate-200 px-3 py-1 text-slate-800 transition hover:border-emerald-300 hover:text-emerald-700"
+                        className="rounded-full border border-slate-200 px-3 py-1 min-h-[44px] text-slate-800 transition hover:border-emerald-300 hover:text-emerald-700"
                       >
                         Copiar
                       </button>

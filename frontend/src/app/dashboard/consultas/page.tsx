@@ -187,7 +187,7 @@ export default function LegalConsultationPage() {
         {/* Header */}
         <header className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900/40 to-emerald-900/30 p-6 shadow-2xl shadow-emerald-500/20">
           <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">Despacho Conversacional</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Consulta Legal Inteligente</h1>
+          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-white">Consulta Legal Inteligente</h1>
           <p className="mt-2 text-sm text-slate-200">Análisis legal y fiscal con inteligencia de precisión basado en tu compendio normativo.</p>
         </header>
 
@@ -307,7 +307,7 @@ export default function LegalConsultationPage() {
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">Diagnóstico Autorizado</p>
-                        <h2 className="mt-2 text-2xl font-semibold text-white">
+                        <h2 className="mt-2 text-xl sm:text-2xl font-semibold text-white">
                           {selectedConsultation.pregunta}
                         </h2>
                       </div>
@@ -431,7 +431,7 @@ export default function LegalConsultationPage() {
                 <div className="h-20 w-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
                   <MessageSquare size={36} className="text-slate-500" />
                 </div>
-                <h3 className="text-2xl font-semibold text-slate-300">Esperando parámetros</h3>
+                <h3 className="text-xl sm:text-2xl font-semibold text-slate-300">Esperando parámetros</h3>
                 <p className="text-slate-400 max-w-sm mt-3 text-base">Define tu planteamiento fiscal para desplegar el diagnóstico legal estructurado.</p>
               </div>
             )}

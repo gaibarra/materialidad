@@ -198,7 +198,7 @@ export default function EmpresasPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-sky-500">Base operativa</p>
-            <h2 className="text-2xl font-semibold text-slate-900">Empresas</h2>
+            <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">Empresas</h2>
             <p className="text-sm text-slate-500">Gestiona las empresas del grupo corporativo.</p>
           </div>
           {!showForm && (
@@ -218,11 +218,11 @@ export default function EmpresasPage() {
               <h3 className="text-lg font-semibold text-slate-800">
                 {editing ? `Editar: ${editing.razon_social}` : "Nueva empresa"}
               </h3>
-              <div className="flex gap-2">
-                <button type="button" onClick={resetForm} className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:border-rose-300 hover:text-rose-600">
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={resetForm} className="min-h-[44px] rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:border-rose-300 hover:text-rose-600">
                   Cancelar
                 </button>
-                <button type="submit" disabled={saving} className="rounded-full bg-sky-600 px-5 py-2 text-xs font-semibold text-white shadow hover:bg-sky-700 disabled:opacity-50">
+                <button type="submit" disabled={saving} className="min-h-[44px] rounded-full bg-sky-600 px-5 py-2 text-xs font-semibold text-white shadow hover:bg-sky-700 disabled:opacity-50">
                   {saving ? "Guardando…" : editing ? "Actualizar" : "Crear empresa"}
                 </button>
               </div>
@@ -234,7 +234,7 @@ export default function EmpresasPage() {
                 <p className="text-sm font-semibold text-sky-700">📄 Constancia de Situación Fiscal</p>
                 <p className="text-xs text-sky-600">Sube el PDF o imagen de la CSF para extraer datos automáticamente.</p>
               </div>
-              <label className="cursor-pointer rounded-full bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-sky-700">
+              <label className="min-h-[44px] flex items-center cursor-pointer rounded-full bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-sky-700">
                 {uploading ? "Procesando…" : "Subir CSF"}
                 <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onChange={handleCSFUpload} disabled={uploading} className="hidden" />
               </label>
@@ -299,7 +299,7 @@ export default function EmpresasPage() {
             {/* Contacto principal */}
             <div className={SECTION}>
               <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Contacto principal</p>
-              <div className="grid gap-3 md:grid-cols-4">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <label className={LABEL}>Nombre<input name="contacto_nombre" value={form.contacto_nombre || ""} onChange={handleChange} className={INPUT} /></label>
                 <label className={LABEL}>Puesto<input name="contacto_puesto" value={form.contacto_puesto || ""} onChange={handleChange} className={INPUT} /></label>
                 <label className={LABEL}>Email<input type="email" name="contacto_email" value={form.contacto_email || ""} onChange={handleChange} className={INPUT} /></label>
@@ -350,8 +350,8 @@ export default function EmpresasPage() {
                         </span>
                       </td>
                       <td className="py-3 text-right">
-                        <button onClick={() => handleEdit(emp)} className="mr-2 text-xs font-semibold text-sky-600 hover:text-sky-800">Editar</button>
-                        <button onClick={() => void handleDelete(emp)} className="text-xs font-semibold text-rose-500 hover:text-rose-700">Eliminar</button>
+                        <button onClick={() => handleEdit(emp)} className="min-h-[44px] mr-2 text-xs font-semibold text-sky-600 hover:text-sky-800">Editar</button>
+                        <button onClick={() => void handleDelete(emp)} className="min-h-[44px] text-xs font-semibold text-rose-500 hover:text-rose-700">Eliminar</button>
                       </td>
                     </tr>
                   ))}

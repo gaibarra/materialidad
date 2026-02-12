@@ -62,7 +62,7 @@ export default function ComparadorPreciosPage() {
       <div className="space-y-6 text-slate-900">
         <header className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 shadow-lg">
           <p className="text-xs uppercase tracking-[0.35em] text-emerald-700">Compras</p>
-          <h1 className="mt-2 text-3xl font-semibold text-slate-900">Comparador de precios</h1>
+          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-slate-900">Comparador de precios</h1>
           <p className="mt-2 text-sm text-slate-600">Carga cotizaciones de proveedores y obtén la mejor opción con ahorros calculados.</p>
         </header>
 
@@ -132,7 +132,7 @@ export default function ComparadorPreciosPage() {
                 <Badge label={`Mejor: ${resultado.mejor_opcion.proveedor} (${resultado.mejor_opcion.precio} ${resultado.mejor_opcion.moneda})`} />
                 <Badge label={`Peor: ${resultado.peor_opcion.proveedor}`} />
               </div>
-              <p className="text-2xl font-semibold text-slate-900">Ahorro vs. promedio: {resultado.ahorro_vs_promedio.toFixed(2)} {resultado.mejor_opcion.moneda}</p>
+              <p className="text-xl sm:text-2xl font-semibold text-slate-900">Ahorro vs. promedio: {resultado.ahorro_vs_promedio.toFixed(2)} {resultado.mejor_opcion.moneda}</p>
               <p className="text-slate-700">Diferencia entre mejor y peor: {resultado.diferencia_porcentual.toFixed(2)}%</p>
               <div className="mt-3 grid gap-2 md:grid-cols-2">
                 {resultado.items_ordenados.map((item, idx) => (

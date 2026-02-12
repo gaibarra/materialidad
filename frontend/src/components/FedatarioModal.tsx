@@ -164,7 +164,7 @@ export function FedatarioModal({ open, onClose, onChanged }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="relative flex max-h-[90vh] w-full max-w-3xl flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl">
+      <div className="relative flex max-h-[90vh] w-[calc(100vw-2rem)] sm:w-full max-w-3xl flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
           <div>
@@ -175,7 +175,7 @@ export function FedatarioModal({ open, onClose, onChanged }: Props) {
           </div>
           <button
             onClick={onClose}
-            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+            className="rounded-xl p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -197,7 +197,7 @@ export function FedatarioModal({ open, onClose, onChanged }: Props) {
                 />
                 <button
                   onClick={openCreate}
-                  className="whitespace-nowrap rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-md hover:bg-emerald-700 transition"
+                  className="whitespace-nowrap rounded-xl bg-emerald-600 px-4 py-2 min-h-[44px] text-sm font-semibold text-white shadow-md hover:bg-emerald-700 transition"
                 >
                   + Nuevo
                 </button>
@@ -235,13 +235,13 @@ export function FedatarioModal({ open, onClose, onChanged }: Props) {
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => openEdit(f)}
-                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200 transition"
+                        className="rounded-lg px-3 py-1.5 min-h-[44px] min-w-[44px] flex items-center text-xs font-medium text-slate-600 hover:bg-slate-200 transition"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => void handleDelete(f)}
-                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"
+                        className="rounded-lg px-3 py-1.5 min-h-[44px] min-w-[44px] flex items-center text-xs font-medium text-red-600 hover:bg-red-50 transition"
                       >
                         Eliminar
                       </button>
@@ -255,7 +255,7 @@ export function FedatarioModal({ open, onClose, onChanged }: Props) {
             <div className="space-y-5">
               <button
                 onClick={() => setView("list")}
-                className="text-sm font-medium text-emerald-600 hover:text-emerald-700 transition"
+                className="text-sm font-medium text-emerald-600 hover:text-emerald-700 transition min-h-[44px] flex items-center"
               >
                 ← Volver al listado
               </button>
@@ -379,14 +379,14 @@ export function FedatarioModal({ open, onClose, onChanged }: Props) {
           <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-6 py-4">
             <button
               onClick={() => setView("list")}
-              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
+              className="rounded-xl border border-slate-200 px-4 py-2 min-h-[44px] text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
             >
               Cancelar
             </button>
             <button
               disabled={saving}
               onClick={() => void handleSave()}
-              className="rounded-xl bg-emerald-600 px-6 py-2 text-sm font-semibold text-white shadow-md hover:bg-emerald-700 disabled:opacity-50 transition"
+              className="rounded-xl bg-emerald-600 px-6 py-2 min-h-[44px] text-sm font-semibold text-white shadow-md hover:bg-emerald-700 disabled:opacity-50 transition"
             >
               {saving ? "Guardando…" : editingId ? "Actualizar" : "Crear fedatario"}
             </button>

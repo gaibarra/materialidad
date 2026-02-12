@@ -197,7 +197,7 @@ export default function RazonNegocioPage() {
       <div className="space-y-6 text-white">
         <header className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900/40 to-emerald-900/30 p-6 shadow-2xl shadow-emerald-500/20">
           <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">Razón de negocio</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Aprobaciones Art. 5-A</h1>
+          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-white">Aprobaciones Art. 5-A</h1>
           <p className="mt-2 text-sm text-slate-200">
             Define la necesidad, monto esperado y registra quién autoriza cada contrato antes de ejecutar.
           </p>
