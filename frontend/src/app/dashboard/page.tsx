@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Building2, Users } from "lucide-react";
 
 import { DashboardShell } from "../../components/DashboardShell";
 import { useAuthContext } from "../../context/AuthContext";
 import { apiFetch } from "../../lib/api";
 import { alertError, alertSuccess, confirmAction } from "../../lib/alerts";
+import { fetchProviders, Proveedor } from "../../lib/providers";
 
 type Empresa = {
   id: number;
@@ -108,55 +109,13 @@ const KPI_TONE_LABEL: Record<MetricTone, string> = {
   info: "Seguimiento",
 };
 
-const REGIMENES_FISCALES = [
-  { value: "601", label: "601 - General de Ley Personas Morales" },
-  { value: "603", label: "603 - Personas Morales con Fines no Lucrativos" },
-  { value: "605", label: "605 - Sueldos y Salarios e Ingresos Asimilados a Salarios" },
-  { value: "606", label: "606 - Arrendamiento" },
-  { value: "608", label: "608 - Demás ingresos" },
-  { value: "610", label: "610 - Residentes en el Extranjero sin Establecimiento Permanente" },
-  { value: "611", label: "611 - Ingresos por Dividendos (socios y accionistas)" },
-  { value: "612", label: "612 - Personas Físicas con Actividades Empresariales y Profesionales" },
-  { value: "614", label: "614 - Ingresos por intereses" },
-  { value: "615", label: "615 - Régimen de los ingresos por obtención de premios" },
-  { value: "620", label: "620 - Sociedades por Acciones Simplificadas" },
-  { value: "621", label: "621 - Incorporación Fiscal" },
-  { value: "622", label: "622 - Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras" },
-  { value: "623", label: "623 - Opcional para Grupos de Sociedades" },
-  { value: "624", label: "624 - Coordinados" },
-  { value: "625", label: "625 - Actividades Empresariales con ingresos a través de Plataformas Tecnológicas" },
-  { value: "626", label: "626 - Régimen Simplificado de Confianza" },
-];
-
 const INSIGHT_STYLES: Record<DashboardMetrics["insights"][number]["severity"], string> = {
   info: "text-jade-600 bg-jade-50",
   warning: "text-amber-600 bg-amber-50",
   alert: "text-flame-600 bg-flame-50",
 };
 
-type EmpresaFormData = {
-  razon_social: string;
-  rfc: string;
-  regimen_fiscal: string;
-  fecha_constitucion: string;
-  pais: string;
-  estado: string;
-  ciudad: string;
-  email_contacto: string;
-  telefono_contacto: string;
-};
 
-const emptyForm: EmpresaFormData = {
-  razon_social: "",
-  rfc: "",
-  regimen_fiscal: "",
-  fecha_constitucion: "",
-  pais: "",
-  estado: "",
-  ciudad: "",
-  email_contacto: "",
-  telefono_contacto: "",
-};
 
 const formatNumber = (value: number) => value.toLocaleString("es-MX");
 const formatPercentage = (value: number) => `${value.toFixed(1)}%`;
@@ -203,12 +162,10 @@ export default function DashboardPage() {
   const isGlobalAdmin = isAuthenticated && user?.is_superuser && !tenant;
 
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState<EmpresaFormData>(emptyForm);
-  const [isSaving, setIsSaving] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [isFormExpanded, setIsFormExpanded] = useState(false);
+
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [isMetricsLoading, setIsMetricsLoading] = useState(false);
   const [metricsError, setMetricsError] = useState<string | null>(null);
@@ -217,9 +174,6 @@ export default function DashboardPage() {
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [historyDays, setHistoryDays] = useState<number>(90);
-
-  const inputClass =
-    "mt-1 w-full rounded-lg border border-slate-300 bg-white/95 px-3 py-2 text-sm text-ink-700 placeholder-slate-500 focus:border-jade-500 focus:ring-2 focus:ring-jade-500/15 focus:outline-none";
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -239,6 +193,15 @@ export default function DashboardPage() {
       void alertError("No pudimos cargar las empresas", message);
     } finally {
       setIsLoading(false);
+    }
+  }, []);
+
+  const loadProveedores = useCallback(async () => {
+    try {
+      const data = await fetchProviders();
+      setProveedores(data);
+    } catch {
+      // silenciar — no es crítico en el dashboard
     }
   }, []);
 
@@ -279,8 +242,8 @@ export default function DashboardPage() {
   );
 
   const handleRefresh = useCallback(() => {
-    void Promise.all([loadEmpresas(), loadMetrics(), loadHistory(historyDays)]);
-  }, [historyDays, loadEmpresas, loadMetrics, loadHistory]);
+    void Promise.all([loadEmpresas(), loadProveedores(), loadMetrics(), loadHistory(historyDays)]);
+  }, [historyDays, loadEmpresas, loadProveedores, loadMetrics, loadHistory]);
 
   const handleHistoryRangeChange = (days: number) => {
     if (historyDays === days) return;
@@ -295,69 +258,13 @@ export default function DashboardPage() {
     if (!isAuthenticated || isGlobalAdmin) return;
 
     void loadEmpresas();
+    void loadProveedores();
     void loadMetrics();
     void loadHistory(historyDays);
-  }, [historyDays, isAuthenticated, isGlobalAdmin, isProfileLoaded, loadEmpresas, loadMetrics, loadHistory]);
-
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "rfc" ? value.toUpperCase() : value,
-    }));
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsSaving(true);
-    try {
-      const endpoint = editingId
-        ? `/api/materialidad/empresas/${editingId}/`
-        : "/api/materialidad/empresas/";
-      const method = editingId ? "PUT" : "POST";
-      await apiFetch<Empresa>(endpoint, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      if (editingId) {
-        await alertSuccess("Empresa actualizada", "La razón social se actualizó correctamente");
-      } else {
-        await alertSuccess("Empresa registrada", "La empresa quedó disponible en tu cliente");
-      }
-      setFormData(emptyForm);
-      setEditingId(null);
-      await loadEmpresas();
-    } catch (err) {
-      void alertError("No pudimos guardar la empresa", (err as Error).message);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const formatDateForInput = (value: string) => {
-    if (!value) return "";
-    return value.split("T")[0];
-  };
+  }, [historyDays, isAuthenticated, isGlobalAdmin, isProfileLoaded, loadEmpresas, loadProveedores, loadMetrics, loadHistory]);
 
   const handleEdit = (empresa: Empresa) => {
-    setEditingId(empresa.id);
-    setFormData({
-      razon_social: empresa.razon_social,
-      rfc: empresa.rfc,
-      regimen_fiscal: empresa.regimen_fiscal,
-      fecha_constitucion: formatDateForInput(empresa.fecha_constitucion),
-      pais: empresa.pais,
-      estado: empresa.estado,
-      ciudad: empresa.ciudad,
-      email_contacto: empresa.email_contacto || "",
-      telefono_contacto: empresa.telefono_contacto || "",
-    });
-  };
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setFormData(emptyForm);
+    router.push("/dashboard/empresas");
   };
 
   const handleDelete = async (empresa: Empresa) => {
@@ -374,22 +281,12 @@ export default function DashboardPage() {
         method: "DELETE",
       });
       await alertSuccess("Empresa eliminada", "Se retiró del catálogo del cliente");
-      if (editingId === empresa.id) {
-        handleCancelEdit();
-      }
       await loadEmpresas();
     } catch (err) {
       void alertError("No pudimos eliminar", (err as Error).message);
     }
   };
 
-  useEffect(() => {
-    if (editingId !== null) {
-      setIsFormExpanded(true);
-    }
-  }, [editingId]);
-
-  const isEditing = useMemo(() => editingId !== null, [editingId]);
   const kpiCards = useMemo<KpiCard[]>(() => {
     if (!metrics) return [];
     const coverageTone: MetricTone =
@@ -933,167 +830,86 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-4">
+        <section className="space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm text-slate-500">Registrar empresa</p>
-              <h2 className="text-2xl font-semibold text-ink-500">
-                {isEditing ? "Actualiza una razón social" : "Agrega una razón social"}
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Despliega el formulario solo cuando necesites capturar o editar datos fiscales.
-              </p>
+              <p className="text-sm text-slate-500">Proveedores registrados en el tenant</p>
+              <h2 className="text-2xl font-semibold text-ink-500">Proveedores activos</h2>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsFormExpanded((prev) => !prev)}
-              aria-expanded={isFormExpanded}
-              aria-controls="empresa-form"
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-ink-500 transition hover:border-jade-400 hover:text-jade-600"
+            <Link
+              href="/dashboard/proveedores"
+              className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-ink-500 hover:border-jade-400 hover:text-jade-600"
             >
-              {isFormExpanded ? "Ocultar formulario" : isEditing ? "Reanudar edición" : "Registrar empresa"}
-            </button>
+              Gestionar proveedores
+            </Link>
           </div>
-          {isFormExpanded ? (
-            <form id="empresa-form" onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="text-sm font-medium text-ink-500">Razón social</label>
-                  <input
-                    type="text"
-                    name="razon_social"
-                    required
-                    value={formData.razon_social}
-                    onChange={handleInputChange}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-ink-500">RFC</label>
-                  <input
-                    type="text"
-                    name="rfc"
-                    required
-                    maxLength={13}
-                    value={formData.rfc}
-                    onChange={handleInputChange}
-                    className={`${inputClass} uppercase`}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-ink-500">Régimen fiscal</label>
-                  <select
-                    name="regimen_fiscal"
-                    required
-                    value={formData.regimen_fiscal}
-                    onChange={handleInputChange}
-                    className={inputClass}
-                  >
-                    <option value="" disabled>
-                      Selecciona un régimen
-                    </option>
-                    {REGIMENES_FISCALES.map((regimen) => (
-                      <option key={regimen.value} value={regimen.label}>
-                        {regimen.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-ink-500">Fecha de constitución</label>
-                  <input
-                    type="date"
-                    name="fecha_constitucion"
-                    required
-                    value={formData.fecha_constitucion}
-                    onChange={handleInputChange}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-ink-500">País</label>
-                  <input
-                    type="text"
-                    name="pais"
-                    required
-                    value={formData.pais}
-                    onChange={handleInputChange}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-ink-500">Estado</label>
-                  <input
-                    type="text"
-                    name="estado"
-                    required
-                    value={formData.estado}
-                    onChange={handleInputChange}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-ink-500">Ciudad</label>
-                  <input
-                    type="text"
-                    name="ciudad"
-                    required
-                    value={formData.ciudad}
-                    onChange={handleInputChange}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-ink-500">Correo de contacto</label>
-                  <input
-                    type="email"
-                    name="email_contacto"
-                    value={formData.email_contacto}
-                    onChange={handleInputChange}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-ink-500">Teléfono</label>
-                  <input
-                    type="tel"
-                    name="telefono_contacto"
-                    value={formData.telefono_contacto}
-                    onChange={handleInputChange}
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="w-full rounded-lg bg-jade-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-jade-600 disabled:opacity-70"
-              >
-                {isSaving
-                  ? isEditing
-                    ? "Guardando cambios..."
-                    : "Registrando..."
-                  : isEditing
-                    ? "Actualizar empresa"
-                    : "Agregar empresa"}
-              </button>
-              {isEditing && (
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-ink-500"
-                >
-                  Cancelar edición
-                </button>
-              )}
-            </form>
-          ) : (
-            <div className="rounded-xl border border-dashed border-slate-300 bg-white/70 p-4 text-sm text-ink-500">
-              {empresas.length
-                ? "Consulta el padrón y abre el formulario cuando necesites agregar o actualizar una razón social."
-                : "Aún no hay empresas registradas. Haz clic en \"Registrar empresa\" para capturar la primera."}
-            </div>
-          )}
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <table className="min-w-full divide-y divide-slate-200 text-sm">
+              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Nombre / Razón social</th>
+                  <th className="px-4 py-3">Tipo</th>
+                  <th className="px-4 py-3">RFC</th>
+                  <th className="px-4 py-3">Riesgo fiscal</th>
+                  <th className="px-4 py-3">Estatus SAT</th>
+                  <th className="px-4 py-3">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {proveedores.length === 0 && (
+                  <tr>
+                    <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
+                      No hay proveedores registrados.{" "}
+                      <Link href="/dashboard/proveedores" className="text-jade-600 hover:underline">
+                        Registrar el primero
+                      </Link>
+                    </td>
+                  </tr>
+                )}
+                {proveedores.map((prov) => (
+                  <tr key={prov.id}>
+                    <td className="px-4 py-3 font-medium text-ink-500">
+                      {prov.display_name || prov.razon_social}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          prov.tipo_persona === "FISICA"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-sky-100 text-sky-700"
+                        }`}
+                      >
+                        {prov.tipo_persona === "FISICA" ? "PF" : "PM"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">{prov.rfc}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          prov.riesgo_fiscal === "ALTO"
+                            ? "bg-flame-100 text-flame-700"
+                            : prov.riesgo_fiscal === "MEDIO"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-jade-100 text-jade-700"
+                        }`}
+                      >
+                        {prov.riesgo_fiscal || "Sin evaluar"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">{prov.estatus_sat || "—"}</td>
+                    <td className="px-4 py-3 text-right">
+                      <Link
+                        href="/dashboard/proveedores"
+                        className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-medium text-ink-500 hover:border-jade-500"
+                      >
+                        Ver detalle
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       </div>
     </DashboardShell>
