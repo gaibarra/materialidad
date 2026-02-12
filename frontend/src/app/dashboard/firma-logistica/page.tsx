@@ -65,7 +65,9 @@ export default function FirmaLogisticaPage() {
   const [contacto, setContacto] = useState<string>("");
   const [fechaCiertaRequerida, setFechaCiertaRequerida] = useState<boolean>(true);
   const [fechaCiertaObtenida, setFechaCiertaObtenida] = useState<boolean>(false);
-  const [fechaRatificacion, setFechaRatificacion] = useState<string>("");
+  const [fechaRatificacion, setFechaRatificacion] = useState<string>(
+    new Date().toISOString().slice(0, 10)
+  );
   const [fedatario, setFedatario] = useState<string>("");
   const [numeroInstrumento, setNumeroInstrumento] = useState<string>("");
   const [archivoNotariadoUrl, setArchivoNotariadoUrl] = useState<string>("");
@@ -353,7 +355,21 @@ export default function FirmaLogisticaPage() {
                   <select
                     className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                     value={fedatario}
-                    onChange={(e) => setFedatario(e.target.value)}
+                    onChange={(e) => {
+                      const nombre = e.target.value;
+                      setFedatario(nombre);
+                      const found = fedatarioCatalog.find((f) => f.nombre === nombre);
+                      if (found) {
+                        const parts: string[] = [];
+                        if (found.direccion) parts.push(found.direccion);
+                        else {
+                          if (found.numero_notaria) parts.push(`Notaría ${found.numero_notaria}`);
+                          if (found.ciudad) parts.push(found.ciudad);
+                          if (found.estado) parts.push(found.estado);
+                        }
+                        if (parts.length) setLugarCita(parts.join(", "));
+                      }
+                    }}
                   >
                     <option value="">Selecciona un fedatario</option>
                     {fedatarioCatalog.map((f) => (

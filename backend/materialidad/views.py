@@ -320,6 +320,7 @@ class EmpresaViewSet(_CSFUploadMixin, viewsets.ModelViewSet):
 class FedatarioViewSet(viewsets.ModelViewSet):
     serializer_class = FedatarioSerializer
     queryset = Fedatario.objects.all().order_by("nombre")
+    pagination_class = None
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
     search_fields = ("nombre", "numero_notaria", "estado", "ciudad", "email")
     ordering_fields = ("nombre", "estado", "created_at")
