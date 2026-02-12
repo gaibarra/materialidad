@@ -211,7 +211,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       {mounted && (
         <aside
           className={clsx(
-            "fixed inset-y-0 left-0 z-50 flex w-[85vw] max-w-[320px] flex-col bg-white px-5 pb-8 pt-6 shadow-2xl transition-transform duration-300 ease-in-out lg:pointer-events-none lg:hidden",
+            "fixed inset-y-0 left-0 z-50 w-[85vw] max-w-[320px] overflow-y-auto overscroll-contain bg-white px-5 pb-8 pt-6 shadow-2xl transition-transform duration-300 ease-in-out [-webkit-overflow-scrolling:touch] lg:pointer-events-none lg:hidden",
             drawerOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
@@ -225,15 +225,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             <X className="h-6 w-6" />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
-          <SidebarNav
-            user={user}
-            orgLabel={orgLabel}
-            pathname={pathname}
-            onNavigate={closeDrawer}
-          />
-        </div>
-        <div className="shrink-0 space-y-3 border-t border-slate-100 pt-4">
+        <SidebarNav
+          user={user}
+          orgLabel={orgLabel}
+          pathname={pathname}
+          onNavigate={closeDrawer}
+        />
+        <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
           <SidebarSessionCard user={user} orgLabel={orgLabel} roleLabel={roleLabel} />
           <button
             onClick={() => { closeDrawer(); logout(); }}
