@@ -120,7 +120,7 @@ function SidebarContent({
           );
         })}
       </nav>
-      <div className="mt-auto rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-700 shadow-sm">
+      <div className="mt-8 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-700 shadow-sm lg:mt-auto">
         <p className="text-[12px] uppercase tracking-[0.3em] text-sky-500">Sesión activa</p>
         <p className="mt-1 text-base font-semibold text-slate-900">{user?.full_name || user?.email}</p>
         <p className="mt-2 text-slate-600">{orgLabel}</p>
@@ -210,7 +210,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             <X className="h-6 w-6" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
           <SidebarContent
             user={user}
             orgLabel={orgLabel}
