@@ -301,34 +301,34 @@ export default function LegalConsultationPage() {
           <div className="lg:col-span-8 flex flex-col gap-6">
             {selectedConsultation ? (
               <>
-                <main id="response-doc" className="rounded-3xl border border-white/10 bg-white/5 flex flex-col overflow-hidden">
+                <main id="response-doc" className="rounded-3xl border border-slate-200 bg-white flex flex-col overflow-hidden shadow-lg">
                   {/* Header de la Respuesta */}
-                  <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-6 m-4">
+                  <div className="bg-gradient-to-r from-slate-800 to-slate-700 p-6">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">Diagnóstico Autorizado</p>
+                        <p className="text-xs uppercase tracking-[0.35em] text-emerald-300 font-medium">Diagnóstico Autorizado</p>
                         <h2 className="mt-2 text-xl sm:text-2xl font-semibold text-white">
                           {selectedConsultation.pregunta}
                         </h2>
                       </div>
                       <button
                         onClick={handlePrint}
-                        className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl border border-white/20 transition-all font-medium text-xs no-print"
+                        className="flex items-center gap-2 px-4 py-2 bg-white/15 hover:bg-white/25 text-white rounded-xl border border-white/30 transition-all font-medium text-xs no-print"
                       >
                         <Printer size={16} />
                         Imprimir
                       </button>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-3">
-                      <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl">
-                        <Clock size={14} className="text-slate-400" />
-                        <span className="text-xs font-medium text-slate-300">{formatDate(selectedConsultation.created_at)}</span>
+                      <div className="flex items-center gap-2 bg-white/10 border border-white/20 px-3 py-1.5 rounded-xl">
+                        <Clock size={14} className="text-slate-300" />
+                        <span className="text-xs font-medium text-slate-200">{formatDate(selectedConsultation.created_at)}</span>
                       </div>
-                      <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl">
-                        <Layers size={14} className="text-slate-400" />
-                        <span className="text-xs font-medium text-slate-300">ID: {selectedConsultation.id}</span>
+                      <div className="flex items-center gap-2 bg-white/10 border border-white/20 px-3 py-1.5 rounded-xl">
+                        <Layers size={14} className="text-slate-300" />
+                        <span className="text-xs font-medium text-slate-200">ID: {selectedConsultation.id}</span>
                       </div>
-                      <div className="flex items-center gap-2 bg-emerald-500/15 border border-emerald-400/30 px-3 py-1.5 rounded-xl">
+                      <div className="flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/40 px-3 py-1.5 rounded-xl">
                         <div className="h-2 w-2 rounded-full bg-emerald-400" />
                         <span className="text-xs font-semibold text-emerald-200">Respuesta Verificada</span>
                       </div>
@@ -336,7 +336,7 @@ export default function LegalConsultationPage() {
                   </div>
 
                   {/* Cuerpo de la Respuesta */}
-                  <div className="flex-1 p-6 bg-white rounded-2xl m-4">
+                  <div className="flex-1 px-8 py-6">
                     {selectedConsultation.respuesta?.toLowerCase().includes("error") ? (
                       <div className="flex flex-col items-center justify-center py-12 bg-red-50 rounded-2xl border border-red-200 text-center gap-4">
                         <div className="h-16 w-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center">
@@ -355,13 +355,20 @@ export default function LegalConsultationPage() {
                         </div>
                       </div>
                     ) : (
-                      <article className="prose prose-lg prose-slate max-w-none 
-                        prose-headings:text-slate-900 prose-headings:font-semibold
-                        prose-p:text-slate-700 prose-p:leading-relaxed
-                        prose-strong:text-emerald-600 prose-strong:font-semibold
-                        prose-li:text-slate-700
-                        prose-code:bg-slate-100 prose-code:text-emerald-600 prose-code:px-2 prose-code:rounded-lg prose-code:font-mono
-                        prose-blockquote:border-emerald-500 prose-blockquote:bg-emerald-50 prose-blockquote:rounded-xl prose-blockquote:p-4
+                      <article className="prose prose-lg max-w-none
+                        prose-headings:text-slate-900 prose-headings:font-bold prose-headings:tracking-tight
+                        prose-h1:text-2xl prose-h1:mt-8 prose-h1:mb-4 prose-h1:border-b prose-h1:border-slate-200 prose-h1:pb-3
+                        prose-h2:text-xl prose-h2:mt-6 prose-h2:mb-3
+                        prose-h3:text-lg prose-h3:mt-5 prose-h3:mb-2
+                        prose-p:text-slate-800 prose-p:leading-[1.8] prose-p:text-[15px]
+                        prose-strong:text-slate-900 prose-strong:font-bold
+                        prose-li:text-slate-800 prose-li:leading-[1.8] prose-li:text-[15px]
+                        prose-ul:space-y-1
+                        prose-ol:space-y-1
+                        prose-code:bg-emerald-50 prose-code:text-emerald-700 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:font-mono prose-code:text-sm
+                        prose-blockquote:border-l-4 prose-blockquote:border-emerald-500 prose-blockquote:bg-emerald-50/60 prose-blockquote:rounded-r-xl prose-blockquote:py-3 prose-blockquote:px-5 prose-blockquote:not-italic
+                        prose-a:text-emerald-600 prose-a:underline prose-a:decoration-emerald-300 hover:prose-a:text-emerald-700
+                        prose-table:border-collapse prose-th:bg-slate-100 prose-th:text-slate-700 prose-td:border-slate-200
                       ">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                           {selectedConsultation.respuesta}
@@ -371,16 +378,16 @@ export default function LegalConsultationPage() {
                   </div>
 
                   {/* Footer Informativo */}
-                  <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 m-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="border-t border-slate-200 bg-slate-50 px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-6">
                       <div className="flex flex-col">
                         <span className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Algoritmo Utilizado</span>
-                        <span className="text-sm font-medium text-slate-200">{selectedConsultation.modelo || 'Engine 1.0 (Compendio)'}</span>
+                        <span className="text-sm font-medium text-slate-700">{selectedConsultation.modelo || 'Engine 1.0 (Compendio)'}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 bg-emerald-500/15 border border-emerald-400/30 px-4 py-2 rounded-xl">
-                      <div className="h-2 w-2 rounded-full bg-emerald-400" />
-                      <span className="text-xs font-semibold text-emerald-200">Sustentado en Ley Vigente</span>
+                    <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-xl">
+                      <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                      <span className="text-xs font-semibold text-emerald-700">Sustentado en Ley Vigente</span>
                     </div>
                   </div>
                 </main>
@@ -388,35 +395,35 @@ export default function LegalConsultationPage() {
                 {/* Sección de Fuentes */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 px-2">
-                    <div className="h-8 w-8 bg-sky-500/20 text-sky-400 rounded-xl flex items-center justify-center">
+                    <div className="h-8 w-8 bg-sky-100 text-sky-600 rounded-xl flex items-center justify-center">
                       <BookOpen size={18} strokeWidth={2.5} />
                     </div>
                     <h3 className="text-lg font-semibold text-white">Fuentes de la Biblioteca</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {references.length === 0 ? (
-                      <div className="col-span-full border border-dashed border-white/20 rounded-2xl p-12 text-center text-slate-400 flex flex-col items-center gap-3">
+                      <div className="col-span-full border border-dashed border-slate-300 rounded-2xl p-12 text-center text-slate-400 bg-white/5 flex flex-col items-center gap-3">
                         <Info size={32} className="opacity-40" />
                         <span className="font-medium">Sin referencias adicionales indexadas</span>
                       </div>
                     ) : (
                       references.map((ref, idx) => (
-                        <div key={idx} className="rounded-2xl border border-white/10 bg-white/5 p-6 hover:bg-white/10 transition-all">
+                        <div key={idx} className="rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-md transition-all shadow-sm">
                           <div className="flex justify-between items-start mb-4">
-                            <span className="bg-sky-500/20 text-sky-300 px-3 py-1 rounded-lg text-xs font-semibold">Referencia {idx + 1}</span>
+                            <span className="bg-sky-100 text-sky-700 px-3 py-1 rounded-lg text-xs font-semibold">Referencia {idx + 1}</span>
                             {ref.fuente_url && (
-                              <a href={ref.fuente_url} target="_blank" className="p-2 rounded-lg text-slate-500 hover:text-sky-400 hover:bg-sky-500/10 transition-colors">
+                              <a href={ref.fuente_url} target="_blank" className="p-2 rounded-lg text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-colors">
                                 <ExternalLink size={16} />
                               </a>
                             )}
                           </div>
-                          <h4 className="text-lg font-semibold text-white mb-2">{ref.ley}</h4>
+                          <h4 className="text-lg font-semibold text-slate-900 mb-2">{ref.ley}</h4>
                           <div className="flex gap-2 mb-4">
-                            {ref.articulo && <span className="bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-lg text-xs font-medium">Art. {ref.articulo}</span>}
-                            {ref.fraccion && <span className="bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-lg text-xs font-medium">Fracción {ref.fraccion}</span>}
+                            {ref.articulo && <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg text-xs font-medium">Art. {ref.articulo}</span>}
+                            {ref.fraccion && <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg text-xs font-medium">Fracción {ref.fraccion}</span>}
                           </div>
-                          <div className="bg-slate-950/40 rounded-xl p-4 border border-white/10">
-                            <p className="text-slate-300 text-sm leading-relaxed">
+                          <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                            <p className="text-slate-700 text-sm leading-relaxed">
                               {ref.extracto || ref.resumen}
                             </p>
                           </div>
