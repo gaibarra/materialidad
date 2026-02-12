@@ -134,6 +134,11 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuthContext();
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const isCorporativo = user?.despacho_tipo === "corporativo";
   const roleLabel = user?.is_superuser
@@ -176,21 +181,25 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* ── Mobile Drawer Overlay ── */}
-      {drawerOpen && (
+      {mounted && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+          className={clsx(
+            "fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 lg:pointer-events-none lg:hidden",
+            drawerOpen ? "opacity-100" : "pointer-events-none opacity-0"
+          )}
           onClick={closeDrawer}
           aria-hidden="true"
         />
       )}
 
       {/* ── Mobile Drawer ── */}
-      <aside
-        className={clsx(
-          "fixed inset-y-0 left-0 z-50 flex w-[85vw] max-w-[320px] flex-col bg-white px-5 pb-8 pt-6 shadow-2xl transition-transform duration-300 ease-in-out lg:hidden",
-          drawerOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
+      {mounted && (
+        <aside
+          className={clsx(
+            "fixed inset-y-0 left-0 z-50 flex w-[85vw] max-w-[320px] flex-col bg-white px-5 pb-8 pt-6 shadow-2xl transition-transform duration-300 ease-in-out lg:pointer-events-none lg:hidden",
+            drawerOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
         <div className="mb-4 flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-wider text-sky-500">Menú</p>
           <button
@@ -217,6 +226,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           Cerrar sesión
         </button>
       </aside>
+      )}
 
       <div className="flex flex-1 flex-col">
         {/* ── Header ── */}
@@ -225,7 +235,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             <div className="flex items-center gap-2 sm:gap-4">
               <button
                 onClick={() => setDrawerOpen(true)}
-                className="flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 active:bg-slate-200 lg:hidden"
+                className={clsx(
+                  "flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 active:bg-slate-200 lg:hidden",
+                  !mounted && "invisible"
+                )}
                 aria-label="Abrir menú"
               >
                 <Menu className="h-6 w-6" />
