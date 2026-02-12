@@ -8,30 +8,30 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
+import { refreshAccessToken } from "../lib/api";
 import { loadSession, persistSession, removeSession } from "../lib/token-storage";
 
-const isTokenExpired = (token: string | null | undefined): boolean => {
-  if (!token) {
-    return true;
-  }
+/* ── helpers ── */
+
+const getTokenExp = (token: string | null | undefined): number | null => {
+  if (!token) return null;
   try {
     const [, payload] = token.split(".");
-    if (!payload) {
-      return true;
-    }
-    const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/"))) as {
-      exp?: number;
-    };
-    if (!decoded.exp) {
-      return false;
-    }
-    return decoded.exp * 1000 <= Date.now();
+    if (!payload) return null;
+    const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/"))) as { exp?: number };
+    return decoded.exp ? decoded.exp * 1000 : null;
   } catch {
-    return true;
+    return null;
   }
+};
+
+const isTokenExpired = (token: string | null | undefined): boolean => {
+  const exp = getTokenExp(token);
+  return exp === null || exp <= Date.now();
 };
 
 export type UserProfile = {
@@ -82,6 +82,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const router = useRouter();
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const logout = useCallback(() => {
     setAccessToken(null);
@@ -91,26 +92,84 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsProfileLoaded(false);
     removeSession();
     Cookies.remove("tenant");
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
     router.push("/login");
   }, [router]);
 
+  /* ── Schedule proactive token refresh 2 min before expiry ── */
+  const scheduleRefresh = useCallback(
+    (token: string) => {
+      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+      const exp = getTokenExp(token);
+      if (!exp) return;
+      // Refresh 2 minutes before expiry, minimum 10 seconds from now
+      const delay = Math.max(exp - Date.now() - 2 * 60 * 1000, 10_000);
+      refreshTimerRef.current = setTimeout(async () => {
+        const newToken = await refreshAccessToken();
+        if (newToken) {
+          setAccessToken(newToken);
+          const session = loadSession();
+          if (session?.refreshToken) setRefreshToken(session.refreshToken);
+          scheduleRefresh(newToken);
+        } else {
+          logout();
+        }
+      }, delay);
+    },
+    [logout]
+  );
+
+  /* ── Listen for token refreshes triggered by api.ts interceptor ── */
+  useEffect(() => {
+    const handler = () => {
+      const session = loadSession();
+      if (session) {
+        setAccessToken(session.accessToken);
+        setRefreshToken(session.refreshToken);
+        scheduleRefresh(session.accessToken);
+      }
+    };
+    window.addEventListener("session-refreshed", handler);
+    return () => window.removeEventListener("session-refreshed", handler);
+  }, [scheduleRefresh]);
+
+  /* ── Initial session load ── */
   useEffect(() => {
     const session = loadSession();
     if (session) {
       if (isTokenExpired(session.accessToken)) {
-        removeSession();
-        Cookies.remove("tenant");
-        setIsProfileLoaded(true);
+        // Try to refresh instead of immediately removing session
+        void (async () => {
+          const newToken = await refreshAccessToken();
+          if (newToken) {
+            const updated = loadSession();
+            setAccessToken(newToken);
+            setRefreshToken(updated?.refreshToken ?? null);
+            setTenant(updated?.tenant ?? session.tenant);
+            scheduleRefresh(newToken);
+          } else {
+            removeSession();
+            Cookies.remove("tenant");
+            setIsProfileLoaded(true);
+          }
+        })();
         return;
       }
       setAccessToken(session.accessToken);
       setRefreshToken(session.refreshToken);
       setTenant(session.tenant);
-      // fetchProfile will set isProfileLoaded = true when done
+      scheduleRefresh(session.accessToken);
     } else {
-      // No session at all — mark as loaded so consumers don't wait forever
       setIsProfileLoaded(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* ── Cleanup timer on unmount ── */
+  useEffect(() => {
+    return () => {
+      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    };
   }, []);
 
   const fetchProfile = useCallback(
@@ -210,18 +269,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
         Cookies.set("tenant", data.tenant);
       }
 
+      scheduleRefresh(data.access);
       await fetchProfile(data.access, data.tenant);
     },
-    [fetchProfile]
+    [fetchProfile, scheduleRefresh]
   );
 
   const refreshProfile = useCallback(async () => {
     if (accessToken && !isTokenExpired(accessToken)) {
       await fetchProfile(accessToken, tenant);
-    } else if (accessToken && isTokenExpired(accessToken)) {
-      logout();
+    } else {
+      // Token expired — try to refresh it
+      const newToken = await refreshAccessToken();
+      if (newToken) {
+        setAccessToken(newToken);
+        const session = loadSession();
+        if (session?.refreshToken) setRefreshToken(session.refreshToken);
+        scheduleRefresh(newToken);
+        await fetchProfile(newToken, tenant);
+      } else {
+        logout();
+      }
     }
-  }, [accessToken, tenant, fetchProfile, logout]);
+  }, [accessToken, tenant, fetchProfile, logout, scheduleRefresh]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

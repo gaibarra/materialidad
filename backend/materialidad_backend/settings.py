@@ -143,11 +143,13 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
     "USER_ID_FIELD": "id",
     "ACCESS_TOKEN_LIFETIME": _duration_from_env(
-        "JWT_ACCESS_TTL", timedelta(minutes=30)
+        "JWT_ACCESS_TTL", timedelta(minutes=60)
     ),
     "REFRESH_TOKEN_LIFETIME": _duration_from_env(
-        "JWT_REFRESH_TTL", timedelta(days=1)
+        "JWT_REFRESH_TTL", timedelta(days=7)
     ),
+    "ROTATE_REFRESH_TOKENS": True,
+    "UPDATE_LAST_LOGIN": True,
     "SIGNING_KEY": SECRET_KEY,
 }
 
