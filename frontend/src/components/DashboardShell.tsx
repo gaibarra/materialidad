@@ -59,17 +59,15 @@ const NAV_ITEMS: NavItem[] = [
   { type: "link", label: "Auditoría", href: "/dashboard/administracion/auditoria", requiresStaff: true },
 ];
 
-/* ── Sidebar content shared between desktop aside & mobile drawer ── */
-function SidebarContent({
+/* ── Sidebar navigation (scrollable) ── */
+function SidebarNav({
   user,
   orgLabel,
-  roleLabel,
   pathname,
   onNavigate,
 }: {
   user: any;
   orgLabel: string;
-  roleLabel: string;
   pathname: string | null;
   onNavigate?: () => void;
 }) {
@@ -120,13 +118,27 @@ function SidebarContent({
           );
         })}
       </nav>
-      <div className="mt-8 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-700 shadow-sm lg:mt-auto">
-        <p className="text-[12px] uppercase tracking-[0.3em] text-sky-500">Sesión activa</p>
-        <p className="mt-1 text-base font-semibold text-slate-900">{user?.full_name || user?.email}</p>
-        <p className="mt-2 text-slate-600">{orgLabel}</p>
-        <p className="text-[12px] uppercase tracking-[0.28em] text-emerald-600">{roleLabel}</p>
-      </div>
     </>
+  );
+}
+
+/* ── Session info card ── */
+function SidebarSessionCard({
+  user,
+  orgLabel,
+  roleLabel,
+}: {
+  user: any;
+  orgLabel: string;
+  roleLabel: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-700 shadow-sm">
+      <p className="text-[12px] uppercase tracking-[0.3em] text-sky-500">Sesión activa</p>
+      <p className="mt-1 text-base font-semibold text-slate-900">{user?.full_name || user?.email}</p>
+      <p className="mt-2 text-slate-600">{orgLabel}</p>
+      <p className="text-[12px] uppercase tracking-[0.28em] text-emerald-600">{roleLabel}</p>
+    </div>
   );
 }
 
@@ -177,7 +189,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-[100dvh] bg-gradient-to-br from-sky-50 via-white to-emerald-50 text-slate-900">
       {/* ── Desktop Sidebar ── */}
       <aside className="hidden flex-col border-r border-slate-100 bg-white/90 px-7 pb-10 pt-12 shadow-xl shadow-slate-200/70 backdrop-blur lg:flex lg:w-72">
-        <SidebarContent user={user} orgLabel={orgLabel} roleLabel={roleLabel} pathname={pathname} />
+        <SidebarNav user={user} orgLabel={orgLabel} pathname={pathname} />
+        <div className="mt-auto">
+          <SidebarSessionCard user={user} orgLabel={orgLabel} roleLabel={roleLabel} />
+        </div>
       </aside>
 
       {/* ── Mobile Drawer Overlay ── */}
@@ -211,20 +226,22 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
-          <SidebarContent
+          <SidebarNav
             user={user}
             orgLabel={orgLabel}
-            roleLabel={roleLabel}
             pathname={pathname}
             onNavigate={closeDrawer}
           />
         </div>
-        <button
-          onClick={() => { closeDrawer(); logout(); }}
-          className="mt-4 flex min-h-[44px] w-full items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition active:bg-slate-700"
-        >
-          Cerrar sesión
-        </button>
+        <div className="shrink-0 space-y-3 border-t border-slate-100 pt-4">
+          <SidebarSessionCard user={user} orgLabel={orgLabel} roleLabel={roleLabel} />
+          <button
+            onClick={() => { closeDrawer(); logout(); }}
+            className="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition active:bg-slate-700"
+          >
+            Cerrar sesión
+          </button>
+        </div>
       </aside>
       )}
 
