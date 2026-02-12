@@ -736,17 +736,25 @@ export default function DashboardPage() {
         <section className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm text-slate-500">Empresas registradas en el tenant</p>
+              <p className="text-sm text-slate-500">Empresas de tu organización</p>
               <h2 className="text-2xl font-semibold text-ink-500">Empresas activas</h2>
             </div>
-            <button
-              onClick={() => {
-                handleRefresh();
-              }}
-              className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-ink-500 hover:border-jade-400 hover:text-jade-600"
-            >
-              Actualizar
-            </button>
+            <div className="flex gap-2">
+              <Link
+                href="/dashboard/empresas"
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-ink-500 hover:border-jade-400 hover:text-jade-600"
+              >
+                Gestionar empresas
+              </Link>
+              <button
+                onClick={() => {
+                  handleRefresh();
+                }}
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-ink-500 hover:border-jade-400 hover:text-jade-600"
+              >
+                Actualizar
+              </button>
+            </div>
           </div>
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
@@ -778,7 +786,7 @@ export default function DashboardPage() {
                 {!isLoading && !error && empresas.length === 0 && (
                   <tr>
                     <td className="px-4 py-6 text-center text-slate-500" colSpan={6}>
-                      No hay empresas registradas en este tenant
+                      No hay empresas registradas
                     </td>
                   </tr>
                 )}
@@ -833,7 +841,7 @@ export default function DashboardPage() {
         <section className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm text-slate-500">Proveedores registrados en el tenant</p>
+              <p className="text-sm text-slate-500">Proveedores de tu organización</p>
               <h2 className="text-2xl font-semibold text-ink-500">Proveedores activos</h2>
             </div>
             <Link
