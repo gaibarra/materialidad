@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { DashboardShell } from "../../../components/DashboardShell";
+import { GuiaContador } from "../../../components/GuiaContador";
 import { alertError, alertSuccess, alertConfirm } from "../../../lib/alerts";
 import {
   Empresa,
@@ -201,14 +202,36 @@ export default function EmpresasPage() {
             <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">Empresas</h2>
             <p className="text-sm text-slate-500">Gestiona las empresas del grupo corporativo.</p>
           </div>
-          {!showForm && (
-            <button
-              onClick={() => { resetForm(); setShowForm(true); }}
-              className="rounded-full bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-200/60 transition hover:bg-sky-700"
-            >
-              + Nueva empresa
-            </button>
-          )}
+          <div className="flex flex-wrap items-center gap-3">
+            <GuiaContador
+              section="Empresas del grupo"
+              steps={[
+                { title: "Registra la empresa", description: "Captura los datos fiscales: <strong>razón social</strong>, <strong>RFC</strong>, <strong>régimen fiscal</strong> y <strong>actividad económica</strong>. Distingue si es persona física o moral." },
+                { title: "Sube la CSF", description: "Carga la <strong>Constancia de Situación Fiscal</strong> (PDF o imagen) y los datos se extraerán automáticamente con IA. Revisa y guarda." },
+                { title: "Completa el domicilio", description: "Registra el <strong>domicilio fiscal</strong> tal como aparece en la CSF: calle, C.P., colonia, municipio, estado y país." },
+                { title: "Agrega el contacto", description: "Registra al <strong>contacto principal</strong> de la empresa: nombre, puesto, email y teléfono para coordinar operaciones." },
+              ]}
+              concepts={[
+                { term: "Razón social", definition: "Nombre legal con el que la empresa está inscrita ante el SAT y en el acta constitutiva." },
+                { term: "RFC", definition: "Registro Federal de Contribuyentes. Identificador único de 12 (PM) o 13 (PF) caracteres." },
+                { term: "CSF", definition: "Constancia de Situación Fiscal emitida por el SAT que acredita el domicilio y régimen de un contribuyente." },
+                { term: "Régimen fiscal", definition: "Clasificación que determina las obligaciones tributarias del contribuyente (LISR Art. 7)." },
+              ]}
+              tips={[
+                "Mantén la <strong>CSF actualizada</strong> — el SAT la modifica cuando cambian datos del contribuyente.",
+                "Verifica que el <strong>RFC y domicilio</strong> coincidan con los CFDI emitidos y recibidos.",
+                "Si la empresa cambia de régimen fiscal, actualiza aquí para mantener la coherencia del expediente.",
+              ]}
+            />
+            {!showForm && (
+              <button
+                onClick={() => { resetForm(); setShowForm(true); }}
+                className="rounded-full bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-200/60 transition hover:bg-sky-700"
+              >
+                + Nueva empresa
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Form */}

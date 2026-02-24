@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { DashboardShell } from "../../../components/DashboardShell";
+import { GuiaContador } from "../../../components/GuiaContador";
 import { useAuthContext } from "../../../context/AuthContext";
 import { alertError, alertSuccess } from "../../../lib/alerts";
 import {
@@ -232,6 +233,27 @@ export default function OperacionesPage() {
               Lista operaciones, agrega entregables y liga evidencia para avanzar a Entregado / Recibido.
             </p>
           </div>
+          <GuiaContador
+            section="Operaciones y entregables"
+            steps={[
+              { title: "Selecciona una operación", description: "En el panel izquierdo elige la <strong>operación</strong> (contrato + proveedor + monto) a la que quieres agregar entregables." },
+              { title: "Programa el entregable", description: "Usa un <strong>requisito sugerido</strong> del catálogo o captura manualmente: título, descripción, fecha compromiso, orden de compra." },
+              { title: "Liga evidencia", description: "Agrega la <strong>URL de la evidencia</strong> (Drive, carpeta compartida, foto). Es requisito para marcar como Entregado." },
+              { title: "Firma la recepción", description: "Captura <strong>nombre y correo</strong> de quien recibe y marca como <strong>Recibido</strong>. El sistema sella la fecha automáticamente." },
+            ]}
+            concepts={[
+              { term: "Entregable", definition: "Documento, bien o servicio que el proveedor debe entregar como parte de la operación y que soporta la materialidad." },
+              { term: "Orden de compra (OC)", definition: "Documento que autoriza formalmente la adquisición. Vincula el entregable con el proceso de compra interno." },
+              { term: "Evidencia", definition: "Archivo, foto, URL o documento que demuestra que el entregable fue efectivamente proporcionado." },
+              { term: "Concepto genérico", definition: "Descripción vaga en el CFDI (p.ej. 'Servicios profesionales'). El sistema sugiere una descripción más específica para soportar materialidad." },
+            ]}
+            tips={[
+              "Liga la evidencia <strong>antes</strong> de marcar como Entregado — el sistema no lo permitirá sin URL.",
+              "Aplica las <strong>sugerencias de concepto</strong> del sistema para mejorar las descripciones genéricas del CFDI.",
+              "Para la recepción, usa el <strong>correo corporativo</strong> de quien firma para dejar rastro auditable.",
+              "Programa fechas compromiso <strong>realistas</strong> — el sistema alerta automáticamente los entregables vencidos.",
+            ]}
+          />
         </header>
 
         <div className="grid gap-6 lg:grid-cols-3">
@@ -258,11 +280,10 @@ export default function OperacionesPage() {
                       onClick={() => {
                         void handleSelectOperacion(op.id);
                       }}
-                      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
-                        isActive
+                      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${isActive
                           ? "border-emerald-300/60 bg-emerald-500/10 text-white"
                           : "border-white/10 bg-white/5 text-slate-200 hover:border-emerald-300/40"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-semibold">{op.proveedor_nombre}</p>

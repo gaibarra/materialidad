@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { DashboardShell } from "../../../components/DashboardShell";
+import { GuiaContador } from "../../../components/GuiaContador";
 import { alertError, alertSuccess } from "../../../lib/alerts";
 import { apiFetch } from "../../../lib/api";
 import {
@@ -196,11 +197,36 @@ export default function RazonNegocioPage() {
     <DashboardShell>
       <div className="space-y-6 text-white">
         <header className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900/40 to-emerald-900/30 p-6 shadow-2xl shadow-emerald-500/20">
-          <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">Razón de negocio</p>
-          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-white">Aprobaciones Art. 5-A</h1>
-          <p className="mt-2 text-sm text-slate-200">
-            Define la necesidad, monto esperado y registra quién autoriza cada contrato antes de ejecutar.
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">Razón de negocio</p>
+              <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-white">Aprobaciones Art. 5-A</h1>
+              <p className="mt-2 text-sm text-slate-200">
+                Define la necesidad, monto esperado y registra quién autoriza cada contrato antes de ejecutar.
+              </p>
+            </div>
+            <GuiaContador
+              section="Razón de negocio y aprobaciones"
+              steps={[
+                { title: "Selecciona un contrato", description: "Elige el contrato que requiere aprobación de su <strong>razón de negocio</strong> antes de ejecutarse." },
+                { title: "Registra cada aprobación", description: "Sigue el flujo: <strong>Solicitante → Responsable del área → Compliance → Fiscal → Dirección</strong>. Cada paso requiere nombre, correo y evidencia." },
+                { title: "Adjunta evidencia", description: "Sube la <strong>URL</strong> del acta de comité, correo de autorización o minuta de aprobación como respaldo documental." },
+                { title: "Verifica el flujo completo", description: "El historial muestra todas las aprobaciones con rol, fecha y evidencia. El flujo se cierra cuando todos aprueban o alguno rechaza." },
+              ]}
+              concepts={[
+                { term: "Art. 5-A CFF", definition: "Los actos jurídicos que carezcan de razón de negocio y generen un beneficio fiscal directo o indirecto, tendrán los efectos fiscales correspondientes a los que se habrían realizado." },
+                { term: "Razón de negocio", definition: "Justificación económica válida de una operación, independiente del ahorro fiscal que pudiera generar." },
+                { term: "Beneficio económico", definition: "Resultado cuantificable esperado de la operación: ahorro, ingreso adicional, reducción de riesgo, etc." },
+                { term: "Flujo de aprobaciones", definition: "Cadena escalonada de autorizaciones donde cada rol debe aprobar antes de pasar al siguiente nivel jerárquico." },
+              ]}
+              tips={[
+                "Documenta la razón de negocio <strong>antes de firmar</strong> el contrato, no después.",
+                "Cada aprobación debe tener <strong>nombre del aprobador y evidencia</strong> para soportar ante el SAT.",
+                "Si un rol rechaza, el flujo se cierra. Resuelve la observación y crea un nuevo ciclo de aprobaciones.",
+                "Guarda las evidencias en una <strong>carpeta compartida</strong> con acceso controlado para auditorías.",
+              ]}
+            />
+          </div>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-3">
@@ -227,11 +253,10 @@ export default function RazonNegocioPage() {
                       onClick={() => {
                         void handleSelectContrato(c.id);
                       }}
-                      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
-                        isActive
+                      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${isActive
                           ? "border-emerald-300/60 bg-emerald-500/10 text-white"
                           : "border-white/10 bg-white/5 text-slate-200 hover:border-emerald-300/40"
-                      }`}
+                        }`}
                     >
                       <p className="text-sm font-semibold">{c.nombre}</p>
                       <p className="text-xs text-slate-300">{c.proveedor_nombre || "Sin proveedor"}</p>

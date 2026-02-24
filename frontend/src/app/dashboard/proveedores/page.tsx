@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { DashboardShell } from "../../../components/DashboardShell";
+import { GuiaContador } from "../../../components/GuiaContador";
 import { alertError, alertInfo, alertSuccess } from "../../../lib/alerts";
 import {
   EmpresaLite,
@@ -310,11 +311,10 @@ export default function ProveedoresPage() {
                 key={t}
                 type="button"
                 onClick={() => setForm((p) => ({ ...p, tipo_persona: t }))}
-                className={`rounded-full px-5 py-2 text-xs font-semibold transition ${
-                  form.tipo_persona === t
+                className={`rounded-full px-5 py-2 text-xs font-semibold transition ${form.tipo_persona === t
                     ? "bg-white text-slate-900 shadow-sm"
                     : "text-slate-500 hover:text-slate-700"
-                }`}
+                  }`}
               >
                 {t === "MORAL" ? "Persona Moral" : "Persona Física"}
               </button>
@@ -625,11 +625,36 @@ export default function ProveedoresPage() {
         </form>
 
         <header className="rounded-3xl border border-slate-100 bg-white p-6 shadow-2xl shadow-slate-200/60">
-          <p className="text-xs uppercase tracking-[0.35em] text-emerald-500">Due diligence</p>
-          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-slate-900">Proveedores y alertas 69-B</h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Consulta estatus SAT, alertas del artículo 69-B y envía validaciones al flujo n8n.
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.35em] text-emerald-500">Due diligence</p>
+              <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-slate-900">Proveedores y alertas 69-B</h1>
+              <p className="mt-2 text-sm text-slate-500">
+                Consulta estatus SAT, alertas del artículo 69-B y envía validaciones al flujo n8n.
+              </p>
+            </div>
+            <GuiaContador
+              section="Proveedores y due diligence"
+              steps={[
+                { title: "Registra al proveedor", description: "Captura <strong>RFC</strong>, razón social, domicilio y datos de contacto. Puedes subir la <strong>CSF</strong> para auto-extraer datos." },
+                { title: "Documenta capacidad operativa", description: "Registra <strong>REPS/IMSS</strong>, activos relevantes, personal clave y evidencias fotográficas del domicilio fiscal." },
+                { title: "Valida contra listas SAT", description: "Selecciona tu empresa y haz clic en <strong>Solicitar validación</strong>. El sistema consultará listas 69-B y regresará el estatus." },
+                { title: "Revisa alertas y riesgos", description: "Verifica el <strong>estatus 69-B</strong> (Sin coincidencia, Presunto, Definitivo) y los riesgos detectados para cada proveedor." },
+              ]}
+              concepts={[
+                { term: "Art. 69-B CFF", definition: "Lista del SAT de contribuyentes que emiten comprobantes de operaciones simuladas (EFOS). Operar con ellos pone en riesgo tus deducciones." },
+                { term: "Due diligence", definition: "Proceso de investigación y verificación del proveedor antes de contratar, para demostrar materialidad y buena fe." },
+                { term: "REPS", definition: "Registro de Prestadoras de Servicios Especializados u Obras Especializadas ante la STPS (Art. 15 LFT)." },
+                { term: "Capacidad operativa", definition: "Evidencia de que el proveedor tiene infraestructura, personal y activos para prestar realmente el servicio contratado." },
+              ]}
+              tips={[
+                "Valida al proveedor <strong>antes de emitir el primer pago</strong> o firmar contrato.",
+                "Guarda capturas de pantalla del sitio web y fotos del domicilio como <strong>soporte de materialidad</strong>.",
+                "Revisa periódicamente las listas 69-B — un proveedor puede aparecer después de haberte facturado.",
+                "Si un proveedor aparece como PRESUNTO, documenta por escrito tu análisis de riesgo.",
+              ]}
+            />
+          </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm">
               <p className="text-slate-500">Proveedores registrados</p>
@@ -674,11 +699,10 @@ export default function ProveedoresPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="text-lg font-semibold text-slate-900">{prov.display_name || prov.razon_social}</p>
-                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide ${
-                        prov.tipo_persona === "FISICA"
+                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide ${prov.tipo_persona === "FISICA"
                           ? "bg-amber-100 text-amber-700"
                           : "bg-sky-100 text-sky-700"
-                      }`}>
+                        }`}>
                         {prov.tipo_persona === "FISICA" ? "PF" : "PM"}
                       </span>
                     </div>

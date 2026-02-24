@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { DashboardShell } from "../../../components/DashboardShell";
+import { GuiaContador } from "../../../components/GuiaContador";
 import { alertError } from "../../../lib/alerts";
 import { compararPrecios, Cotizacion, ComparativoResponse } from "../../../lib/precios";
 
@@ -61,9 +62,34 @@ export default function ComparadorPreciosPage() {
     <DashboardShell>
       <div className="space-y-6 text-slate-900">
         <header className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 shadow-lg">
-          <p className="text-xs uppercase tracking-[0.35em] text-emerald-700">Compras</p>
-          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-slate-900">Comparador de precios</h1>
-          <p className="mt-2 text-sm text-slate-600">Carga cotizaciones de proveedores y obtén la mejor opción con ahorros calculados.</p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.35em] text-emerald-700">Compras</p>
+              <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-slate-900">Comparador de precios</h1>
+              <p className="mt-2 text-sm text-slate-600">Carga cotizaciones de proveedores y obtén la mejor opción con ahorros calculados.</p>
+            </div>
+            <GuiaContador
+              section="Comparador de precios"
+              steps={[
+                { title: "Define el concepto", description: "Describe el <strong>bien o servicio</strong> que estás comparando: equipo de cómputo, servicio de auditoría, etc." },
+                { title: "Carga cotizaciones", description: "Agrega al menos <strong>2 proveedores</strong> con su descripción, <strong>precio</strong> y <strong>moneda</strong>. Puedes agregar más filas." },
+                { title: "Ejecuta la comparación", description: "El sistema calcula automáticamente la <strong>mejor opción</strong>, el <strong>ahorro vs. promedio</strong> y la <strong>diferencia porcentual</strong>." },
+                { title: "Documenta la decisión", description: "El resultado queda como <strong>evidencia de compra responsable</strong> y soporte de que se eligió la mejor opción disponible." },
+              ]}
+              concepts={[
+                { term: "Cotización", definition: "Propuesta formal de precio de un proveedor para un bien o servicio específico. Mínimo 3 cotizaciones para compras de gobierno." },
+                { term: "Ahorro vs. promedio", definition: "Diferencia entre el precio de la mejor opción y el promedio de todas las cotizaciones recibidas." },
+                { term: "Diferencia porcentual", definition: "Porcentaje de variación entre la cotización más cara y la más barata. Valores muy altos pueden indicar precios inflados." },
+                { term: "Valor de mercado", definition: "Precio al que se intercambian bienes o servicios similares entre partes independientes en condiciones normales (Art. 179 LISR)." },
+              ]}
+              tips={[
+                "Incluye al menos <strong>3 cotizaciones</strong> para demostrar una selección objetiva del proveedor.",
+                "Si un proveedor es significativamente más barato, <strong>documenta por qué</strong> para evitar cuestionamientos.",
+                "Usa la misma <strong>moneda</strong> en todas las cotizaciones para que la comparación sea justa.",
+                "Guarda este comparativo como <strong>soporte</strong> junto con el contrato y la orden de compra.",
+              ]}
+            />
+          </div>
         </header>
 
         <section className="space-y-3 rounded-3xl border border-slate-200 bg-white p-6 text-sm shadow-sm">

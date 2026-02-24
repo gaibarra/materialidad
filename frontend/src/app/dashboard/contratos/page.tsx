@@ -13,6 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 
 import { DashboardShell } from "../../../components/DashboardShell";
+import { GuiaContador } from "../../../components/GuiaContador";
 import { useAuthContext } from "../../../context/AuthContext";
 import { apiFetch } from "../../../lib/api";
 import {
@@ -518,7 +519,30 @@ export default function ContratosPage() {
                 <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Configura el contexto</p>
                 <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">Datos para el borrador</h2>
               </div>
-              {isLoadingOptions && <p className="text-sm text-slate-500">Cargando catálogos…</p>}
+              <div className="flex flex-wrap items-center gap-3">
+                {isLoadingOptions && <p className="text-sm text-slate-500">Cargando catálogos…</p>}
+                <GuiaContador
+                  section="Generador de contratos"
+                  steps={[
+                    { title: "Configura el contexto", description: "Selecciona la <strong>empresa</strong>, el <strong>proveedor</strong>, tipo de contrato y moneda. Define el <strong>monto</strong> y la <strong>vigencia</strong>." },
+                    { title: "Genera el borrador", description: "El sistema genera un contrato completo usando IA. Revisa el borrador en el editor y realiza ajustes manuales si lo necesitas." },
+                    { title: "Analiza cláusulas (Redline)", description: "Usa el análisis <strong>Redline</strong> para comparar versiones, detectar riesgos y optimizar cláusulas individualmente." },
+                    { title: "Exporta el contrato", description: "Una vez aprobado, el contrato queda vinculado al expediente del proveedor y empresa para efectos de <strong>materialidad fiscal</strong>." },
+                  ]}
+                  concepts={[
+                    { term: "Redline", definition: "Comparación párrafo a párrafo de dos versiones de un contrato, mostrando adiciones, eliminaciones y modificaciones." },
+                    { term: "Cláusula de materialidad", definition: "Disposición contractual que obliga a las partes a documentar la sustancia económica de las operaciones (Art. 5-A CFF)." },
+                    { term: "Vigencia prorrogable", definition: "Período fijo con extensión automática si ninguna parte notifica su terminación con la antelación pactada." },
+                    { term: "Razón de negocio", definition: "Justificación económica real de por qué se celebra el contrato, independiente del beneficio fiscal (Art. 5-A CFF)." },
+                  ]}
+                  tips={[
+                    "Siempre incluye cláusulas de <strong>materialidad, entregables y penalidades</strong> para soportar deducciones.",
+                    "Usa la función de <strong>optimización de cláusulas</strong> para mejorar la protección fiscal automáticamente.",
+                    "Guarda cada versión del contrato — el historial de cambios es evidencia para auditorías.",
+                    "Vincula el contrato con el <strong>proveedor</strong> correcto para mantener el expediente de due diligence completo.",
+                  ]}
+                />
+              </div>
             </div>
 
             {!isLoadingOptions && !empresas.length && (

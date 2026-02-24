@@ -4,6 +4,7 @@ import { useCallback, useEffect, useReducer, useState } from "react";
 
 import { DashboardShell } from "../../../components/DashboardShell";
 import { FedatarioModal } from "../../../components/FedatarioModal";
+import { GuiaContador } from "../../../components/GuiaContador";
 import { alertError, alertSuccess } from "../../../lib/alerts";
 import { apiFetch } from "../../../lib/api";
 import { fetchFedatarios, Fedatario as FedatarioType } from "../../../lib/fedatarios";
@@ -163,7 +164,7 @@ export default function FirmaLogisticaPage() {
   const [loading, setLoading] = useState(false);
   const [fedatarioModalOpen, setFedatarioModalOpen] = useState(false);
   const [fedatarioCatalog, setFedatarioCatalog] = useState<FedatarioType[]>([]);
-  const [guiaOpen, setGuiaOpen] = useState(false);
+
 
   const set = useCallback(
     <K extends keyof FormState>(field: K, value: FormState[K]) =>
@@ -366,99 +367,28 @@ export default function FirmaLogisticaPage() {
                   Elige primero tu fedatario, después programa la firma y registra la instrumentación.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setGuiaOpen((v) => !v)}
-                className={`flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold shadow-sm transition-all ${guiaOpen
-                    ? "border-sky-400 bg-sky-50 text-sky-700 hover:bg-sky-100"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-sky-300 hover:text-sky-600"
-                  }`}
-              >
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-sky-600">
-                  ?
-                </span>
-                {guiaOpen ? "Ocultar guía" : "Guía del contador"}
-              </button>
+              <GuiaContador
+                section="Firma y fecha cierta"
+                steps={[
+                  { title: "Selecciona contrato y modalidad", description: "Elige el contrato que vas a firmar y define cómo se firmará: <strong>Notarial</strong> (ante fedatario), <strong>Electrónica</strong> (FEA/FIEL) o <strong>Manuscrita</strong> (autógrafa)." },
+                  { title: "Elige tu fedatario", description: "Si la modalidad es <strong>Notarial</strong>, selecciona al notario o corredor público del catálogo. Se prellenarán automáticamente el lugar, teléfono y datos de contacto." },
+                  { title: "Programa la logística", description: "Registra la <strong>fecha y hora</strong> de la cita de firma, el <strong>lugar</strong> (se autollena con la dirección del fedatario) y quién será el <strong>responsable de coordinar</strong>." },
+                  { title: "Acredita la fecha cierta", description: "Después de la firma, captura el <strong>número de instrumento</strong>, la <strong>fecha de protocolización</strong> y sube el link al <strong>testimonio notariado</strong> o acuse de sello de tiempo." },
+                ]}
+                concepts={[
+                  { term: "Fecha cierta", definition: "Certeza jurídica de que un contrato existía en determinada fecha. Sin ella, el SAT podría cuestionar la temporalidad del acto." },
+                  { term: "Fedatario público", definition: "Notario o corredor público con fe pública para dar fecha cierta a documentos privados (Art. 2246 CC Federal)." },
+                  { term: "Protocolización", definition: "Acto de incorporar un documento al protocolo del notario, generando un instrumento (escritura) con número consecutivo." },
+                  { term: "Sello de tiempo", definition: "Certificado digital emitido por una TSA (Time Stamping Authority) que acredita la existencia de un documento en un momento específico." },
+                ]}
+                tips={[
+                  "Siempre registra la firma <strong>antes de deducir</strong> operaciones vinculadas al contrato.",
+                  "Guarda el testimonio notariado en formato digital con link accesible (Drive, SharePoint, etc.).",
+                  "Si usas firma electrónica avanzada, guarda el <strong>acuse del sello de tiempo</strong> como respaldo complementario.",
+                  "Mantén actualizado el <strong>catálogo de fedatarios</strong> con datos de contacto para agilizar futuras firmas.",
+                ]}
+              />
             </div>
-
-            {/* ── Instructivo / Guía ── */}
-            {guiaOpen && (
-              <div className="space-y-4 rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white p-5 shadow-sm animate-in fade-in">
-                <div className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-lg">📘</span>
-                  <div>
-                    <h3 className="text-base font-semibold text-sky-900">Guía rápida — Firma y fecha cierta</h3>
-                    <p className="text-xs text-sky-600">Sigue estos pasos para registrar correctamente la firma de un contrato con materialidad fiscal.</p>
-                  </div>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {/* Paso 1 */}
-                  <div className="rounded-xl border border-sky-100 bg-white p-3">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">1</span>
-                      <p className="text-sm font-semibold text-slate-800">Selecciona contrato y modalidad</p>
-                    </div>
-                    <p className="mt-1.5 text-xs text-slate-500">
-                      Elige el contrato que vas a firmar y define cómo se firmará: <strong>Notarial</strong> (ante fedatario), <strong>Electrónica</strong> (FEA/FIEL) o <strong>Manuscrita</strong> (autógrafa).
-                    </p>
-                  </div>
-                  {/* Paso 2 */}
-                  <div className="rounded-xl border border-sky-100 bg-white p-3">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">2</span>
-                      <p className="text-sm font-semibold text-slate-800">Elige tu fedatario</p>
-                    </div>
-                    <p className="mt-1.5 text-xs text-slate-500">
-                      Si la modalidad es <strong>Notarial</strong>, selecciona al notario o corredor público del catálogo. Se prellenarán automáticamente el lugar, teléfono y datos de contacto.
-                    </p>
-                  </div>
-                  {/* Paso 3 */}
-                  <div className="rounded-xl border border-sky-100 bg-white p-3">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">3</span>
-                      <p className="text-sm font-semibold text-slate-800">Programa la logística</p>
-                    </div>
-                    <p className="mt-1.5 text-xs text-slate-500">
-                      Registra la <strong>fecha y hora</strong> de la cita de firma, el <strong>lugar</strong> (se autollena con la dirección del fedatario) y quién será el <strong>responsable de coordinar</strong>.
-                    </p>
-                  </div>
-                  {/* Paso 4 */}
-                  <div className="rounded-xl border border-sky-100 bg-white p-3">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">4</span>
-                      <p className="text-sm font-semibold text-slate-800">Acredita la fecha cierta</p>
-                    </div>
-                    <p className="mt-1.5 text-xs text-slate-500">
-                      Después de la firma, captura el <strong>número de instrumento</strong>, la <strong>fecha de protocolización</strong> y sube el link al <strong>testimonio notariado</strong> o acuse de sello de tiempo.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Conceptos clave */}
-                <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">💡 Conceptos clave</p>
-                  <ul className="mt-2 space-y-1.5 text-xs text-slate-600">
-                    <li><strong className="text-slate-800">Fecha cierta</strong> — Es la certeza jurídica de que un contrato existía en determinada fecha. Sin ella, el SAT podría cuestionar la temporalidad del acto.</li>
-                    <li><strong className="text-slate-800">Fedatario público</strong> — Notario o corredor público con fe pública para dar fecha cierta a documentos privados (Art. 2246 CC Federal).</li>
-                    <li><strong className="text-slate-800">Protocolización</strong> — Acto de incorporar un documento al protocolo del notario, generando un instrumento (escritura) con número consecutivo.</li>
-                    <li><strong className="text-slate-800">Sello de tiempo</strong> — Certificado digital emitido por una TSA (Time Stamping Authority) que acredita la existencia de un documento en un momento específico.</li>
-                    <li><strong className="text-slate-800">Materialidad</strong> — Para efectos fiscales, la fecha cierta demuestra que la operación ocurrió realmente (sustancia sobre forma).</li>
-                  </ul>
-                </div>
-
-                {/* Tips */}
-                <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">✅ Recomendaciones</p>
-                  <ul className="mt-2 space-y-1 text-xs text-slate-600">
-                    <li>• Siempre registra la firma <strong>antes de deducir</strong> operaciones vinculadas al contrato.</li>
-                    <li>• Guarda el testimonio notariado en formato digital con link accesible (Drive, SharePoint, etc.).</li>
-                    <li>• Si usas firma electrónica avanzada, guarda el <strong>acuse del sello de tiempo</strong> como respaldo complementario.</li>
-                    <li>• Mantén actualizado el <strong>catálogo de fedatarios</strong> con datos de contacto para agilizar futuras firmas.</li>
-                  </ul>
-                </div>
-              </div>
-            )}
 
             {/* ═══ PASO 1 — Contrato + Modalidad ═══ */}
             <div className="space-y-4">

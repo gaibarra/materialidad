@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { DashboardShell } from "../../../components/DashboardShell";
+import { GuiaContador } from "../../../components/GuiaContador";
 import { alertError } from "../../../lib/alerts";
 import { validarCfdiSpei, ValidacionCFDISPEI } from "../../../lib/validador";
 
@@ -50,9 +51,34 @@ export default function ValidadorCFDISPEI() {
     <DashboardShell>
       <div className="space-y-6 text-slate-900">
         <header className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 shadow-lg">
-          <p className="text-xs uppercase tracking-[0.35em] text-emerald-700">Validador</p>
-          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-slate-900">CFDI / SPEI</h1>
-          <p className="mt-2 text-sm text-slate-600">Verifica UUID de CFDI y referencia SPEI en un solo paso.</p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.35em] text-emerald-700">Validador</p>
+              <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-slate-900">CFDI / SPEI</h1>
+              <p className="mt-2 text-sm text-slate-600">Verifica UUID de CFDI y referencia SPEI en un solo paso.</p>
+            </div>
+            <GuiaContador
+              section="Validador CFDI / SPEI"
+              steps={[
+                { title: "Captura UUID o referencia", description: "Ingresa el <strong>UUID del CFDI</strong> y/o la <strong>referencia SPEI</strong> del pago que quieres validar." },
+                { title: "Agrega el monto (opcional)", description: "Si capturas el <strong>monto</strong>, el sistema verifica que coincida con los registros para mayor certeza." },
+                { title: "Ejecuta la validación", description: "Haz clic en <strong>Validar</strong>. El sistema cruzará los datos contra el SAT y los registros de pago en segundos." },
+                { title: "Interpreta resultados", description: "Revisa el estatus: <strong>Válido</strong> (todo correcto), <strong>Inválido</strong> (discrepancia), <strong>No encontrado</strong> (no existe en registros)." },
+              ]}
+              concepts={[
+                { term: "UUID CFDI", definition: "Identificador único universal del Comprobante Fiscal Digital por Internet. Es el 'folio fiscal' que valida la autenticidad del CFDI ante el SAT." },
+                { term: "Referencia SPEI", definition: "Clave de rastreo de transferencias interbancarias. Permite vincular un pago bancario con un CFDI específico." },
+                { term: "Validación cruzada", definition: "Proceso de verificar que UUID, referencia SPEI y monto coincidan, demostrando que el pago corresponde a la factura." },
+                { term: "Estatus del CFDI", definition: "Estado fiscal del comprobante ante el SAT: Vigente (válido para deducir) o Cancelado (no deducible)." },
+              ]}
+              tips={[
+                "Valida <strong>cada CFDI antes de contabilizarlo</strong> — un CFDI cancelado no es deducible.",
+                "La referencia SPEI confirma que el <strong>pago se realizó efectivamente</strong> al beneficiario correcto.",
+                "Si el resultado es <strong>No encontrado</strong>, verifica que el UUID esté correctamente capturado (sin espacios).",
+                "Usa la validación cruzada UUID + SPEI + monto para <strong>máxima certeza</strong> de materialidad del pago.",
+              ]}
+            />
+          </div>
         </header>
 
         <section className="grid gap-4 lg:grid-cols-[1.3fr,1fr]">

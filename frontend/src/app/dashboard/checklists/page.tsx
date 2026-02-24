@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { DashboardShell } from "../../../components/DashboardShell";
+import { GuiaContador } from "../../../components/GuiaContador";
 import { alertError, alertSuccess } from "../../../lib/alerts";
 import {
   Checklist,
@@ -181,9 +182,34 @@ export default function ChecklistsPage() {
     <DashboardShell>
       <div className="space-y-6">
         <header className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900/40 to-emerald-900/20 p-6 shadow-2xl shadow-emerald-500/20">
-          <p className="text-xs uppercase tracking-[0.4em] text-emerald-300">Checklist</p>
-          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-white">Pilares de cumplimiento</h1>
-          <p className="mt-2 text-sm text-slate-300">Controla entregables por gasto y marca avance por pilar.</p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-emerald-300">Checklist</p>
+              <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-white">Pilares de cumplimiento</h1>
+              <p className="mt-2 text-sm text-slate-300">Controla entregables por gasto y marca avance por pilar.</p>
+            </div>
+            <GuiaContador
+              section="Checklists de cumplimiento"
+              steps={[
+                { title: "Crea un checklist", description: "Asigna un <strong>nombre</strong> y un <strong>tipo de gasto</strong> al checklist. Agrega las tareas requeridas por pilar." },
+                { title: "Agrega entregables del catálogo", description: "Usa el <strong>catálogo de entregables</strong> para añadir tareas predefinidas con pilar, código y descripción." },
+                { title: "Asigna responsable y fecha", description: "Cada tarea puede tener un <strong>responsable</strong> y una <strong>fecha de vencimiento</strong> para dar seguimiento." },
+                { title: "Marca avance", description: "Cambia el estado de cada tarea: <strong>Pendiente → En proceso → Completo</strong>. El resumen muestra el porcentaje de avance." },
+              ]}
+              concepts={[
+                { term: "Pilar de cumplimiento", definition: "Categoría o eje temático para agrupar entregables: Entregables, Fiscal, Legal, Operativo, Financiero." },
+                { term: "Tipo de gasto", definition: "Clasificación del gasto que agrupa los entregables requeridos: CapEx, OpEx, viáticos, honorarios, etc." },
+                { term: "Catálogo de entregables", definition: "Biblioteca reutilizable de tareas estándar por tipo de gasto que puedes agregar a cualquier checklist." },
+                { term: "Trazabilidad", definition: "Capacidad de rastrear quién, cuándo y cómo se completó cada entregable para efectos de auditoría." },
+              ]}
+              tips={[
+                "Crea un checklist por cada <strong>tipo de gasto recurrente</strong> para estandarizar los entregables.",
+                "Usa el catálogo para <strong>no reinventar tareas</strong> — agrega entregables probados con un clic.",
+                "Revisa los checklists <strong>antes del cierre mensual</strong> para identificar tareas vencidas.",
+                "Asigna fechas de vencimiento <strong>5 días antes</strong> del cierre real para tener margen de maniobra.",
+              ]}
+            />
+          </div>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[1.5fr,1fr]">

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { DashboardShell } from "../../../components/DashboardShell";
+import { GuiaContador } from "../../../components/GuiaContador";
 import { alertError, alertSuccess } from "../../../lib/alerts";
 import {
   CuentaBancaria,
@@ -231,8 +232,31 @@ export default function FinanzasPage() {
             <h1 className="text-xl sm:text-2xl font-semibold text-white">Bancarización y conciliación</h1>
             <p className="text-sm text-slate-300">Adjunta cuentas, estados, movimientos y monitorea conciliaciones con alertas.</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-slate-200">
-            {conciliaciones.length} conciliaciones registradas
+          <div className="flex flex-wrap items-center gap-3">
+            <GuiaContador
+              section="Finanzas y bancarización"
+              steps={[
+                { title: "Registra la cuenta bancaria", description: "Captura <strong>alias</strong>, banco, número de cuenta, <strong>CLABE</strong>, moneda y titular. Cada cuenta se vincula a una empresa." },
+                { title: "Carga estados de cuenta", description: "Registra el <strong>período</strong> (inicio/fin), enlaza el <strong>PDF del estado</strong> y captura saldos inicial y final para conciliación." },
+                { title: "Registra movimientos", description: "Captura cada movimiento: <strong>fecha, monto, tipo</strong> (abono/cargo), referencia SPEI, contraparte y categoría." },
+                { title: "Revisa conciliaciones", description: "El sistema <strong>concilia automáticamente</strong> movimientos con operaciones. Revisa las alertas de <strong>operaciones circulares</strong> y <strong>capacidad operativa</strong>." },
+              ]}
+              concepts={[
+                { term: "Bancarización", definition: "Obligación de realizar pagos superiores a $2,000 MXN mediante medios electrónicos o cheque para efectos de deducibilidad (Art. 27-III LISR)." },
+                { term: "Conciliación", definition: "Proceso de cruzar movimientos bancarios contra operaciones registradas para verificar que cada pago corresponde a una operación real." },
+                { term: "Operación circular", definition: "Movimiento donde el dinero sale y regresa al mismo contribuyente sin sustancia económica real. Indicador de riesgo fiscal." },
+                { term: "SPEI", definition: "Sistema de Pagos Electrónicos Interbancarios del Banco de México. La referencia SPEI permite rastrear cada transferencia." },
+              ]}
+              tips={[
+                "Registra <strong>una cuenta por cada banco</strong> y moneda para facilitar la conciliación.",
+                "Carga el estado de cuenta <strong>dentro de los 5 primeros días</strong> del mes siguiente para no acumular atrasos.",
+                "Si una conciliación es rechazada, <strong>documenta el motivo</strong> en el campo de comentarios.",
+                "Las alertas de <strong>operaciones circulares</strong> requieren atención inmediata — pueden indicar operaciones simuladas.",
+              ]}
+            />
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-slate-200">
+              {conciliaciones.length} conciliaciones registradas
+            </div>
           </div>
         </header>
 
@@ -255,9 +279,8 @@ export default function FinanzasPage() {
                     key={c.id}
                     type="button"
                     onClick={() => setSelectedCuentaId(c.id)}
-                    className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
-                      active ? "border-emerald-300/60 bg-emerald-500/10" : "border-white/10 bg-white/5 hover:border-emerald-300/40"
-                    }`}
+                    className={`w-full rounded-2xl border px-4 py-3 text-left transition ${active ? "border-emerald-300/60 bg-emerald-500/10" : "border-white/10 bg-white/5 hover:border-emerald-300/40"
+                      }`}
                   >
                     <p className="text-sm font-semibold text-white">{c.alias || c.numero_cuenta || "Cuenta"}</p>
                     <p className="text-xs text-slate-300">{c.banco} • {c.moneda}</p>
