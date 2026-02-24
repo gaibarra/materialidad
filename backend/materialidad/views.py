@@ -431,6 +431,28 @@ class ContratoViewSet(viewsets.ModelViewSet):
                 fecha_cierta_requerida=data.get("fecha_cierta_requerida", False),
                 metadata={"generado_por": "ai"},
             )
+        else:
+            # Actualizar datos del contrato existente
+            contrato.empresa = data["empresa"]
+            if "proveedor" in data:
+                contrato.proveedor = data.get("proveedor")
+            if template:
+                contrato.template = template
+                contrato.categoria = template.categoria
+                contrato.proceso = template.proceso
+                contrato.tipo_empresa = template.tipo_empresa
+            if "resumen_necesidades" in data:
+                contrato.descripcion = data.get("resumen_necesidades")
+            if "razon_negocio" in data:
+                contrato.razon_negocio = data.get("razon_negocio")
+            if "beneficio_economico_esperado" in data:
+                contrato.beneficio_economico_esperado = data.get("beneficio_economico_esperado")
+            if "beneficio_fiscal_estimado" in data:
+                contrato.beneficio_fiscal_estimado = data.get("beneficio_fiscal_estimado")
+            if "fecha_cierta_requerida" in data:
+                contrato.fecha_cierta_requerida = data.get("fecha_cierta_requerida", False)
+            contrato.save()
+
         try:
             resultado = generate_contract_document(
                 empresa=data["empresa"],
