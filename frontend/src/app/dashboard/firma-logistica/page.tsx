@@ -295,8 +295,8 @@ export default function FirmaLogisticaPage() {
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const payload: any = {
+    // eslint-disable-next-line @next/next/no-assign-module-variable
+    const payload: Record<string, unknown> = {
       firma_modalidad: form.firmaModalidad,
       logistica_estado: form.logisticaEstado,
       fecha_cierta_requerida: form.fechaCiertaRequerida,
@@ -398,8 +398,8 @@ export default function FirmaLogisticaPage() {
                       <label
                         key={m.value}
                         className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all ${form.firmaModalidad === m.value
-                            ? "border-emerald-400 bg-emerald-50/60 text-emerald-800 shadow-sm"
-                            : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                          ? "border-emerald-400 bg-emerald-50/60 text-emerald-800 shadow-sm"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
                           }`}
                       >
                         <input
