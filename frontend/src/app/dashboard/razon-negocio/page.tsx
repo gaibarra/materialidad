@@ -38,7 +38,10 @@ const ROLES: Array<{ value: RazonNegocioAprobacion["rol"]; label: string }> = [
   { value: "DIRECTOR", label: "Dirección" },
 ];
 
-const ESTADOS: Array<{ value: RazonNegocioAprobacion["estado"]; label: string }> = [
+const ESTADOS: Array<{
+  value: RazonNegocioAprobacion["estado"];
+  label: string;
+}> = [
   { value: "PENDIENTE", label: "Pendiente" },
   { value: "APROBADO", label: "Aprobado" },
   { value: "RECHAZADO", label: "Rechazado" },
@@ -53,7 +56,9 @@ const estadoColor: Record<RazonNegocioAprobacion["estado"], string> = {
 export default function RazonNegocioPage() {
   const [contratos, setContratos] = useState<ContratoLite[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [aprobaciones, setAprobaciones] = useState<RazonNegocioAprobacion[]>([]);
+  const [aprobaciones, setAprobaciones] = useState<RazonNegocioAprobacion[]>(
+    [],
+  );
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string>("");
@@ -75,7 +80,7 @@ export default function RazonNegocioPage() {
 
   const selectedContrato = useMemo(
     () => contratos.find((c) => c.id === selectedId) ?? null,
-    [contratos, selectedId]
+    [contratos, selectedId],
   );
 
   const nextRol = useMemo(() => {
@@ -84,7 +89,9 @@ export default function RazonNegocioPage() {
       return null;
     }
     for (const rol of orden) {
-      const aprobado = aprobaciones.find((a) => a.rol === rol && a.estado === "APROBADO");
+      const aprobado = aprobaciones.find(
+        (a) => a.rol === rol && a.estado === "APROBADO",
+      );
       if (!aprobado) return rol;
     }
     return null;
@@ -104,10 +111,10 @@ export default function RazonNegocioPage() {
   const loadContratos = useCallback(async () => {
     setLoading(true);
     try {
-      const payload = await apiFetch<PaginatedResponse<ContratoLite> | ContratoLite[]>(
-        "/api/materialidad/contratos/?ordering=-created_at"
-      );
-      const list = Array.isArray(payload) ? payload : payload.results ?? [];
+      const payload = await apiFetch<
+        PaginatedResponse<ContratoLite> | ContratoLite[]
+      >("/api/materialidad/contratos/?ordering=-created_at");
+      const list = Array.isArray(payload) ? payload : (payload.results ?? []);
       setContratos(list);
       const first = list[0]?.id ?? null;
       setSelectedId(first);
@@ -160,12 +167,18 @@ export default function RazonNegocioPage() {
 
   const handleSave = async () => {
     if (!selectedId) {
-      await alertError("Falta contrato", "Elige un contrato para registrar la aprobación");
+      await alertError(
+        "Falta contrato",
+        "Elige un contrato para registrar la aprobación",
+      );
       return;
     }
     if (form.estado !== "PENDIENTE") {
       if (!form.firmado_por.trim() || !form.firmado_email.trim()) {
-        await alertError("Datos de aprobador", "Captura nombre y correo de quien aprueba/rechaza");
+        await alertError(
+          "Datos de aprobador",
+          "Captura nombre y correo de quien aprueba/rechaza",
+        );
         return;
       }
     }
@@ -183,7 +196,14 @@ export default function RazonNegocioPage() {
       });
       await alertSuccess("Guardado", "Aprobación registrada");
       await loadAprobaciones(selectedId);
-      setForm((prev) => ({ ...prev, estado: "PENDIENTE", comentario: "", evidencia_url: "", firmado_por: "", firmado_email: "" }));
+      setForm((prev) => ({
+        ...prev,
+        estado: "PENDIENTE",
+        comentario: "",
+        evidencia_url: "",
+        firmado_por: "",
+        firmado_email: "",
+      }));
     } catch (err) {
       const message = extractErrorMessage(err);
       setFormError(message);
@@ -195,29 +215,66 @@ export default function RazonNegocioPage() {
 
   return (
     <DashboardShell>
-      <div className="space-y-6 text-white">
+      <div className="space-y-6 text-slate-900">
         <header className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900/40 to-emerald-900/30 p-6 shadow-2xl shadow-emerald-500/20">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">Razón de negocio</p>
-              <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-white">Aprobaciones Art. 5-A</h1>
-              <p className="mt-2 text-sm text-slate-200">
-                Define la necesidad, monto esperado y registra quién autoriza cada contrato antes de ejecutar.
+              <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">
+                Razón de negocio
+              </p>
+              <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-white">
+                Aprobaciones Art. 5-A
+              </h1>
+              <p className="mt-2 text-sm text-slate-600">
+                Define la necesidad, monto esperado y registra quién autoriza
+                cada contrato antes de ejecutar.
               </p>
             </div>
             <GuiaContador
               section="Razón de negocio y aprobaciones"
               steps={[
-                { title: "Selecciona un contrato", description: "Elige el contrato que requiere aprobación de su <strong>razón de negocio</strong> antes de ejecutarse." },
-                { title: "Registra cada aprobación", description: "Sigue el flujo: <strong>Solicitante → Responsable del área → Compliance → Fiscal → Dirección</strong>. Cada paso requiere nombre, correo y evidencia." },
-                { title: "Adjunta evidencia", description: "Sube la <strong>URL</strong> del acta de comité, correo de autorización o minuta de aprobación como respaldo documental." },
-                { title: "Verifica el flujo completo", description: "El historial muestra todas las aprobaciones con rol, fecha y evidencia. El flujo se cierra cuando todos aprueban o alguno rechaza." },
+                {
+                  title: "Selecciona un contrato",
+                  description:
+                    "Elige el contrato que requiere aprobación de su <strong>razón de negocio</strong> antes de ejecutarse.",
+                },
+                {
+                  title: "Registra cada aprobación",
+                  description:
+                    "Sigue el flujo: <strong>Solicitante → Responsable del área → Compliance → Fiscal → Dirección</strong>. Cada paso requiere nombre, correo y evidencia.",
+                },
+                {
+                  title: "Adjunta evidencia",
+                  description:
+                    "Sube la <strong>URL</strong> del acta de comité, correo de autorización o minuta de aprobación como respaldo documental.",
+                },
+                {
+                  title: "Verifica el flujo completo",
+                  description:
+                    "El historial muestra todas las aprobaciones con rol, fecha y evidencia. El flujo se cierra cuando todos aprueban o alguno rechaza.",
+                },
               ]}
               concepts={[
-                { term: "Art. 5-A CFF", definition: "Los actos jurídicos que carezcan de razón de negocio y generen un beneficio fiscal directo o indirecto, tendrán los efectos fiscales correspondientes a los que se habrían realizado." },
-                { term: "Razón de negocio", definition: "Justificación económica válida de una operación, independiente del ahorro fiscal que pudiera generar." },
-                { term: "Beneficio económico", definition: "Resultado cuantificable esperado de la operación: ahorro, ingreso adicional, reducción de riesgo, etc." },
-                { term: "Flujo de aprobaciones", definition: "Cadena escalonada de autorizaciones donde cada rol debe aprobar antes de pasar al siguiente nivel jerárquico." },
+                {
+                  term: "Art. 5-A CFF",
+                  definition:
+                    "Los actos jurídicos que carezcan de razón de negocio y generen un beneficio fiscal directo o indirecto, tendrán los efectos fiscales correspondientes a los que se habrían realizado.",
+                },
+                {
+                  term: "Razón de negocio",
+                  definition:
+                    "Justificación económica válida de una operación, independiente del ahorro fiscal que pudiera generar.",
+                },
+                {
+                  term: "Beneficio económico",
+                  definition:
+                    "Resultado cuantificable esperado de la operación: ahorro, ingreso adicional, reducción de riesgo, etc.",
+                },
+                {
+                  term: "Flujo de aprobaciones",
+                  definition:
+                    "Cadena escalonada de autorizaciones donde cada rol debe aprobar antes de pasar al siguiente nivel jerárquico.",
+                },
               ]}
               tips={[
                 "Documenta la razón de negocio <strong>antes de firmar</strong> el contrato, no después.",
@@ -230,18 +287,24 @@ export default function RazonNegocioPage() {
         </header>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20 lg:col-span-1">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg lg:col-span-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Contratos</p>
-                <h2 className="text-lg font-semibold text-white">Selecciona un contrato</h2>
+                <p className="text-xs uppercase tracking-[0.3em] text-emerald-600">
+                  Contratos
+                </p>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Selecciona un contrato
+                </h2>
               </div>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-100">{contratos.length}</span>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">
+                {contratos.length}
+              </span>
             </div>
             <div className="mt-4 space-y-3 max-h-[520px] overflow-y-auto pr-1">
-              {loading && <p className="text-sm text-slate-300">Cargando...</p>}
+              {loading && <p className="text-sm text-slate-500">Cargando...</p>}
               {!loading && contratos.length === 0 && (
-                <p className="text-sm text-slate-300">Aún no hay contratos.</p>
+                <p className="text-sm text-slate-500">Aún no hay contratos.</p>
               )}
               {!loading &&
                 contratos.map((c) => {
@@ -253,15 +316,18 @@ export default function RazonNegocioPage() {
                       onClick={() => {
                         void handleSelectContrato(c.id);
                       }}
-                      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${isActive
-                          ? "border-emerald-300/60 bg-emerald-500/10 text-white"
-                          : "border-white/10 bg-white/5 text-slate-200 hover:border-emerald-300/40"
-                        }`}
+                      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                        isActive
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-900 shadow-sm"
+                          : "border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-300 hover:bg-slate-100"
+                      }`}
                     >
                       <p className="text-sm font-semibold">{c.nombre}</p>
-                      <p className="text-xs text-slate-300">{c.proveedor_nombre || "Sin proveedor"}</p>
+                      <p className="text-xs text-slate-500">
+                        {c.proveedor_nombre || "Sin proveedor"}
+                      </p>
                       {c.beneficio_economico_esperado && (
-                        <p className="text-[11px] text-emerald-200">
+                        <p className="text-[11px] font-medium text-emerald-600">
                           Beneficio esperado: ${c.beneficio_economico_esperado}
                         </p>
                       )}
@@ -272,60 +338,92 @@ export default function RazonNegocioPage() {
           </div>
 
           <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Registro</p>
-                  <h3 className="text-lg font-semibold text-white">Nueva aprobación</h3>
-                  <p className="text-sm text-slate-300">
-                    Captura quién aprueba/rechaza y adjunta evidencia de la decisión.
+                  <p className="text-xs uppercase tracking-[0.3em] text-emerald-600">
+                    Registro
+                  </p>
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    Nueva aprobación
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    Captura quién aprueba/rechaza y adjunta evidencia de la
+                    decisión.
                   </p>
                 </div>
                 {selectedContrato && (
-                  <div className="text-right text-xs text-slate-300">
-                    <p className="font-semibold text-white">{selectedContrato.nombre}</p>
-                    <p>{selectedContrato.proveedor_nombre || "Sin proveedor"}</p>
+                  <div className="text-right text-xs text-slate-500">
+                    <p className="font-semibold text-slate-900">
+                      {selectedContrato.nombre}
+                    </p>
+                    <p>
+                      {selectedContrato.proveedor_nombre || "Sin proveedor"}
+                    </p>
                   </div>
                 )}
               </div>
               {flujoCerrado && (
-                <div className="mt-3 rounded-xl border border-emerald-300/40 bg-emerald-900/30 px-4 py-3 text-sm text-emerald-100">
-                  El flujo de aprobaciones ya concluyó (aprobado o rechazado). No puedes capturar más pasos.
+                <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  El flujo de aprobaciones ya concluyó (aprobado o rechazado).
+                  No puedes capturar más pasos.
                 </div>
               )}
               {!flujoCerrado && nextRol && (
-                <div className="mt-3 rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-slate-100">
-                  Próximo rol esperado: <span className="font-semibold text-white">{ROLES.find((r) => r.value === nextRol)?.label}</span>
+                <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  Próximo rol esperado:{" "}
+                  <span className="font-semibold text-slate-900">
+                    {ROLES.find((r) => r.value === nextRol)?.label}
+                  </span>
                 </div>
               )}
               {formError && (
-                <div className="mt-3 rounded-xl border border-flame-300/60 bg-flame-900/40 px-4 py-3 text-sm text-flame-50">
+                <div className="mt-3 rounded-xl border border-flame-200 bg-flame-50 px-4 py-3 text-sm text-flame-800">
                   {formError}
                 </div>
               )}
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <div className="space-y-3">
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">Rol</label>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Rol
+                    </label>
                     <select
                       value={form.rol}
-                      onChange={(e) => setForm((prev) => ({ ...prev, rol: e.target.value as RazonNegocioAprobacion["rol"] }))}
-                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          rol: e.target.value as RazonNegocioAprobacion["rol"],
+                        }))
+                      }
+                      className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-400 placeholder-slate-400"
                       disabled={flujoCerrado}
                     >
                       {ROLES.map((r) => (
-                        <option key={r.value} value={r.value} disabled={Boolean(nextRol && r.value !== nextRol)}>
+                        <option
+                          key={r.value}
+                          value={r.value}
+                          disabled={Boolean(nextRol && r.value !== nextRol)}
+                        >
                           {r.label}
                         </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">Estado</label>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Estado
+                    </label>
                     <select
                       value={form.estado}
-                      onChange={(e) => setForm((prev) => ({ ...prev, estado: e.target.value as RazonNegocioAprobacion["estado"] }))}
-                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          estado: e.target
+                            .value as RazonNegocioAprobacion["estado"],
+                        }))
+                      }
+                      className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-400 placeholder-slate-400"
                       disabled={flujoCerrado}
                     >
                       {ESTADOS.map((s) => (
@@ -336,11 +434,18 @@ export default function RazonNegocioPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">Evidencia (URL)</label>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Evidencia (URL)
+                    </label>
                     <input
                       value={form.evidencia_url}
-                      onChange={(e) => setForm((prev) => ({ ...prev, evidencia_url: e.target.value }))}
-                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          evidencia_url: e.target.value,
+                        }))
+                      }
+                      className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-400 placeholder-slate-400"
                       placeholder="Carpeta de aprobaciones, correo o acta"
                     />
                   </div>
@@ -348,32 +453,53 @@ export default function RazonNegocioPage() {
                 <div className="space-y-3">
                   <div className="grid gap-2 md:grid-cols-2">
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">Nombre aprobador</label>
+                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Nombre aprobador
+                      </label>
                       <input
                         value={form.firmado_por}
-                        onChange={(e) => setForm((prev) => ({ ...prev, firmado_por: e.target.value }))}
-                        className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            firmado_por: e.target.value,
+                          }))
+                        }
+                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-400 placeholder-slate-400"
                         placeholder="Quien autoriza"
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">Correo</label>
+                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Correo
+                      </label>
                       <input
                         type="email"
                         value={form.firmado_email}
-                        onChange={(e) => setForm((prev) => ({ ...prev, firmado_email: e.target.value }))}
-                        className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            firmado_email: e.target.value,
+                          }))
+                        }
+                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-400 placeholder-slate-400"
                         placeholder="correo@empresa.com"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">Comentarios</label>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Comentarios
+                    </label>
                     <textarea
                       value={form.comentario}
-                      onChange={(e) => setForm((prev) => ({ ...prev, comentario: e.target.value }))}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          comentario: e.target.value,
+                        }))
+                      }
                       rows={3}
-                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                      className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-400 placeholder-slate-400"
                     />
                   </div>
                 </div>
@@ -392,18 +518,26 @@ export default function RazonNegocioPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Historial</p>
-                  <h3 className="text-lg font-semibold text-white">Aprobaciones registradas</h3>
-                  <p className="text-sm text-slate-300">Queda constancia con rol, nombre y evidencia.</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-emerald-600">
+                    Historial
+                  </p>
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    Aprobaciones registradas
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    Queda constancia con rol, nombre y evidencia.
+                  </p>
                 </div>
-                <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-100">{aprobaciones.length}</span>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">
+                  {aprobaciones.length}
+                </span>
               </div>
               <div className="mt-4 overflow-x-auto">
-                <table className="min-w-full divide-y divide-white/10 text-sm text-slate-100">
-                  <thead className="text-xs uppercase tracking-wide text-slate-300">
+                <table className="min-w-full divide-y divide-slate-200 text-sm text-slate-700">
+                  <thead className="text-xs uppercase tracking-wide text-slate-500">
                     <tr>
                       <th className="px-3 py-2 text-left">Rol</th>
                       <th className="px-3 py-2 text-left">Estado</th>
@@ -413,25 +547,34 @@ export default function RazonNegocioPage() {
                       <th className="px-3 py-2 text-left">Fecha</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/10">
+                  <tbody className="divide-y divide-slate-100">
                     {aprobaciones.length === 0 && (
                       <tr>
-                        <td className="px-3 py-4 text-center text-slate-300" colSpan={6}>
+                        <td
+                          className="px-3 py-4 text-center text-slate-300"
+                          colSpan={6}
+                        >
                           No hay aprobaciones registradas.
                         </td>
                       </tr>
                     )}
                     {aprobaciones.map((ap) => (
                       <tr key={ap.id}>
-                        <td className="px-3 py-3 text-slate-100">{ap.rol}</td>
+                        <td className="px-3 py-3 text-slate-800">{ap.rol}</td>
                         <td className="px-3 py-3">
-                          <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${estadoColor[ap.estado]}`}>
+                          <span
+                            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${estadoColor[ap.estado]}`}
+                          >
                             {ap.estado}
                           </span>
                         </td>
                         <td className="px-3 py-3">
-                          <p className="font-semibold text-white">{ap.firmado_por || "-"}</p>
-                          <p className="text-xs text-slate-300">{ap.firmado_email || ""}</p>
+                          <p className="font-semibold text-slate-900">
+                            {ap.firmado_por || "-"}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {ap.firmado_email || ""}
+                          </p>
                         </td>
                         <td className="px-3 py-3">
                           {ap.evidencia_url ? (
@@ -439,7 +582,7 @@ export default function RazonNegocioPage() {
                               href={ap.evidencia_url}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-xs text-emerald-200 hover:text-emerald-100"
+                              className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
                             >
                               Evidencia
                             </a>
@@ -447,8 +590,12 @@ export default function RazonNegocioPage() {
                             <span className="text-xs text-slate-400">N/A</span>
                           )}
                         </td>
-                        <td className="px-3 py-3 text-slate-100">{ap.comentario || "-"}</td>
-                        <td className="px-3 py-3 text-slate-200">{ap.decidido_en || ap.created_at}</td>
+                        <td className="px-3 py-3 text-slate-800">
+                          {ap.comentario || "-"}
+                        </td>
+                        <td className="px-3 py-3 text-slate-600">
+                          {ap.decidido_en || ap.created_at}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
