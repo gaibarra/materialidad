@@ -576,15 +576,19 @@ export default function FirmaLogisticaPage() {
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
                       <label className="text-xs font-medium text-slate-500">Fedatario</label>
-                      <input
-                        className={inputCls}
-                        value={form.fedatario}
-                        placeholder="Nombre del fedatario"
-                        onChange={(e) => set("fedatario", e.target.value)}
-                        readOnly={!!form.fedatarioId}
-                      />
-                      {form.fedatarioId && (
-                        <p className="mt-0.5 text-[10px] text-slate-400">Vinculado al catálogo · ID {form.fedatarioId}</p>
+                      {form.fedatarioId ? (
+                        <div className="mt-1 flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2.5">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white">✓</span>
+                          <span className="text-sm font-medium text-emerald-800">{form.fedatario}</span>
+                          <span className="ml-auto text-[10px] text-emerald-600">Catálogo · ID {form.fedatarioId}</span>
+                        </div>
+                      ) : (
+                        <input
+                          className={inputCls}
+                          value={form.fedatario}
+                          placeholder="Escribe el nombre o selecciónalo arriba ↑"
+                          onChange={(e) => set("fedatario", e.target.value)}
+                        />
                       )}
                     </div>
                     <div>
