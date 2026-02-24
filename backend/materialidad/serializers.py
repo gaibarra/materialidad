@@ -885,6 +885,11 @@ class ContratoGeneracionSerializer(serializers.Serializer):
         allow_null=True,
     )
     empresa = serializers.PrimaryKeyRelatedField(queryset=Empresa.objects.all())
+    proveedor = serializers.PrimaryKeyRelatedField(
+        queryset=Proveedor.objects.all(),
+        required=False,
+        allow_null=True,
+    )
     template = serializers.PrimaryKeyRelatedField(
         queryset=ContratoTemplate.objects.filter(activo=True),
         required=False,
@@ -971,6 +976,11 @@ class ImportarExternoSerializer(serializers.Serializer):
     empresa = serializers.PrimaryKeyRelatedField(queryset=Empresa.objects.all())
     template = serializers.PrimaryKeyRelatedField(
         queryset=ContratoTemplate.objects.filter(activo=True),
+        required=False,
+        allow_null=True,
+    )
+    proveedor = serializers.PrimaryKeyRelatedField(
+        queryset=Proveedor.objects.all(),
         required=False,
         allow_null=True,
     )

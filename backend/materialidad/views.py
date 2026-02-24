@@ -418,6 +418,7 @@ class ContratoViewSet(viewsets.ModelViewSet):
             nombre_base = template.nombre if template else "Contrato generado"
             contrato = Contrato.objects.create(
                 empresa=data["empresa"],
+                proveedor=data.get("proveedor"),
                 template=template,
                 nombre=f"{nombre_base} - {data['empresa'].razon_social}",
                 categoria=categoria,
@@ -726,6 +727,7 @@ class ContratoViewSet(viewsets.ModelViewSet):
         tipo_empresa = template.tipo_empresa if template else Contrato.TipoEmpresa.MIXTA
         contrato = Contrato.objects.create(
             empresa=empresa,
+            proveedor=data.get("proveedor"),
             template=template,
             nombre=f"Contrato externo importado \u2014 {empresa.razon_social}",
             categoria=categoria,

@@ -43,6 +43,7 @@ export type CitationCacheMetadata = {
 export type ContractGenerationPayload = {
   contrato?: number | null;
   empresa: number;
+  proveedor?: number | null;
   template?: number | null;
   razon_negocio?: string;
   beneficio_economico_esperado?: number;
@@ -322,11 +323,11 @@ export type ClauseOptimizePayload = {
   contexto_contrato?: string;
   idioma?: "es" | "en";
   objetivo?:
-    | "mejorar_fiscal"
-    | "simplificar"
-    | "reforzar_materialidad"
-    | "ampliar_proteccion"
-    | "adaptar_idioma";
+  | "mejorar_fiscal"
+  | "simplificar"
+  | "reforzar_materialidad"
+  | "ampliar_proteccion"
+  | "adaptar_idioma";
 };
 
 export type ClauseOptimizeResponse = {

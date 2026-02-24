@@ -42,6 +42,12 @@ type Empresa = {
   rfc: string;
 };
 
+type Proveedor = {
+  id: number;
+  razon_social: string;
+  rfc: string;
+};
+
 type ContratoTemplate = {
   id: number;
   clave: string;
@@ -66,6 +72,7 @@ type PaginatedResponse<T> = {
 
 type ContractFormState = {
   empresa: string;
+  proveedor: string;
   template: string;
   resumen_necesidades: string;
   clausulas: string;
@@ -82,6 +89,7 @@ const MATERIALITY_TIPS = [
 
 const initialForm: ContractFormState = {
   empresa: "",
+  proveedor: "",
   template: "",
   resumen_necesidades: "",
   clausulas: "",
@@ -95,6 +103,7 @@ export default function ContratosPage() {
 
   const [formState, setFormState] = useState<ContractFormState>(initialForm);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [templates, setTemplates] = useState<ContratoTemplate[]>([]);
   const [contratos, setContratos] = useState<ContratoLite[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
@@ -145,13 +154,15 @@ export default function ContratosPage() {
     const loadOptions = async () => {
       setIsLoadingOptions(true);
       try {
-        const [empresasRes, templatesRes] = await Promise.all([
+        const [empresasRes, proveedoresRes, templatesRes] = await Promise.all([
           apiFetch<PaginatedResponse<Empresa>>("/api/materialidad/empresas/"),
+          apiFetch<PaginatedResponse<Proveedor>>("/api/materialidad/proveedores/"),
           apiFetch<ContratoTemplate[]>("/api/materialidad/contrato-templates/"),
         ]);
 
         if (!mounted) return;
         setEmpresas(empresasRes.results ?? []);
+        setProveedores(proveedoresRes.results ?? []);
         setTemplates(templatesRes ?? []);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Intenta de nuevo en unos minutos.";
@@ -291,6 +302,7 @@ export default function ContratosPage() {
       const payload = {
         contrato: contratoId ? Number(contratoId) : undefined,
         empresa: Number(formState.empresa),
+        proveedor: formState.proveedor ? Number(formState.proveedor) : undefined,
         template: formState.template ? Number(formState.template) : undefined,
         idioma: formState.idioma,
         tono: formState.tono,
@@ -557,22 +569,41 @@ export default function ContratosPage() {
             )}
 
             <form className="space-y-5" onSubmit={handleSubmit}>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Empresa</label>
-                <select
-                  name="empresa"
-                  value={formState.empresa}
-                  onChange={handleChange}
-                  required
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-                >
-                  <option value="">Selecciona la razón social</option>
-                  {empresas.map((empresa) => (
-                    <option key={empresa.id} value={empresa.id}>
-                      {empresa.razon_social} ({empresa.rfc})
-                    </option>
-                  ))}
-                </select>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Empresa</label>
+                  <select
+                    name="empresa"
+                    value={formState.empresa}
+                    onChange={handleChange}
+                    required
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                  >
+                    <option value="">Selecciona la razón social</option>
+                    {empresas.map((empresa) => (
+                      <option key={empresa.id} value={empresa.id}>
+                        {empresa.razon_social} ({empresa.rfc})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Proveedor</label>
+                  <select
+                    name="proveedor"
+                    value={formState.proveedor}
+                    onChange={handleChange}
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                  >
+                    <option value="">(Sin proveedor asociado)</option>
+                    {proveedores.map((proveedor) => (
+                      <option key={proveedor.id} value={proveedor.id}>
+                        {proveedor.razon_social} ({proveedor.rfc})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div>
