@@ -12,9 +12,9 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 
-import { DashboardShell } from "components/DashboardShell";
-import { useAuthContext } from "context/AuthContext";
-import { apiFetch } from "lib/api";
+import { DashboardShell } from "../../../components/DashboardShell";
+import { useAuthContext } from "../../../context/AuthContext";
+import { apiFetch } from "../../../lib/api";
 import {
   generateContract,
   ContractGenerationResponse,
@@ -31,9 +31,9 @@ import {
   RedlineAnalysis,
   DiffSegment,
   optimizeClause,
-} from "lib/contracts";
-import { alertError, alertInfo, alertSuccess } from "lib/alerts";
-import { ContractEditor, type OptimizeRequest } from "components/ContractEditor";
+} from "../../../lib/contracts";
+import { alertError, alertInfo, alertSuccess } from "../../../lib/alerts";
+import { ContractEditor, type OptimizeRequest } from "../../../components/ContractEditor";
 
 type Empresa = {
   id: number;
@@ -403,11 +403,11 @@ export default function ContratosPage() {
         setResult((prev) =>
           prev
             ? {
-                ...prev,
-                citas_legales: exportResult.citas_legales,
-                citas_legales_metadata:
-                  exportResult.citas_legales_metadata ?? prev.citas_legales_metadata,
-              }
+              ...prev,
+              citas_legales: exportResult.citas_legales,
+              citas_legales_metadata:
+                exportResult.citas_legales_metadata ?? prev.citas_legales_metadata,
+            }
             : prev
         );
       }
