@@ -13,6 +13,7 @@ export type FirmaLogisticaPayload = {
   fecha_cierta_requerida?: boolean;
   fecha_cierta_obtenida?: boolean;
   fecha_ratificacion?: string | null;
+  fedatario_id?: number | null;
   fedatario_nombre?: string;
   numero_instrumento?: string;
   archivo_notariado_url?: string;
@@ -32,6 +33,7 @@ export type ContratoLogistica = {
   fecha_cierta_requerida: boolean;
   fecha_cierta_obtenida: boolean;
   fecha_ratificacion: string | null;
+  fedatario_id: number | null;
   fedatario_nombre: string;
   numero_instrumento: string;
   archivo_notariado_url: string;

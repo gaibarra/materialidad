@@ -610,6 +610,7 @@ class ContratoViewSet(viewsets.ModelViewSet):
             "fecha_cierta_requerida",
             "fecha_cierta_obtenida",
             "fecha_ratificacion",
+            "fedatario",
             "fedatario_nombre",
             "numero_instrumento",
             "archivo_notariado_url",

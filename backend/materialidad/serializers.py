@@ -271,6 +271,7 @@ class ContratoSerializer(serializers.ModelSerializer):
             "fecha_cierta_requerida",
             "fecha_cierta_obtenida",
             "fecha_ratificacion",
+            "fedatario",
             "fedatario_nombre",
             "numero_instrumento",
             "archivo_notariado",
@@ -366,6 +367,9 @@ class ContratoFirmaLogisticaSerializer(serializers.Serializer):
     fecha_cierta_requerida = serializers.BooleanField(required=False)
     fecha_cierta_obtenida = serializers.BooleanField(required=False)
     fecha_ratificacion = serializers.DateField(required=False, allow_null=True)
+    fedatario = serializers.PrimaryKeyRelatedField(
+        queryset=Fedatario.objects.all(), required=False, allow_null=True
+    )
     fedatario_nombre = serializers.CharField(max_length=255, required=False, allow_blank=True)
     numero_instrumento = serializers.CharField(max_length=50, required=False, allow_blank=True)
     archivo_notariado_url = serializers.URLField(required=False, allow_blank=True)
