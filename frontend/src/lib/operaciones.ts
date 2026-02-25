@@ -145,3 +145,26 @@ export function mapRequirementToEntregable(req: DeliverableRequirement): Operaci
     requerido: req.requerido,
   };
 }
+
+export async function exportOperacionDossier(id: number): Promise<void> {
+  // Using apiFetchRaw to get the raw response because it's a binary file (ZIP)
+  const { apiFetchRaw } = await import("./api");
+  const response = await apiFetchRaw(`/api/materialidad/operaciones/${id}/exportar-dossier/`);
+
+  // Extract filename from Content-Disposition if present
+  const disposition = response.headers.get("Content-Disposition");
+  let filename = `dossier-operacion-${id}.zip`;
+  if (disposition && disposition.includes("filename=")) {
+    filename = disposition.split("filename=")[1].replace(/"/g, "");
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+}

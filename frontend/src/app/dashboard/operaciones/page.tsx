@@ -16,6 +16,7 @@ import {
   OperacionEntregablePayload,
   updateOperacionEntregable,
   updateOperacion,
+  exportOperacionDossier,
 } from "../../../lib/operaciones";
 import { DeliverableRequirement, fetchDeliverableRequirements } from "../../../lib/checklists";
 
@@ -101,6 +102,7 @@ export default function OperacionesPage() {
   const [form, setForm] = useState<OperacionEntregablePayload>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [exportingId, setExportingId] = useState<number | null>(null);
   const [evidencias, setEvidencias] = useState<Record<number, string>>({});
   const [firmas, setFirmas] = useState<Record<number, { por: string; email: string }>>({});
   const [updatingConceptId, setUpdatingConceptId] = useState<number | null>(null);
@@ -162,6 +164,17 @@ export default function OperacionesPage() {
     setSelectedOperacionId(operacionId);
     setForm((prev) => ({ ...prev, operacion: operacionId }));
     await loadEntregables(operacionId);
+  };
+
+  const handleExportDossier = async (operacionId: number) => {
+    setExportingId(operacionId);
+    try {
+      await exportOperacionDossier(operacionId);
+    } catch (err) {
+      void alertError("Error al exportar", "No se pudo generar el expediente ZIP: " + (err as Error).message);
+    } finally {
+      setExportingId(null);
+    }
   };
 
   const handleRequirementChange = (id: string) => {
@@ -389,6 +402,17 @@ export default function OperacionesPage() {
                   <div className="text-right text-xs text-slate-300">
                     <p>Proveedor: <span className="font-semibold text-white">{selectedOperacion.proveedor_nombre}</span></p>
                     <p>Monto: <span className="font-semibold text-emerald-300">{formatCurrency(selectedOperacion.monto, selectedOperacion.moneda)}</span></p>
+
+                    <button
+                      type="button"
+                      onClick={() => handleExportDossier(selectedOperacion.id)}
+                      disabled={exportingId === selectedOperacion.id}
+                      title="Descarga el expediente estructurado con todas las evidencias (PDF/ZIP) para revisiones del SAT (Gabinete/Domiciliarias)."
+                      className="mt-3 flex items-center justify-end gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 font-semibold text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50"
+                    >
+                      <span>🗂️</span>
+                      {exportingId === selectedOperacion.id ? "Generando ZIP..." : "Exportar Expediente SAT (Dossier)"}
+                    </button>
                   </div>
                 )}
               </div>
