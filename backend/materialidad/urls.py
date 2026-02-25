@@ -24,6 +24,7 @@ from .views import (
     LegalReferenceSourceViewSet,
     OperacionViewSet,
     AuditLogViewSet,
+    AlertaCSDViewSet,
     ProveedorViewSet,
     RazonNegocioAprobacionViewSet,
     PriceComparisonView,
@@ -38,6 +39,7 @@ router.register("clause-templates", ClauseTemplateViewSet, basename="clause-temp
 router.register("contratos", ContratoViewSet, basename="contrato")
 router.register("operaciones", OperacionViewSet, basename="operacion")
 router.register("audit-log", AuditLogViewSet, basename="audit-log")
+router.register("alertas-csd", AlertaCSDViewSet, basename="alerta-csd")
 router.register("cuentas-bancarias", CuentaBancariaViewSet, basename="cuenta-bancaria")
 router.register("estados-cuenta", EstadoCuentaViewSet, basename="estado-cuenta")
 router.register("movimientos-bancarios", MovimientoBancarioViewSet, basename="movimiento-bancario")

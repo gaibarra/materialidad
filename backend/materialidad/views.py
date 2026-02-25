@@ -109,6 +109,7 @@ from .ai.redlines import analyze_redlines
 from .exporters import build_operacion_dossier_zip, markdown_to_docx_bytes
 from .models import (
     AuditLog,
+    AlertaCSD,
     Checklist,
     ChecklistItem,
     ClauseTemplate,
@@ -139,6 +140,7 @@ from .serializers import (
     ClauseTemplateSerializer,
     CuentaBancariaSerializer,
     ContractDocumentCreateSerializer,
+    AlertaCSDSerializer,
     ContractDocumentSerializer,
     ContratoGeneracionSerializer,
     ContratoDocxExportSerializer,

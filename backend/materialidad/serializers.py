@@ -8,6 +8,7 @@ from rest_framework import serializers
 
 from .models import (
     AuditLog,
+    AlertaCSD,
     Checklist,
     ChecklistItem,
     ClauseTemplate,
@@ -1460,3 +1461,28 @@ class ClauseTemplateSerializer(serializers.ModelSerializer):
             "updated_at",
         )
         read_only_fields = ("created_at", "updated_at")
+
+
+class AlertaCSDSerializer(serializers.ModelSerializer):
+    empresa_nombre = serializers.CharField(source="empresa.razon_social", read_only=True)
+    proveedor_nombre = serializers.CharField(source="proveedor.razon_social", read_only=True)
+
+    class Meta:
+        model = AlertaCSD
+        fields = [
+            "id",
+            "empresa",
+            "empresa_nombre",
+            "proveedor",
+            "proveedor_nombre",
+            "tipo_alerta",
+            "estatus",
+            "fecha_deteccion",
+            "fecha_resolucion",
+            "oficio_sat",
+            "motivo_presuncion",
+            "acciones_tomadas",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at"]

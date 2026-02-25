@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 
 class ContratoCategoriaChoices(models.TextChoices):
@@ -1251,3 +1252,42 @@ class ClauseTemplate(models.Model):
 
     def __str__(self) -> str:
         return f"{self.titulo} (v{self.version})"
+
+
+class TipoAlertaCSD(models.TextChoices):
+    PROPIETARIO = "PROPIETARIO", "CSD de la propia Empresa"
+    PROVEEDOR_CRITICO = "PROVEEDOR", "CSD de Proveedor Crítico"
+
+
+class EstatusAlertaCSD(models.TextChoices):
+    ACTIVA = "ACTIVA", "Activa (CSD Suspendido/En Riesgo)"
+    ACLARACION = "ACLARACION", "Caso de Aclaración Ingresado"
+    RESUELTA = "RESUELTA", "Resuelta (CSD Reactivado)"
+    REVOCADO = "REVOCADO", "Cancelación Definitiva"
+
+
+class AlertaCSD(models.Model):
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name="alertas_csd")
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.SET_NULL, null=True, blank=True, related_name="alertas_csd")
+    
+    tipo_alerta = models.CharField(max_length=32, choices=TipoAlertaCSD.choices, default=TipoAlertaCSD.PROPIETARIO)
+    estatus = models.CharField(max_length=32, choices=EstatusAlertaCSD.choices, default=EstatusAlertaCSD.ACTIVA)
+    
+    fecha_deteccion = models.DateField(default=timezone.now)
+    fecha_resolucion = models.DateField(null=True, blank=True)
+    
+    oficio_sat = models.CharField(max_length=64, blank=True, help_text="Número de oficio notificado por el SAT")
+    motivo_presuncion = models.TextField(blank=True, help_text="Fracción del 17-H Bis invocada y detalles")
+    acciones_tomadas = models.TextField(blank=True, help_text="Bitácora de seguimiento")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "materialidad_alerta_csd"
+        ordering = ("-fecha_deteccion",)
+        verbose_name = "Alerta CSD"
+        verbose_name_plural = "Alertas CSD"
+
+    def __str__(self) -> str:
+        return f"Alerta CSD - {self.get_tipo_alerta_display()} ({self.estatus})"

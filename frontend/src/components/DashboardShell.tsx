@@ -44,6 +44,7 @@ const NAV_ITEMS: NavItem[] = [
   { type: "link", label: "Expedientes digitales", href: "/dashboard/expedientes" },
   { type: "link", label: "Checklist", href: "/dashboard/checklists" },
   { type: "link", label: "Alertas ESG", href: "/dashboard/alertas" },
+  { type: "link", label: "Contingencias CSD", href: "/dashboard/alertas-csd" },
 
   { type: "header", label: "Legal e IA" },
   { type: "link", label: "Consulta legal", href: "/dashboard/consultas" },
@@ -244,7 +245,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               </div>
             </div>
           </div>
-      </aside>
+        </aside>
       )}
 
       <div className="flex flex-1 flex-col">
