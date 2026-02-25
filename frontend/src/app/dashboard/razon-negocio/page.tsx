@@ -28,7 +28,109 @@ type ContratoLite = {
   proveedor_nombre: string | null;
   razon_negocio?: string;
   beneficio_economico_esperado?: string | null;
+  beneficio_fiscal_estimado?: string | null;
 };
+
+/* ── Indicador BE vs. BF (Art. 5-A CFF Reforma 2026) ─────────────────── */
+function BeFbIndicador({ contrato }: { contrato: ContratoLite }) {
+  const be = parseFloat(contrato.beneficio_economico_esperado ?? "0") || 0;
+  const bf = parseFloat(contrato.beneficio_fiscal_estimado ?? "0") || 0;
+
+  const fmt = (n: number) =>
+    `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  if (!be && !bf) {
+    return (
+      <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          Beneficio económico vs. fiscal
+        </p>
+        <p className="mt-1 text-sm text-slate-500">
+          Sin datos registrados en el contrato. Edita el contrato y captura el{" "}
+          <strong>beneficio económico esperado</strong> y el{" "}
+          <strong>beneficio fiscal estimado</strong> para activar este indicador.
+        </p>
+      </div>
+    );
+  }
+
+  const cumple = be > bf;
+  const diferencia = be - bf;
+  const pct = bf > 0 ? ((diferencia / bf) * 100).toFixed(1) : null;
+
+  return (
+    <div
+      className={`mt-4 rounded-2xl border p-4 ${cumple
+        ? "border-emerald-200 bg-emerald-50"
+        : "border-red-200 bg-red-50"
+        }`}
+    >
+      {/* Encabezado con semáforo */}
+      <div className="flex items-center gap-2">
+        <span className="text-xl">{cumple ? "🟢" : "🔴"}</span>
+        <div>
+          <p
+            className={`text-sm font-bold ${cumple ? "text-emerald-800" : "text-red-800"
+              }`}
+          >
+            {cumple
+              ? "BE > BF — cumple Art. 5-A CFF"
+              : "BE ≤ BF — RIESGO Art. 5-A CFF"}
+          </p>
+          <p className="text-xs text-slate-500">
+            Beneficio Económico vs Beneficio Fiscal
+          </p>
+        </div>
+      </div>
+
+      {/* Desglose de valores */}
+      <div className="mt-3 grid grid-cols-3 gap-2 rounded-xl border border-current/10 bg-white/60 p-3 text-center text-xs">
+        <div>
+          <p className="font-semibold uppercase tracking-wider text-slate-400">BE</p>
+          <p className={`mt-1 text-base font-bold ${cumple ? "text-emerald-700" : "text-slate-700"}`}>
+            {fmt(be)}
+          </p>
+        </div>
+        <div>
+          <p className="font-semibold uppercase tracking-wider text-slate-400">BF</p>
+          <p className="mt-1 text-base font-bold text-slate-700">{fmt(bf)}</p>
+        </div>
+        <div>
+          <p className="font-semibold uppercase tracking-wider text-slate-400">
+            Δ Diferencia
+          </p>
+          <p
+            className={`mt-1 text-base font-bold ${cumple ? "text-emerald-700" : "text-red-700"
+              }`}
+          >
+            {fmt(diferencia)}
+            {pct !== null && (
+              <span className="ml-1 text-xs font-normal opacity-70">
+                ({cumple ? "+" : ""}{pct}%)
+              </span>
+            )}
+          </p>
+        </div>
+      </div>
+
+      {/* Alerta cuando no cumple */}
+      {!cumple && (
+        <div className="mt-3 rounded-xl border border-red-200 bg-red-100/60 px-3 py-2 text-xs text-red-800">
+          <p className="font-semibold">⚠️ Acción requerida (Reforma 2026)</p>
+          <p className="mt-1">
+            El beneficio fiscal supera al económico. El SAT puede recaracterizar
+            este contrato conforme al Art. 5-A CFF. Opciones:
+          </p>
+          <ul className="mt-1 list-inside list-disc space-y-0.5">
+            <li>Actualiza el monto del <strong>beneficio económico</strong> en el contrato si está subestimado.</li>
+            <li>Documenta en la <strong>razón de negocio</strong> el beneficio cualitativo adicional (reducción de riesgo, acceso a mercado, etc.).</li>
+            <li>Registra una aprobación de <strong>Compliance</strong> con el análisis de sustancia económica.</li>
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const ROLES: Array<{ value: RazonNegocioAprobacion["rol"]; label: string }> = [
   { value: "SOLICITANTE", label: "Solicitante" },
@@ -317,8 +419,8 @@ export default function RazonNegocioPage() {
                         void handleSelectContrato(c.id);
                       }}
                       className={`w-full rounded-2xl border px-4 py-3 text-left transition ${isActive
-                          ? "border-emerald-500 bg-emerald-50 text-emerald-900 shadow-sm"
-                          : "border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-300 hover:bg-slate-100"
+                        ? "border-emerald-500 bg-emerald-50 text-emerald-900 shadow-sm"
+                        : "border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-300 hover:bg-slate-100"
                         }`}
                     >
                       <p className="text-sm font-semibold">{c.nombre}</p>
@@ -362,6 +464,10 @@ export default function RazonNegocioPage() {
                   </div>
                 )}
               </div>
+
+              {selectedContrato && (
+                <BeFbIndicador contrato={selectedContrato} />
+              )}
               {flujoCerrado && (
                 <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
                   El flujo de aprobaciones ya concluyó (aprobado o rechazado).

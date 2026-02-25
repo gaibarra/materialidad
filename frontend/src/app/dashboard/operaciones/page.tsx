@@ -72,10 +72,10 @@ function MaterialidadSemaforo({ op }: { op: Operacion }) {
             key={c.label}
             title={c.label}
             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border ${c.ok
-                ? "bg-emerald-500/15 border-emerald-400/40 text-emerald-300"
-                : c.warn
-                  ? "bg-red-500/15 border-red-400/40 text-red-300"
-                  : "bg-white/5 border-white/10 text-slate-400"
+              ? "bg-emerald-500/15 border-emerald-400/40 text-emerald-300"
+              : c.warn
+                ? "bg-red-500/15 border-red-400/40 text-red-300"
+                : "bg-white/5 border-white/10 text-slate-400"
               }`}
           >
             {c.ok ? "✓" : c.warn ? "✗" : "○"} {c.label}
@@ -283,7 +283,7 @@ export default function OperacionesPage() {
               { term: "Semáforo de materialidad", definition: "Indicador por operación que muestra si CFDI, SPEI, Contrato y NIF están validados. Si alguno falla, la operación tiene riesgo de ser considerada simulación." },
               { term: "Reforma 2026 — Art. 69-B CFF", definition: "Sanciones de 2-9 años de prisión por CFDI sin operación real. Ya NO basta el contrato + CFDI + pago: se requieren entregables con evidencia documental robusta." },
               { term: "Sustancia económica (NIF)", definition: "Principio de las NIF que obliga a demostrar que el activo o servicio tiene uso real en el negocio y genera beneficios económicos futuros, independiente del aspecto legal." },
-              { term: "Art. 48 CFF reformado", description: "El SAT ahora puede usar fotografías, videos y grabaciones en visitas domiciliarias como evidencia en tu contra. Documenta tus instalaciones y procesos proactivamente." },
+              { term: "Art. 48 CFF reformado", definition: "El SAT ahora puede usar fotografías, videos y grabaciones en visitas domiciliarias como evidencia en tu contra. Documenta tus instalaciones y procesos proactivamente." },
             ]}
             tips={[
               "<strong>⚠️ Riesgo 2026:</strong> Un CFDI válido sin evidencias de materialidad es suficiente para que el SAT presuma simulación y bloquee tu CSD.",

@@ -27,6 +27,7 @@ export type Operacion = {
   estatus_validacion: string;
   cfdi_estatus?: string;
   spei_estatus?: string;
+  nif_aplicable?: string | null;
 };
 
 export type OperacionEntregable = {
