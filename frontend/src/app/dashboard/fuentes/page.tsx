@@ -62,7 +62,7 @@ const PAGE_SIZE = 12;
 
 export default function LegalLibraryPage() {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthContext();
+  const { isAuthenticated, isProfileLoaded, user } = useAuthContext();
 
   const [filters, setFilters] = useState<FilterState>({ search: "", ley: "todas", tipo: "todas", page: 1 });
   const [searchDraft, setSearchDraft] = useState("");
@@ -80,10 +80,10 @@ export default function LegalLibraryPage() {
   const [csvLog, setCsvLog] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isProfileLoaded && !isAuthenticated) {
       router.replace("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isProfileLoaded, router]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

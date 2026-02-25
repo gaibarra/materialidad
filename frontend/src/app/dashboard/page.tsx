@@ -176,10 +176,10 @@ export default function DashboardPage() {
   const [historyDays, setHistoryDays] = useState<number>(90);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isProfileLoaded && !isAuthenticated) {
       router.replace("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isProfileLoaded, router]);
 
   const loadEmpresas = useCallback(async () => {
     setIsLoading(true);

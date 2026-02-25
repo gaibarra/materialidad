@@ -210,7 +210,7 @@ const operacionInitial = {
 export default function EmpresaMaterialidadPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated, isProfileLoaded } = useAuthContext();
   const empresaId = Number(params?.id ?? 0);
 
   const [empresa, setEmpresa] = useState<EmpresaDetail | null>(null);
@@ -251,10 +251,10 @@ export default function EmpresaMaterialidadPage() {
   }, [contratoForm, selectedTemplate]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isProfileLoaded && !isAuthenticated) {
       router.replace("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isProfileLoaded, router]);
 
   const loadData = useCallback(async () => {
     if (!empresaId) {

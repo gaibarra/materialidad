@@ -99,7 +99,7 @@ const initialForm: ContractFormState = {
 
 export default function ContratosPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated, isProfileLoaded } = useAuthContext();
 
   const [formState, setFormState] = useState<ContractFormState>(initialForm);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
@@ -140,10 +140,10 @@ export default function ContratosPage() {
   const hasCitations = Boolean(result?.citas_legales?.length);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isProfileLoaded && !isAuthenticated) {
       router.replace("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isProfileLoaded, router]);
 
   useEffect(() => {
     if (!isAuthenticated) {

@@ -39,7 +39,7 @@ const MAX_REFERENCIAS_OPTIONS = [3, 5, 10, 15, 20];
 
 export default function LegalConsultationPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated, isProfileLoaded } = useAuthContext();
 
   const [consultations, setConsultations] = useState<LegalConsultation[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -55,10 +55,10 @@ export default function LegalConsultationPage() {
   const [maxRefs, setMaxRefs] = useState(3);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isProfileLoaded && !isAuthenticated) {
       router.replace("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isProfileLoaded, router]);
 
   const loadConsultations = useCallback(async () => {
     if (!isAuthenticated) return;

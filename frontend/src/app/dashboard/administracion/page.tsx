@@ -34,7 +34,7 @@ type AiFormState = TenantAIConfigPayload & { api_key: string };
 
 export default function AdminPage() {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthContext();
+  const { isAuthenticated, isProfileLoaded, user } = useAuthContext();
 
   const [activeTab, setActiveTab] = useState<AdminTab>("usuarios");
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -49,6 +49,7 @@ export default function AdminPage() {
   const [aiSaving, setAiSaving] = useState(false);
 
   useEffect(() => {
+    if (!isProfileLoaded) return;
     if (!isAuthenticated) {
       router.replace("/login");
       return;
@@ -56,7 +57,7 @@ export default function AdminPage() {
     if (user && !user.is_staff) {
       router.replace("/dashboard");
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, isProfileLoaded, user, router]);
 
   const loadUsers = useCallback(async () => {
     setUsersLoading(true);

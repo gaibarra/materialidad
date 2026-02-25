@@ -34,7 +34,7 @@ const INITIAL_FORM: TenantProvisionPayload = {
 
 export default function TenantProvisionPage() {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthContext();
+  const { isAuthenticated, isProfileLoaded, user } = useAuthContext();
 
   const [form, setForm] = useState<TenantProvisionPayload>(INITIAL_FORM);
   const [limits, setLimits] = useState<TenantLimitInfo | null>(null);
@@ -57,6 +57,7 @@ export default function TenantProvisionPage() {
   }, []);
 
   useEffect(() => {
+    if (!isProfileLoaded) return;
     if (!isAuthenticated) {
       router.replace("/login");
       return;
@@ -73,7 +74,7 @@ export default function TenantProvisionPage() {
         .then(setDespachos)
         .catch((error) => void alertError("No pudimos cargar despachos", (error as Error).message));
     }
-  }, [isAuthenticated, user, router, loadLimits]);
+  }, [isAuthenticated, isProfileLoaded, user, router, loadLimits]);
 
   const hasCapacity = useMemo(() => limits?.has_capacity ?? true, [limits?.has_capacity]);
 
