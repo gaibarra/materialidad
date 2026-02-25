@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useAuthContext } from "../context/AuthContext";
-import { alertError, alertSuccess } from "../lib/alerts";
+import { alertError } from "../lib/alerts";
 
 export function LoginForm() {
   const { login } = useAuthContext();
@@ -29,7 +29,7 @@ export function LoginForm() {
       }
 
       await login(loginData);
-      await alertSuccess("Acceso autorizado", "Redirigiendo al panel principal");
+      // Navegar inmediatamente sin bloquear con un alert modal
       router.push("/dashboard");
     } catch (err) {
       void alertError("No pudimos iniciar sesión", (err as Error).message);
