@@ -65,8 +65,9 @@ ok "Paquetes del sistema instalados (Node $(node -v), Python $(python3.12 --vers
 if [[ "$LOCAL_DEPLOY" == true ]]; then
     info "Despliegue local: Sincronizando desde $(pwd)..."
     mkdir -p "$APP_DIR"
-    # Sincronizar evitando node_modules, .git y .venv para velocidad y limpieza
-    rsync -av --exclude='.git' --exclude='node_modules' --exclude='.venv' --exclude='.next' ./ "$APP_DIR/"
+    # Sincronizar evitando node_modules, .git, .venv y archivos .env (los de producción ya existen)
+    rsync -av --exclude='.git' --exclude='node_modules' --exclude='.venv' --exclude='.next' \
+              --exclude='.env' --exclude='.env.*' --exclude='.env.local' ./ "$APP_DIR/"
     ok "Código sincronizado localmente en ${APP_DIR}"
 else
     if [[ -d "${APP_DIR}/.git" ]]; then
@@ -117,6 +118,16 @@ print(f'SECRET_KEY generada correctamente')
     exit 0
 else
     ok "Archivo .env existente encontrado"
+
+    # Asegurar que ALLOWED_HOSTS incluye el dominio de producción
+    if ! grep -q "${DOMAIN}" "${BACKEND_DIR}/.env"; then
+        warn "DJANGO_ALLOWED_HOSTS no incluye ${DOMAIN}, corrigiendo..."
+        sed -i "s|^DJANGO_ALLOWED_HOSTS=.*|DJANGO_ALLOWED_HOSTS=${DOMAIN},www.${DOMAIN},localhost,127.0.0.1|" "${BACKEND_DIR}/.env"
+        ok "ALLOWED_HOSTS corregido con ${DOMAIN}"
+    fi
+
+    # Forzar DEBUG=False en producción
+    sed -i "s|^DJANGO_DEBUG=True|DJANGO_DEBUG=False|" "${BACKEND_DIR}/.env"
 fi
 
 # ══════════════════════════════════════════════════════════════════════
@@ -150,13 +161,11 @@ ok "Archivos estáticos recopilados"
 info "Construyendo frontend Next.js..."
 cd "$FRONTEND_DIR"
 
-# Crear .env.local si no existe
-if [[ ! -f ".env.local" ]]; then
-    cat > .env.local <<ENVEOF
+# Forzar siempre la URL de producción (el deploy puede sobrescribir con valores de desarrollo)
+cat > .env.local <<ENVEOF
 NEXT_PUBLIC_API_BASE_URL=https://${DOMAIN}
 ENVEOF
-    ok "Creado .env.local del frontend"
-fi
+ok ".env.local del frontend configurado con https://${DOMAIN}"
 
 npm install -q
 npm run build
@@ -196,7 +205,12 @@ info "Instalando servicio frontend (Supervisor)..."
 cp "${APP_DIR}/deploy/supervisor/materialidad-frontend.conf" /etc/supervisor/conf.d/
 supervisorctl reread
 supervisorctl update
-supervisorctl restart materialidad-frontend 2>/dev/null || true
+
+# Asegurar que el puerto 3100 esté libre antes de reiniciar
+supervisorctl stop materialidad-frontend 2>/dev/null || true
+fuser -k 3100/tcp 2>/dev/null || true
+sleep 1
+supervisorctl start materialidad-frontend
 ok "Frontend activo bajo Supervisor"
 
 # ══════════════════════════════════════════════════════════════════════
