@@ -202,9 +202,19 @@ ok "Frontend activo bajo Supervisor"
 # ══════════════════════════════════════════════════════════════════════
 # 11. NGINX
 # ══════════════════════════════════════════════════════════════════════
+NGINX_CONF="/etc/nginx/sites-available/materialidad.conf"
 info "Configurando Nginx..."
-cp "${APP_DIR}/deploy/nginx/materialidad.conf" /etc/nginx/sites-available/materialidad.conf
-ln -sf /etc/nginx/sites-available/materialidad.conf /etc/nginx/sites-enabled/materialidad.conf
+
+if grep -q 'ssl_certificate' "$NGINX_CONF" 2>/dev/null; then
+    # La config actual ya tiene bloques SSL de Certbot — NO sobrescribir
+    info "Config Nginx existente tiene SSL — preservando certificados"
+else
+    # Primera instalación o config sin SSL — instalar template base
+    cp "${APP_DIR}/deploy/nginx/materialidad.conf" "$NGINX_CONF"
+    ok "Config Nginx base instalada"
+fi
+
+ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/materialidad.conf
 
 # Desactivar default si existe
 rm -f /etc/nginx/sites-enabled/default
@@ -217,15 +227,21 @@ ok "Nginx configurado y activo"
 # 12. CERTBOT (SSL)
 # ══════════════════════════════════════════════════════════════════════
 if [[ "$SKIP_SSL" == false ]]; then
-    info "Obteniendo certificado SSL con Certbot..."
-    certbot --nginx \
-        -d "$DOMAIN" \
-        -d "www.${DOMAIN}" \
-        --non-interactive \
-        --agree-tos \
-        --redirect \
-        -m "admin@${DOMAIN}" || warn "Certbot falló — verifica que el DNS apunte al VPS"
-    ok "Certificado SSL configurado"
+    if grep -q 'ssl_certificate' "$NGINX_CONF" 2>/dev/null; then
+        info "Certificado SSL ya configurado — verificando renovación..."
+        certbot renew --dry-run || warn "La renovación automática puede tener problemas"
+        ok "SSL existente verificado"
+    else
+        info "Obteniendo certificado SSL con Certbot..."
+        certbot --nginx \
+            -d "$DOMAIN" \
+            -d "www.${DOMAIN}" \
+            --non-interactive \
+            --agree-tos \
+            --redirect \
+            -m "admin@${DOMAIN}" || err "Certbot falló — verifica que el DNS apunte al VPS"
+        ok "Certificado SSL configurado"
+    fi
 else
     warn "SSL omitido (--skip-ssl)"
 fi
