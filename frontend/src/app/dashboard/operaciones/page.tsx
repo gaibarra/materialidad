@@ -17,7 +17,11 @@ import {
   updateOperacionEntregable,
   updateOperacion,
   exportOperacionDossier,
+  createOperacion,
+  OperacionPayload,
 } from "../../../lib/operaciones";
+import { apiFetch } from "../../../lib/api";
+import { type Proveedor } from "../../../lib/providers";
 import { DeliverableRequirement, fetchDeliverableRequirements } from "../../../lib/checklists";
 
 const ESTADO_STYLES: Record<OperacionEntregable["estado"], string> = {
@@ -96,6 +100,21 @@ function MaterialidadSemaforo({ op }: { op: Operacion }) {
 export default function OperacionesPage() {
   const { isAuthenticated } = useAuthContext();
   const [operaciones, setOperaciones] = useState<Operacion[]>([]);
+  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
+  const [contratos, setContratos] = useState<{ id: number, nombre: string }[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [creatingOp, setCreatingOp] = useState(false);
+  const [newOpForm, setNewOpForm] = useState<OperacionPayload>({
+    proveedor: 0,
+    contrato: null,
+    uuid_cfdi: "",
+    monto: "",
+    moneda: "MXN",
+    fecha_operacion: today(),
+    tipo_operacion: "GASTO",
+    concepto: "",
+  });
+
   const [requisitos, setRequisitos] = useState<DeliverableRequirement[]>([]);
   const [entregables, setEntregables] = useState<OperacionEntregable[]>([]);
   const [selectedOperacionId, setSelectedOperacionId] = useState<number | null>(null);
@@ -115,9 +134,16 @@ export default function OperacionesPage() {
   const loadInitialData = useCallback(async () => {
     setLoading(true);
     try {
-      const [ops, reqs] = await Promise.all([fetchOperaciones(), fetchDeliverableRequirements()]);
+      const [ops, reqs, provsData, contsData] = await Promise.all([
+        fetchOperaciones(),
+        fetchDeliverableRequirements(),
+        apiFetch<any>("/api/materialidad/proveedores/"),
+        apiFetch<any>("/api/materialidad/contratos/"),
+      ]);
       setOperaciones(ops);
       setRequisitos(reqs);
+      setProveedores(Array.isArray(provsData) ? provsData : provsData?.results ?? []);
+      setContratos(Array.isArray(contsData) ? contsData : contsData?.results ?? []);
       const primera = ops[0]?.id ?? null;
       setSelectedOperacionId(primera);
       if (primera) {
@@ -157,6 +183,35 @@ export default function OperacionesPage() {
       );
     } catch (err) {
       void alertError("No pudimos cargar entregables", (err as Error).message);
+    }
+  };
+
+  const handleCreateOperacion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newOpForm.proveedor) {
+      await alertError("Falta proveedor", "Selecciona un proveedor válido");
+      return;
+    }
+    setCreatingOp(true);
+    try {
+      const op = await createOperacion(newOpForm);
+      await alertSuccess("Operación creada", "Se registró exitosamente");
+      setOperaciones((prev) => [op, ...prev]);
+      setSelectedOperacionId(op.id);
+      setShowModal(false);
+      setNewOpForm({
+        ...newOpForm,
+        proveedor: 0,
+        contrato: null,
+        uuid_cfdi: "",
+        monto: "",
+        concepto: "",
+      });
+      await loadEntregables(op.id);
+    } catch (err) {
+      void alertError("Error al registrar", (err as Error).message);
+    } finally {
+      setCreatingOp(false);
     }
   };
 
@@ -284,27 +339,35 @@ export default function OperacionesPage() {
               Lista operaciones, agrega entregables y liga evidencia para avanzar a Entregado / Recibido.
             </p>
           </div>
-          <GuiaContador
-            section="Operaciones y entregables — Reforma 2026"
-            steps={[
-              { title: "1. Selecciona la operación", description: "Elige la <strong>operación</strong> en el panel izquierdo. El semáforo de color muestra qué tan completa está su materialidad: CFDI ✓, SPEI ✓, Contrato ✓, NIF ✓." },
-              { title: "2. Registra todos los entregables", description: "<strong>Reforma 2026:</strong> ya no basta el CFDI + pago. Debes tener entregables con evidencia (bitácora, correo, fotografía, informe) para evitar sanciones de 2-9 años de prisión." },
-              { title: "3. Liga evidencia irrefutable", description: "Sube la URL del entregable (Drive, SharePoint) <strong>antes</strong> de marcarlo como Entregado. El sistema sella timestamp. El SAT puede pedir fotos/video en visitas (art. 48 CFF reformado)." },
-              { title: "4. Firma la recepción con NIF", description: "Captura nombre y correo de quien firma la recepción. Registra la <strong>NIF aplicable</strong> (C-6, C-8, D-1...) y sube la póliza contable para demostrar sustancia económica." },
-            ]}
-            concepts={[
-              { term: "Semáforo de materialidad", definition: "Indicador por operación que muestra si CFDI, SPEI, Contrato y NIF están validados. Si alguno falla, la operación tiene riesgo de ser considerada simulación." },
-              { term: "Reforma 2026 — Art. 69-B CFF", definition: "Sanciones de 2-9 años de prisión por CFDI sin operación real. Ya NO basta el contrato + CFDI + pago: se requieren entregables con evidencia documental robusta." },
-              { term: "Sustancia económica (NIF)", definition: "Principio de las NIF que obliga a demostrar que el activo o servicio tiene uso real en el negocio y genera beneficios económicos futuros, independiente del aspecto legal." },
-              { term: "Art. 48 CFF reformado", definition: "El SAT ahora puede usar fotografías, videos y grabaciones en visitas domiciliarias como evidencia en tu contra. Documenta tus instalaciones y procesos proactivamente." },
-            ]}
-            tips={[
-              "<strong>⚠️ Riesgo 2026:</strong> Un CFDI válido sin evidencias de materialidad es suficiente para que el SAT presuma simulación y bloquee tu CSD.",
-              "Sube evidencias fotográficas y bitácoras <strong>el mismo día</strong> que se presta el servicio o entrega el bien.",
-              "Para la recepción, usa el <strong>correo corporativo</strong> con asunto descriptivo — los correos son evidencia admisible ante el SAT.",
-              "Registra la <strong>NIF aplicable</strong> en cada operación para demostrar el tratamiento contable correcto ante una auditoría metodológica (Art. 48 CFF).",
-            ]}
-          />
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowModal(true)}
+              className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400"
+            >
+              + Nueva Operación
+            </button>
+            <GuiaContador
+              section="Operaciones y entregables — Reforma 2026"
+              steps={[
+                { title: "1. Selecciona la operación", description: "Elige la <strong>operación</strong> en el panel izquierdo. El semáforo de color muestra qué tan completa está su materialidad: CFDI ✓, SPEI ✓, Contrato ✓, NIF ✓." },
+                { title: "2. Registra todos los entregables", description: "<strong>Reforma 2026:</strong> ya no basta el CFDI + pago. Debes tener entregables con evidencia (bitácora, correo, fotografía, informe) para evitar sanciones de 2-9 años de prisión." },
+                { title: "3. Liga evidencia irrefutable", description: "Sube la URL del entregable (Drive, SharePoint) <strong>antes</strong> de marcarlo como Entregado. El sistema sella timestamp. El SAT puede pedir fotos/video en visitas (art. 48 CFF reformado)." },
+                { title: "4. Firma la recepción con NIF", description: "Captura nombre y correo de quien firma la recepción. Registra la <strong>NIF aplicable</strong> (C-6, C-8, D-1...) y sube la póliza contable para demostrar sustancia económica." },
+              ]}
+              concepts={[
+                { term: "Semáforo de materialidad", definition: "Indicador por operación que muestra si CFDI, SPEI, Contrato y NIF están validados. Si alguno falla, la operación tiene riesgo de ser considerada simulación." },
+                { term: "Reforma 2026 — Art. 69-B CFF", definition: "Sanciones de 2-9 años de prisión por CFDI sin operación real. Ya NO basta el contrato + CFDI + pago: se requieren entregables con evidencia documental robusta." },
+                { term: "Sustancia económica (NIF)", definition: "Principio de las NIF que obliga a demostrar que el activo o servicio tiene uso real en el negocio y genera beneficios económicos futuros, independiente del aspecto legal." },
+                { term: "Art. 48 CFF reformado", definition: "El SAT ahora puede usar fotografías, videos y grabaciones en visitas domiciliarias como evidencia en tu contra. Documenta tus instalaciones y procesos proactivamente." },
+              ]}
+              tips={[
+                "<strong>⚠️ Riesgo 2026:</strong> Un CFDI válido sin evidencias de materialidad es suficiente para que el SAT presuma simulación y bloquee tu CSD.",
+                "Sube evidencias fotográficas y bitácoras <strong>el mismo día</strong> que se presta el servicio o entrega el bien.",
+                "Para la recepción, usa el <strong>correo corporativo</strong> con asunto descriptivo — los correos son evidencia admisible ante el SAT.",
+                "Registra la <strong>NIF aplicable</strong> en cada operación para demostrar el tratamiento contable correcto ante una auditoría metodológica (Art. 48 CFF).",
+              ]}
+            />
+          </div>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-3">
@@ -679,6 +742,127 @@ export default function OperacionesPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal Nueva Operación Manual */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
+          <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-semibold text-white">Registrar Operación</h3>
+                <p className="text-sm text-slate-400 mt-1">
+                  Da de alta manualmente una operación de compra o gasto.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-slate-400 hover:text-white text-3xl leading-none font-light"
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={(e) => void handleCreateOperacion(e)} className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Proveedor</label>
+                <select
+                  required
+                  value={newOpForm.proveedor || ""}
+                  onChange={(e) => setNewOpForm({ ...newOpForm, proveedor: Number(e.target.value) })}
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                >
+                  <option value="" className="text-slate-800">Selecciona un proveedor</option>
+                  {proveedores.map((p) => (
+                    <option key={p.id} value={p.id} className="text-slate-800">{p.razon_social}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Contrato vinculado (Opcional)</label>
+                <select
+                  value={newOpForm.contrato || ""}
+                  onChange={(e) => setNewOpForm({ ...newOpForm, contrato: e.target.value ? Number(e.target.value) : null })}
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                >
+                  <option value="" className="text-slate-800">Sin contrato - Solo CFDI</option>
+                  {contratos.map((c) => (
+                    <option key={c.id} value={c.id} className="text-slate-800">{c.nombre}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Fecha Operación</label>
+                  <input
+                    type="date"
+                    required
+                    value={newOpForm.fecha_operacion || ""}
+                    onChange={(e) => setNewOpForm({ ...newOpForm, fecha_operacion: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                    style={{ colorScheme: "dark" }}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Monto sin IVA</label>
+                  <div className="relative mt-1">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      placeholder="0.00"
+                      value={newOpForm.monto || ""}
+                      onChange={(e) => setNewOpForm({ ...newOpForm, monto: e.target.value })}
+                      className="w-full rounded-xl border border-white/10 bg-white/5 pl-8 pr-3 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Folio fiscal / UUID CFDI (Opcional)</label>
+                <input
+                  type="text"
+                  placeholder="Ej. ABCD-1234-..."
+                  value={newOpForm.uuid_cfdi || ""}
+                  onChange={(e) => setNewOpForm({ ...newOpForm, uuid_cfdi: e.target.value })}
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none font-mono text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Concepto de la operación</label>
+                <textarea
+                  rows={2}
+                  required
+                  value={newOpForm.concepto || ""}
+                  onChange={(e) => setNewOpForm({ ...newOpForm, concepto: e.target.value })}
+                  placeholder="Descripción de los servicios o bienes..."
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-4 flex justify-end gap-3 border-t border-white/10 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="rounded-xl px-5 py-2.5 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingOp}
+                  className="rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 disabled:opacity-50"
+                >
+                  {creatingOp ? "Guardando..." : "Crear Operación"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </DashboardShell>
   );
 }

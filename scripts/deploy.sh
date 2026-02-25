@@ -29,10 +29,12 @@ REPO_URL="${REPO_URL:-https://github.com/gaibarra/materialidad.git}"
 BRANCH="${BRANCH:-main}"
 SKIP_SSL=false
 NODE_MAJOR=20
+LOCAL_DEPLOY=false
 
 for arg in "$@"; do
     case $arg in
         --skip-ssl) SKIP_SSL=true ;;
+        --local)    LOCAL_DEPLOY=true ;;
     esac
 done
 
@@ -59,20 +61,26 @@ if ! command -v node &>/dev/null || [[ $(node -v | cut -d. -f1 | tr -d v) -lt $N
 fi
 ok "Paquetes del sistema instalados (Node $(node -v), Python $(python3.12 --version))"
 
-# ══════════════════════════════════════════════════════════════════════
-#  2. CLONAR / ACTUALIZAR REPOSITORIO
-# ══════════════════════════════════════════════════════════════════════
-if [[ -d "${APP_DIR}/.git" ]]; then
-    info "Repositorio existente, actualizando..."
-    cd "$APP_DIR"
-    git fetch origin
-    git reset --hard "origin/${BRANCH}"
-else
-    info "Clonando repositorio en ${APP_DIR}..."
+# ── 2. CLONAR / ACTUALIZAR REPOSITORIO ────────────────────────────────
+if [[ "$LOCAL_DEPLOY" == true ]]; then
+    info "Despliegue local: Sincronizando desde $(pwd)..."
     mkdir -p "$APP_DIR"
-    git clone --branch "$BRANCH" "$REPO_URL" "$APP_DIR"
+    # Sincronizar evitando node_modules, .git y .venv para velocidad y limpieza
+    rsync -av --exclude='.git' --exclude='node_modules' --exclude='.venv' --exclude='.next' ./ "$APP_DIR/"
+    ok "Código sincronizado localmente en ${APP_DIR}"
+else
+    if [[ -d "${APP_DIR}/.git" ]]; then
+        info "Repositorio existente, actualizando..."
+        cd "$APP_DIR"
+        git fetch origin
+        git reset --hard "origin/${BRANCH}"
+    else
+        info "Clonando repositorio en ${APP_DIR}..."
+        mkdir -p "$APP_DIR"
+        git clone --branch "$BRANCH" "$REPO_URL" "$APP_DIR"
+    fi
+    ok "Código en ${APP_DIR}"
 fi
-ok "Código en ${APP_DIR}"
 
 # ══════════════════════════════════════════════════════════════════════
 #  3. ENTORNO VIRTUAL PYTHON + DEPENDENCIAS
@@ -150,7 +158,7 @@ ENVEOF
     ok "Creado .env.local del frontend"
 fi
 
-npm ci --omit=dev -q 2>/dev/null || npm install --omit=dev -q
+npm install -q
 npm run build
 ok "Frontend construido"
 

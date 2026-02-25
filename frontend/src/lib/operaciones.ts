@@ -75,6 +75,26 @@ export async function fetchOperaciones(): Promise<Operacion[]> {
   return payload?.results ?? [];
 }
 
+export type OperacionPayload = {
+  empresa?: number;
+  proveedor: number;
+  contrato?: number | null;
+  uuid_cfdi?: string | null;
+  monto?: number | string | null;
+  moneda?: string;
+  fecha_operacion?: string | null;
+  tipo_operacion?: string;
+  concepto?: string;
+};
+
+export async function createOperacion(data: OperacionPayload): Promise<Operacion> {
+  return apiFetch<Operacion>("/api/materialidad/operaciones/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
 export async function updateOperacion(id: number, data: Partial<Operacion>): Promise<Operacion> {
   return apiFetch<Operacion>(`/api/materialidad/operaciones/${id}/`, {
     method: "PATCH",
