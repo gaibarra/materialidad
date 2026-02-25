@@ -54,6 +54,44 @@ const formatCurrency = (value: string, currency: string) =>
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+// ── Semáforo de materialidad ───────────────────────────────────────────────
+function MaterialidadSemaforo({ op }: { op: Operacion }) {
+  const checks = [
+    { label: "CFDI", ok: op.cfdi_estatus === "VALIDO", warn: op.cfdi_estatus === "INVALIDO" },
+    { label: "SPEI", ok: op.spei_estatus === "VALIDADO", warn: op.spei_estatus === "NO_ENCONTRADO" },
+    { label: "Contrato", ok: Boolean(op.contrato_nombre), warn: false },
+    { label: "NIF", ok: Boolean(op.nif_aplicable), warn: false },
+  ];
+  const allOk = checks.every((c) => c.ok);
+  const hasWarn = checks.some((c) => c.warn);
+  return (
+    <div className="mt-2">
+      <div className="flex flex-wrap gap-1">
+        {checks.map((c) => (
+          <span
+            key={c.label}
+            title={c.label}
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border ${c.ok
+                ? "bg-emerald-500/15 border-emerald-400/40 text-emerald-300"
+                : c.warn
+                  ? "bg-red-500/15 border-red-400/40 text-red-300"
+                  : "bg-white/5 border-white/10 text-slate-400"
+              }`}
+          >
+            {c.ok ? "✓" : c.warn ? "✗" : "○"} {c.label}
+          </span>
+        ))}
+      </div>
+      {!allOk && !hasWarn && (
+        <p className="mt-1 text-[10px] text-amber-300">⚠ Materialidad incompleta</p>
+      )}
+      {hasWarn && (
+        <p className="mt-1 text-[10px] text-red-300">⛔ Riesgo alto — revisa CFDI/SPEI</p>
+      )}
+    </div>
+  );
+}
+
 export default function OperacionesPage() {
   const { isAuthenticated } = useAuthContext();
   const [operaciones, setOperaciones] = useState<Operacion[]>([]);
@@ -234,24 +272,24 @@ export default function OperacionesPage() {
             </p>
           </div>
           <GuiaContador
-            section="Operaciones y entregables"
+            section="Operaciones y entregables — Reforma 2026"
             steps={[
-              { title: "Selecciona una operación", description: "En el panel izquierdo elige la <strong>operación</strong> (contrato + proveedor + monto) a la que quieres agregar entregables." },
-              { title: "Programa el entregable", description: "Usa un <strong>requisito sugerido</strong> del catálogo o captura manualmente: título, descripción, fecha compromiso, orden de compra." },
-              { title: "Liga evidencia", description: "Agrega la <strong>URL de la evidencia</strong> (Drive, carpeta compartida, foto). Es requisito para marcar como Entregado." },
-              { title: "Firma la recepción", description: "Captura <strong>nombre y correo</strong> de quien recibe y marca como <strong>Recibido</strong>. El sistema sella la fecha automáticamente." },
+              { title: "1. Selecciona la operación", description: "Elige la <strong>operación</strong> en el panel izquierdo. El semáforo de color muestra qué tan completa está su materialidad: CFDI ✓, SPEI ✓, Contrato ✓, NIF ✓." },
+              { title: "2. Registra todos los entregables", description: "<strong>Reforma 2026:</strong> ya no basta el CFDI + pago. Debes tener entregables con evidencia (bitácora, correo, fotografía, informe) para evitar sanciones de 2-9 años de prisión." },
+              { title: "3. Liga evidencia irrefutable", description: "Sube la URL del entregable (Drive, SharePoint) <strong>antes</strong> de marcarlo como Entregado. El sistema sella timestamp. El SAT puede pedir fotos/video en visitas (art. 48 CFF reformado)." },
+              { title: "4. Firma la recepción con NIF", description: "Captura nombre y correo de quien firma la recepción. Registra la <strong>NIF aplicable</strong> (C-6, C-8, D-1...) y sube la póliza contable para demostrar sustancia económica." },
             ]}
             concepts={[
-              { term: "Entregable", definition: "Documento, bien o servicio que el proveedor debe entregar como parte de la operación y que soporta la materialidad." },
-              { term: "Orden de compra (OC)", definition: "Documento que autoriza formalmente la adquisición. Vincula el entregable con el proceso de compra interno." },
-              { term: "Evidencia", definition: "Archivo, foto, URL o documento que demuestra que el entregable fue efectivamente proporcionado." },
-              { term: "Concepto genérico", definition: "Descripción vaga en el CFDI (p.ej. 'Servicios profesionales'). El sistema sugiere una descripción más específica para soportar materialidad." },
+              { term: "Semáforo de materialidad", definition: "Indicador por operación que muestra si CFDI, SPEI, Contrato y NIF están validados. Si alguno falla, la operación tiene riesgo de ser considerada simulación." },
+              { term: "Reforma 2026 — Art. 69-B CFF", definition: "Sanciones de 2-9 años de prisión por CFDI sin operación real. Ya NO basta el contrato + CFDI + pago: se requieren entregables con evidencia documental robusta." },
+              { term: "Sustancia económica (NIF)", definition: "Principio de las NIF que obliga a demostrar que el activo o servicio tiene uso real en el negocio y genera beneficios económicos futuros, independiente del aspecto legal." },
+              { term: "Art. 48 CFF reformado", description: "El SAT ahora puede usar fotografías, videos y grabaciones en visitas domiciliarias como evidencia en tu contra. Documenta tus instalaciones y procesos proactivamente." },
             ]}
             tips={[
-              "Liga la evidencia <strong>antes</strong> de marcar como Entregado — el sistema no lo permitirá sin URL.",
-              "Aplica las <strong>sugerencias de concepto</strong> del sistema para mejorar las descripciones genéricas del CFDI.",
-              "Para la recepción, usa el <strong>correo corporativo</strong> de quien firma para dejar rastro auditable.",
-              "Programa fechas compromiso <strong>realistas</strong> — el sistema alerta automáticamente los entregables vencidos.",
+              "<strong>⚠️ Riesgo 2026:</strong> Un CFDI válido sin evidencias de materialidad es suficiente para que el SAT presuma simulación y bloquee tu CSD.",
+              "Sube evidencias fotográficas y bitácoras <strong>el mismo día</strong> que se presta el servicio o entrega el bien.",
+              "Para la recepción, usa el <strong>correo corporativo</strong> con asunto descriptivo — los correos son evidencia admisible ante el SAT.",
+              "Registra la <strong>NIF aplicable</strong> en cada operación para demostrar el tratamiento contable correcto ante una auditoría metodológica (Art. 48 CFF).",
             ]}
           />
         </header>
@@ -273,6 +311,8 @@ export default function OperacionesPage() {
               {!loading &&
                 operaciones.map((op) => {
                   const isActive = op.id === selectedOperacionId;
+                  // Detectar riesgo: CFDI válido sin contrato (posible simulación)
+                  const cfdiSinContrato = op.cfdi_estatus === "VALIDO" && !op.contrato_nombre;
                   return (
                     <button
                       key={op.id}
@@ -281,7 +321,9 @@ export default function OperacionesPage() {
                         void handleSelectOperacion(op.id);
                       }}
                       className={`w-full rounded-2xl border px-4 py-3 text-left transition ${isActive
-                          ? "border-emerald-300/60 bg-emerald-500/10 text-white"
+                        ? "border-emerald-300/60 bg-emerald-500/10 text-white"
+                        : cfdiSinContrato
+                          ? "border-red-400/50 bg-red-500/10 text-white hover:border-red-300"
                           : "border-white/10 bg-white/5 text-slate-200 hover:border-emerald-300/40"
                         }`}
                     >
@@ -289,10 +331,17 @@ export default function OperacionesPage() {
                         <p className="text-sm font-semibold">{op.proveedor_nombre}</p>
                         <span className="text-xs text-slate-300">{op.fecha_operacion}</span>
                       </div>
-                      <p className="text-xs text-slate-300">{op.contrato_nombre || "Sin contrato"}</p>
+                      {cfdiSinContrato && (
+                        <div className="mt-1 rounded-lg bg-red-500/20 px-2 py-1 text-[11px] font-semibold text-red-300">
+                          ⛔ CFDI sin materialidad — Riesgo Reforma 2026
+                        </div>
+                      )}
+                      <p className="text-xs text-slate-300">{op.contrato_nombre || <span className="text-red-400">Sin contrato</span>}</p>
                       <p className="text-sm font-medium text-emerald-300">
                         {formatCurrency(op.monto, op.moneda)} · {op.tipo_operacion}
                       </p>
+                      {/* Semáforo de materialidad */}
+                      <MaterialidadSemaforo op={op} />
                       <div className="mt-2 text-xs text-slate-200">
                         <p className="font-semibold text-white">Concepto CFDI</p>
                         <p className="text-slate-200">{op.concepto || "(sin concepto)"}</p>

@@ -534,24 +534,24 @@ export default function ContratosPage() {
               <div className="flex flex-wrap items-center gap-3">
                 {isLoadingOptions && <p className="text-sm text-slate-500">Cargando catálogos…</p>}
                 <GuiaContador
-                  section="Generador de contratos"
+                  section="Generador de contratos — Reforma 2026"
                   steps={[
-                    { title: "Configura el contexto", description: "Selecciona la <strong>empresa</strong>, el <strong>proveedor</strong>, tipo de contrato y moneda. Define el <strong>monto</strong> y la <strong>vigencia</strong>." },
-                    { title: "Genera el borrador", description: "El sistema genera un contrato completo usando IA. Revisa el borrador en el editor y realiza ajustes manuales si lo necesitas." },
-                    { title: "Analiza cláusulas (Redline)", description: "Usa el análisis <strong>Redline</strong> para comparar versiones, detectar riesgos y optimizar cláusulas individualmente." },
-                    { title: "Exporta el contrato", description: "Una vez aprobado, el contrato queda vinculado al expediente del proveedor y empresa para efectos de <strong>materialidad fiscal</strong>." },
+                    { title: "1. Configura el contexto", description: "Selecciona la <strong>empresa</strong>, el <strong>proveedor validado 69-B</strong> y el tipo de contrato. <strong>Reforma 2026:</strong> solo contrata con proveedores que hayan pasado el due diligence completo." },
+                    { title: "2. Genera con cláusulas de materialidad", description: "El sistema genera un contrato con IA que incluye automáticamente cláusulas de <strong>razón de negocio</strong>, <strong>entregables específicos</strong>, <strong>penalidades por incumplimiento</strong> y <strong>evidencia documental</strong> obligatorias por la Reforma 2026." },
+                    { title: "3. Optimiza con Redline y IA", description: "Usa el análisis <strong>Redline</strong> para comparar versiones y la <strong>optimización de cláusulas por IA</strong> para mejorar la protección fiscal. El sistema puede identificar cláusulas que el SAT considera 'genéricas'." },
+                    { title: "4. Exporta y vincula al expediente", description: "Una vez aprobado, exporta el contrato en DOCX y viúnculalo al expediente del proveedor. El contrato debe estar en el expediente <strong>antes de la primera operación</strong> para soportar materialidad." },
                   ]}
                   concepts={[
-                    { term: "Redline", definition: "Comparación párrafo a párrafo de dos versiones de un contrato, mostrando adiciones, eliminaciones y modificaciones." },
-                    { term: "Cláusula de materialidad", definition: "Disposición contractual que obliga a las partes a documentar la sustancia económica de las operaciones (Art. 5-A CFF)." },
-                    { term: "Vigencia prorrogable", definition: "Período fijo con extensión automática si ninguna parte notifica su terminación con la antelación pactada." },
-                    { term: "Razón de negocio", definition: "Justificación económica real de por qué se celebra el contrato, independiente del beneficio fiscal (Art. 5-A CFF)." },
+                    { term: "Cláusula de materialidad (Reforma 2026)", definition: "Disposición contractual que obliga al proveedor a entregar evidencia documental de la prestación real del servicio. Ya no basta con indicar el objeto del contrato — debe especificar QUÉ, CUÁNDO y CÓMO se entregarán los bienes/servicios." },
+                    { term: "Redline", definition: "Comparación párrafo a párrafo de dos versiones de un contrato. Permite detectar cláusulas genéricas, riesgos fiscales y cambios que debiliten la posición ante el SAT." },
+                    { term: "Razón de negocio contractual", definition: "La Reforma 2026 exige que el propio contrato enuncie la razón de negocio (beneficio económico esperado, independiente del ahorro fiscal) en una cláusula explícita." },
+                    { term: "Generación IA + NIF", definition: "El sistema incorpora automáticamente referencias a las NIF aplicables (C-6 bienes, C-8 activos, D-1 ingreso, D-2 costo) para dar sustancia contable al contrato alineada con la reforma." },
                   ]}
                   tips={[
-                    "Siempre incluye cláusulas de <strong>materialidad, entregables y penalidades</strong> para soportar deducciones.",
-                    "Usa la función de <strong>optimización de cláusulas</strong> para mejorar la protección fiscal automáticamente.",
-                    "Guarda cada versión del contrato — el historial de cambios es evidencia para auditorías.",
-                    "Vincula el contrato con el <strong>proveedor</strong> correcto para mantener el expediente de due diligence completo.",
+                    "<strong>Reforma 2026:</strong> Incluye siempre cláusulas de entregables <em>específicas</em>: qué documentos entregará, en qué fechas y quién lo recibirá. Sin esto, el contrato no soporta materialidad.",
+                    "Usa la función de <strong>optimización de cláusulas</strong> para mejorar automáticamente las descripciones genéricas que el SAT cuestiona.",
+                    "Guarda el historial de <strong>versiones del contrato</strong> — demostrar que el contrato existió <em>antes</em> de la operación es clave en auditorías.",
+                    "Vincula el contrato al <strong>proveedor con due diligence completo</strong>. Un contrato sin expediente del proveedor no soporta materialidad por sí solo.",
                   ]}
                 />
               </div>

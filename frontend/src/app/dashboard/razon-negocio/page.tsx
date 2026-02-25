@@ -42,10 +42,10 @@ const ESTADOS: Array<{
   value: RazonNegocioAprobacion["estado"];
   label: string;
 }> = [
-  { value: "PENDIENTE", label: "Pendiente" },
-  { value: "APROBADO", label: "Aprobado" },
-  { value: "RECHAZADO", label: "Rechazado" },
-];
+    { value: "PENDIENTE", label: "Pendiente" },
+    { value: "APROBADO", label: "Aprobado" },
+    { value: "RECHAZADO", label: "Rechazado" },
+  ];
 
 const estadoColor: Record<RazonNegocioAprobacion["estado"], string> = {
   PENDIENTE: "bg-amber-100 text-amber-700",
@@ -231,56 +231,56 @@ export default function RazonNegocioPage() {
               </p>
             </div>
             <GuiaContador
-              section="Razón de negocio y aprobaciones"
+              section="Razón de negocio — Art. 5-A Reforma 2026"
               steps={[
                 {
-                  title: "Selecciona un contrato",
+                  title: "1. Selecciona el contrato",
                   description:
-                    "Elige el contrato que requiere aprobación de su <strong>razón de negocio</strong> antes de ejecutarse.",
+                    "Elige el contrato que requiere validación previa. <strong>Reforma 2026:</strong> el Art. 5-A ahora exige documentar la razón de negocio <em>antes</em> de ejecutar cualquier operación con impacto fiscal significativo.",
                 },
                 {
-                  title: "Registra cada aprobación",
+                  title: "2. Registra la aprobación escalonada",
                   description:
-                    "Sigue el flujo: <strong>Solicitante → Responsable del área → Compliance → Fiscal → Dirección</strong>. Cada paso requiere nombre, correo y evidencia.",
+                    "Sigue el flujo: <strong>Solicitante → Responsable del área → Compliance → Fiscal → Dirección</strong>. Cada paso requiere nombre, correo y evidencia. La cadena de aprobaciones es tu principal defensa ante el SAT.",
                 },
                 {
-                  title: "Adjunta evidencia",
+                  title: "3. Documenta el beneficio económico cuantificable",
                   description:
-                    "Sube la <strong>URL</strong> del acta de comité, correo de autorización o minuta de aprobación como respaldo documental.",
+                    "La Reforma 2026 exige que el <strong>beneficio económico sea mayor al beneficio fiscal</strong>. Captura el monto, cómo se midió y quién lo validó. Generico como 'mejorar eficiencia' ya no es suficiente.",
                 },
                 {
-                  title: "Verifica el flujo completo",
+                  title: "4. Verifica que el flujo esté completo",
                   description:
-                    "El historial muestra todas las aprobaciones con rol, fecha y evidencia. El flujo se cierra cuando todos aprueban o alguno rechaza.",
+                    "El historial muestra todas las aprobaciones. El flujo se cierra cuando todos aprueban o alguno rechaza. <strong>Guarda el PDF del historial</strong> como evidencia ante una revisión del SAT.",
                 },
               ]}
               concepts={[
                 {
-                  term: "Art. 5-A CFF",
+                  term: "Art. 5-A CFF (Reforma 2026)",
                   definition:
-                    "Los actos jurídicos que carezcan de razón de negocio y generen un beneficio fiscal directo o indirecto, tendrán los efectos fiscales correspondientes a los que se habrían realizado.",
+                    "Los actos jurídicos que carezcan de razón de negocio y generen un beneficio fiscal directo o indirecto tendrán efectos fiscales conforme a la realidad económica. La Reforma 2026 amplió la presunción de simulación a operaciones entre partes independientes.",
                 },
                 {
                   term: "Razón de negocio",
                   definition:
-                    "Justificación económica válida de una operación, independiente del ahorro fiscal que pudiera generar.",
+                    "Justificación económica válida e independiente del ahorro fiscal que pudiera generar. Debe ser <strong>cuantificable</strong>, <strong>previa a la operación</strong> y <strong>documentada</strong> formalmente por área responsable.",
                 },
                 {
-                  term: "Beneficio económico",
+                  term: "Beneficio económico vs fiscal",
                   definition:
-                    "Resultado cuantificable esperado de la operación: ahorro, ingreso adicional, reducción de riesgo, etc.",
+                    "Reforma 2026: el SAT puede recaracterizar operaciones si el beneficio fiscal (ahorro en impuestos) supera al económico (ahorro real, ingresos adicionales, reducción de riesgos). El beneficio económico siempre debe ser el motivo principal.",
                 },
                 {
                   term: "Flujo de aprobaciones",
                   definition:
-                    "Cadena escalonada de autorizaciones donde cada rol debe aprobar antes de pasar al siguiente nivel jerárquico.",
+                    "Cadena escalonada de autorizaciones que constituye la evidencia de que la decisión empresarial fue tomada de forma deliberada, informada y por los órganos competentes — no solo por motivos fiscales.",
                 },
               ]}
               tips={[
-                "Documenta la razón de negocio <strong>antes de firmar</strong> el contrato, no después.",
-                "Cada aprobación debe tener <strong>nombre del aprobador y evidencia</strong> para soportar ante el SAT.",
-                "Si un rol rechaza, el flujo se cierra. Resuelve la observación y crea un nuevo ciclo de aprobaciones.",
-                "Guarda las evidencias en una <strong>carpeta compartida</strong> con acceso controlado para auditorías.",
+                "<strong>Reforma 2026:</strong> Ya no basta con justificar la razón de negocio después de una revisión del SAT. Debe estar documentada <em>previa</em> a la operación.",
+                "Cuantifica el beneficio económico en pesos o porcentaje: 'Reducción de costo del 18%' es mejor que 'mejorar eficiencia operativa'.",
+                "Si un rol rechaza, el flujo se cierra. Resuelve la observación <strong>antes de ejecutar</strong> el contrato y crea un nuevo ciclo de aprobaciones.",
+                "Guarda el historial de aprobaciones en el expediente del contrato — puede pedirse en visitas domiciliarias del SAT (Art. 48 CFF).",
               ]}
             />
           </div>
@@ -316,11 +316,10 @@ export default function RazonNegocioPage() {
                       onClick={() => {
                         void handleSelectContrato(c.id);
                       }}
-                      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
-                        isActive
+                      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${isActive
                           ? "border-emerald-500 bg-emerald-50 text-emerald-900 shadow-sm"
                           : "border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-300 hover:bg-slate-100"
-                      }`}
+                        }`}
                     >
                       <p className="text-sm font-semibold">{c.nombre}</p>
                       <p className="text-xs text-slate-500">

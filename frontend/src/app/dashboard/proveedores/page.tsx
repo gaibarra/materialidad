@@ -312,8 +312,8 @@ export default function ProveedoresPage() {
                 type="button"
                 onClick={() => setForm((p) => ({ ...p, tipo_persona: t }))}
                 className={`rounded-full px-5 py-2 text-xs font-semibold transition ${form.tipo_persona === t
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
                   }`}
               >
                 {t === "MORAL" ? "Persona Moral" : "Persona Física"}
@@ -625,33 +625,57 @@ export default function ProveedoresPage() {
         </form>
 
         <header className="rounded-3xl border border-slate-100 bg-white p-6 shadow-2xl shadow-slate-200/60">
+          {/* Banner de alerta Reforma 2026 */}
+          {proveedoresEnRiesgo.length > 0 && (
+            <div className="mb-5 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
+              <span className="mt-0.5 text-2xl">⛔</span>
+              <div>
+                <p className="text-sm font-bold text-red-800">
+                  {proveedoresEnRiesgo.length} proveedor{proveedoresEnRiesgo.length > 1 ? "es" : ""} con alerta 69-B activa — Riesgo Reforma 2026
+                </p>
+                <p className="mt-1 text-xs text-red-700">
+                  Operar con EFOS <strong>definitivos</strong> implica pérdida de deducciones y puede desencadenar bloqueo de CSD (Art. 17-H Bis CFF reformado 2026). Documenta tu análisis de riesgo por escrito y notifica a dirección.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {proveedoresEnRiesgo.map((p) => (
+                    <span key={p.id} className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${p.estatus_sat === "DEFINITIVO"
+                        ? "border-red-300 bg-red-100 text-red-800"
+                        : "border-amber-300 bg-amber-100 text-amber-800"
+                      }`}>
+                      {p.estatus_sat === "DEFINITIVO" ? "⛔" : "⚠️"} {p.razon_social} — {p.estatus_sat}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-emerald-500">Due diligence</p>
               <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-slate-900">Proveedores y alertas 69-B</h1>
               <p className="mt-2 text-sm text-slate-500">
-                Consulta estatus SAT, alertas del artículo 69-B y envía validaciones al flujo n8n.
+                Consulta estatus SAT, alertas Art. 69-B y documenta el due diligence requerido por la Reforma 2026.
               </p>
             </div>
             <GuiaContador
-              section="Proveedores y due diligence"
+              section="Proveedores y due diligence — Reforma 2026"
               steps={[
-                { title: "Registra al proveedor", description: "Captura <strong>RFC</strong>, razón social, domicilio y datos de contacto. Puedes subir la <strong>CSF</strong> para auto-extraer datos." },
-                { title: "Documenta capacidad operativa", description: "Registra <strong>REPS/IMSS</strong>, activos relevantes, personal clave y evidencias fotográficas del domicilio fiscal." },
-                { title: "Valida contra listas SAT", description: "Selecciona tu empresa y haz clic en <strong>Solicitar validación</strong>. El sistema consultará listas 69-B y regresará el estatus." },
-                { title: "Revisa alertas y riesgos", description: "Verifica el <strong>estatus 69-B</strong> (Sin coincidencia, Presunto, Definitivo) y los riesgos detectados para cada proveedor." },
+                { title: "1. Registra y documenta al proveedor", description: "Captura <strong>RFC</strong>, razón social, domicilio y datos de contacto. Sube la <strong>CSF</strong> para auto-extraer datos. <strong>Reforma 2026:</strong> la CSF debe tener menos de 3 meses de antigüedad." },
+                { title: "2. Verifica capacidad operativa real", description: "Registra <strong>REPS/IMSS</strong>, activos relevantes, personal clave y fotos del domicilio fiscal. El SAT verificará si el proveedor puede prestar realmente el servicio (Art. 69-B bis reformado)." },
+                { title: "3. Valida PROACTIVAMENTE contra 69-B", description: "Selecciona tu empresa y haz clic en <strong>Solicitar validación</strong>. No esperes a que el SAT te notifique — la Reforma 2026 exige due diligence previo a cada pago relevante." },
+                { title: "4. Documenta el análisis de riesgo", description: "Si el proveedor aparece como PRESUNTO, crea un <strong>memo de análisis de riesgo</strong> firmado por compliance y guarda la evidencia de proveedor bonafide antes de continuar operando." },
               ]}
               concepts={[
-                { term: "Art. 69-B CFF", definition: "Lista del SAT de contribuyentes que emiten comprobantes de operaciones simuladas (EFOS). Operar con ellos pone en riesgo tus deducciones." },
-                { term: "Due diligence", definition: "Proceso de investigación y verificación del proveedor antes de contratar, para demostrar materialidad y buena fe." },
-                { term: "REPS", definition: "Registro de Prestadoras de Servicios Especializados u Obras Especializadas ante la STPS (Art. 15 LFT)." },
-                { term: "Capacidad operativa", definition: "Evidencia de que el proveedor tiene infraestructura, personal y activos para prestar realmente el servicio contratado." },
+                { term: "Art. 69-B CFF (Reforma 2026)", definition: "Sanciones penales de 2-9 años de prisión por CFDI simulado. Se amplió para incluir a quienes RECIBEN el CFDI sabiendo que la operación es simulada (EDO — Empresa que Deduce Operaciones simuladas)." },
+                { term: "EFOS / EDO", definition: "EFOS: Empresa que Factura Operaciones Simuladas. EDO: Empresa que Deduce Operaciones Simuladas. La Reforma 2026 equipara la responsabilidad del emisor y receptor del CFDI falso." },
+                { term: "Art. 17-H Bis CFF", definition: "El SAT puede restringir (no solo cancelar) el CSD cuando detecte que recibes CFDIs de EFOS, aunque el proceso de 69-B aún esté en etapa presunta." },
+                { term: "Due diligence documental", definition: "Expediente obligatorio por proveedor: CSF, REPS, IMSS patronal, fotos domicilio, evidencia de capacidad, contratos y memo de análisis de riesgo 69-B." },
               ]}
               tips={[
-                "Valida al proveedor <strong>antes de emitir el primer pago</strong> o firmar contrato.",
-                "Guarda capturas de pantalla del sitio web y fotos del domicilio como <strong>soporte de materialidad</strong>.",
-                "Revisa periódicamente las listas 69-B — un proveedor puede aparecer después de haberte facturado.",
-                "Si un proveedor aparece como PRESUNTO, documenta por escrito tu análisis de riesgo.",
+                "<strong>⚠️ Reforma 2026:</strong> Recepcionar CFDIs de EFOS DEFINITIVOS puede configurar el delito fiscal como EDO — penalmente perseguible.",
+                "Valida al proveedor <strong>antes de emitir el primer pago</strong> Y cada trimestre después. Un proveedor puede aparecer en 69-B meses después.",
+                "Si aparece como PRESUNTO: crea memo de riesgo, notifica a dirección y retén del 10-16% del IVA como precaución.",
+                "Guarda capturas de la página del SAT con <strong>fecha y hora</strong> como evidencia de due diligence en tiempo real.",
               ]}
             />
           </div>
@@ -700,8 +724,8 @@ export default function ProveedoresPage() {
                     <div className="flex items-center gap-2">
                       <p className="text-lg font-semibold text-slate-900">{prov.display_name || prov.razon_social}</p>
                       <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide ${prov.tipo_persona === "FISICA"
-                          ? "bg-amber-100 text-amber-700"
-                          : "bg-sky-100 text-sky-700"
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-sky-100 text-sky-700"
                         }`}>
                         {prov.tipo_persona === "FISICA" ? "PF" : "PM"}
                       </span>
