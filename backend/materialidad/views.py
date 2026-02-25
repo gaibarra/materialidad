@@ -1472,3 +1472,28 @@ class ClauseTemplateViewSet(viewsets.ModelViewSet):
         if curada is not None:
             qs = qs.filter(es_curada=curada.lower() in ("true", "1", "si"))
         return qs
+
+
+# ---------------------------------------------------------------------------
+# Alertas CSD (Art. 17-H Bis)
+# ---------------------------------------------------------------------------
+
+class AlertaCSDViewSet(viewsets.ModelViewSet):
+    """
+    CRUD para gestionar contingencias y suspensiones de Sellos Digitales.
+    """
+    serializer_class = AlertaCSDSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["rfc_afectado", "nombre_afectado", "oficio_sat", "observaciones"]
+    ordering_fields = ["emitida_el", "resuelta_el", "created_at"]
+    ordering = ["-emitida_el"]
+
+    def get_queryset(self):
+        qs = AlertaCSD.objects.all()
+        entidad = self.request.query_params.get("entidad")
+        estado = self.request.query_params.get("estado")
+        if entidad:
+            qs = qs.filter(entidad=entidad)
+        if estado:
+            qs = qs.filter(estado=estado)
+        return qs
