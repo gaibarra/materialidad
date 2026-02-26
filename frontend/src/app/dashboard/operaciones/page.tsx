@@ -374,7 +374,7 @@ export default function OperacionesPage() {
                 },
                 {
                   title: "2. Requisito sugerido",
-                  description: "Selecciona una <strong>plantilla predefinida</strong> para cargar automáticamente el título, descripción, código y tipo de gasto. Ahorra tiempo y garantiza nomenclatura homogénea en todos los expedientes.",
+                  description: "Selecciona una <strong>plantilla predefinida</strong> para cargar automáticamente el título, descripción, código y tipo de gasto. Las plantillas se crean y administran en <strong>Checklists → Catálogo de Entregables</strong> (menú lateral). Ahí defines: tipo de gasto, código identificador, título, pilar y si es obligatorio. Una vez guardadas, aparecen aquí para reutilizarlas en cualquier operación.",
                 },
                 {
                   title: "3. Título del entregable",
