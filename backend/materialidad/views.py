@@ -6,7 +6,7 @@ import logging
 from decimal import Decimal
 from uuid import UUID
 from django.db import DatabaseError
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.db.models import Model
 
 from django.core.exceptions import ImproperlyConfigured
@@ -964,6 +964,7 @@ class ChecklistItemViewSet(viewsets.ModelViewSet):
 
 class DeliverableRequirementViewSet(viewsets.ModelViewSet):
     serializer_class = DeliverableRequirementSerializer
+    pagination_class = None  # Siempre retornar todas las plantillas
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
     search_fields = ("tipo_gasto", "titulo", "codigo")
     ordering_fields = ("created_at", "tipo_gasto", "codigo")
@@ -973,7 +974,10 @@ class DeliverableRequirementViewSet(viewsets.ModelViewSet):
         tenant = getattr(self.request, "tenant", None)
         qs = DeliverableRequirement.objects.all()
         if tenant:
-            qs = qs.filter(tenant_slug=tenant.slug)
+            # Devuelve plantillas del tenant Y las plantillas globales (slug vacío)
+            qs = qs.filter(
+                Q(tenant_slug=tenant.slug) | Q(tenant_slug="")
+            )
         return qs
 
     def perform_create(self, serializer):
