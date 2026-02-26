@@ -23,6 +23,7 @@ import {
 import { apiFetch } from "../../../lib/api";
 import { type Proveedor } from "../../../lib/providers";
 import { DeliverableRequirement, fetchDeliverableRequirements } from "../../../lib/checklists";
+import { RequisitoCombobox } from "../../../components/RequisitoCombobox";
 
 const ESTADO_STYLES: Record<OperacionEntregable["estado"], string> = {
   PENDIENTE: "bg-slate-700/80 text-slate-200 border border-slate-500/50",
@@ -585,19 +586,15 @@ export default function OperacionesPage() {
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
                         Requisito sugerido
+                        <span className="ml-2 normal-case font-normal text-slate-500 tracking-normal">
+                          ({requisitos.length} plantillas)
+                        </span>
                       </label>
-                      <select
-                        value={form.requirement ?? ""}
-                        onChange={(e) => handleRequirementChange(e.target.value)}
-                        className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
-                      >
-                        <option value="" className="bg-slate-800">Sin plantilla</option>
-                        {requisitos.map((req) => (
-                          <option key={req.id} value={req.id} className="bg-slate-800">
-                            {req.codigo} · {req.titulo}
-                          </option>
-                        ))}
-                      </select>
+                      <RequisitoCombobox
+                        requisitos={requisitos}
+                        value={form.requirement ?? null}
+                        onChange={handleRequirementChange}
+                      />
                     </div>
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
