@@ -17,7 +17,9 @@ type NavLink = {
 
 type NavItem =
   | { type: "header"; label: string }
-  | ({ type: "link" } & NavLink);
+  | { type: "divider" }
+  | ({ type: "link" } & NavLink)
+  | ({ type: "featured" } & NavLink & { badge?: string; description?: string });
 
 const NAV_ITEMS: NavItem[] = [
   { type: "header", label: "Inicio" },
@@ -33,7 +35,13 @@ const NAV_ITEMS: NavItem[] = [
   { type: "link", label: "Razón de negocio", href: "/dashboard/razon-negocio" },
 
   { type: "header", label: "Ejecución" },
-  { type: "link", label: "Operaciones", href: "/dashboard/operaciones" },
+  {
+    type: "featured",
+    label: "Operaciones",
+    href: "/dashboard/operaciones",
+    badge: "CORE",
+    description: "Trazabilidad · Entregables · SAT",
+  },
 
   { type: "header", label: "Fiscal y financiero" },
   { type: "link", label: "Validador CFDI/SPEI", href: "/dashboard/validador" },
@@ -73,7 +81,7 @@ function SidebarNav({
   onNavigate?: () => void;
 }) {
   const filteredItems = NAV_ITEMS.filter((item) => {
-    if (item.type === "header") return true;
+    if (item.type === "header" || item.type === "divider") return true;
     if (item.requiresSuperuser && !user?.is_superuser) return false;
     if (item.requiresStaff && !user?.is_staff) return false;
     return true;
@@ -86,7 +94,7 @@ function SidebarNav({
         <h1 className="mt-2 text-xl font-semibold text-slate-900 lg:text-2xl">Command Center</h1>
         <p className="mt-1 text-sm text-slate-500">{orgLabel}</p>
       </div>
-      <nav className="mt-8 space-y-1.5 text-base lg:mt-10 lg:space-y-2">
+      <nav className="mt-8 space-y-1 text-base lg:mt-10">
         {filteredItems.map((item, index, items) => {
           if (item.type === "header") {
             const nextItem = items[index + 1];
@@ -94,12 +102,73 @@ function SidebarNav({
             return (
               <p
                 key={`header-${item.label}`}
-                className="mt-5 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400 lg:mt-6"
+                className="pt-4 pb-1 text-[10px] font-bold uppercase tracking-[0.35em] text-slate-400"
               >
                 {item.label}
               </p>
             );
           }
+
+          if (item.type === "divider") {
+            return <hr key={`divider-${index}`} className="my-2 border-slate-100" />;
+          }
+
+          if (item.type === "featured") {
+            const isActive = pathname?.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onNavigate}
+                className={clsx(
+                  "group relative my-2 flex flex-col rounded-2xl border-2 px-4 py-3.5 transition-all duration-200",
+                  isActive
+                    ? "border-emerald-400 bg-gradient-to-br from-emerald-500 to-teal-500 shadow-xl shadow-emerald-300/40"
+                    : "border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-100 active:scale-[0.98]"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className={clsx(
+                      "text-lg leading-none",
+                      isActive ? "opacity-90" : ""
+                    )}>⚡</span>
+                    <span className={clsx(
+                      "text-sm font-bold tracking-tight",
+                      isActive ? "text-white" : "text-emerald-800"
+                    )}>
+                      {item.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {item.badge && (
+                      <span className={clsx(
+                        "rounded-md px-1.5 py-0.5 text-[9px] font-black tracking-widest",
+                        isActive
+                          ? "bg-white/25 text-white"
+                          : "bg-emerald-500 text-white"
+                      )}>
+                        {item.badge}
+                      </span>
+                    )}
+                    <span className={clsx(
+                      "text-xs font-bold",
+                      isActive ? "text-white/80" : "text-emerald-500"
+                    )}>→</span>
+                  </div>
+                </div>
+                {item.description && (
+                  <p className={clsx(
+                    "mt-1 text-[10px] font-medium leading-snug",
+                    isActive ? "text-white/70" : "text-emerald-600/80"
+                  )}>
+                    {item.description}
+                  </p>
+                )}
+              </Link>
+            );
+          }
+
           const isActive = pathname?.startsWith(item.href);
           return (
             <Link
@@ -107,14 +176,14 @@ function SidebarNav({
               href={item.href}
               onClick={onNavigate}
               className={clsx(
-                "flex min-h-[44px] items-center justify-between rounded-xl px-4 py-3 transition",
+                "flex min-h-[44px] items-center justify-between rounded-xl px-4 py-2.5 transition-all",
                 isActive
-                  ? "bg-gradient-to-r from-sky-500 to-emerald-400 text-white shadow-lg shadow-sky-200"
-                  : "text-slate-600 hover:bg-slate-100 active:bg-slate-200"
+                  ? "bg-gradient-to-r from-sky-500 to-emerald-400 text-white shadow-md shadow-sky-200"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200"
               )}
             >
-              <span className="font-medium">{item.label}</span>
-              <span className="text-xs">→</span>
+              <span className="text-sm font-medium">{item.label}</span>
+              <span className={clsx("text-xs", isActive ? "text-white/70" : "text-slate-300")}>→</span>
             </Link>
           );
         })}
