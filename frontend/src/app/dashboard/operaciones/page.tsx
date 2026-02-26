@@ -368,22 +368,62 @@ export default function OperacionesPage() {
             <GuiaContador
               section="Operaciones y entregables — Reforma 2026"
               steps={[
-                { title: "1. Selecciona la operación", description: "Elige la <strong>operación</strong> en el panel izquierdo. El semáforo de color muestra qué tan completa está su materialidad: CFDI ✓, SPEI ✓, Contrato ✓, NIF ✓." },
-                { title: "2. Registra todos los entregables", description: "<strong>Reforma 2026:</strong> ya no basta el CFDI + pago. Debes tener entregables con evidencia (bitácora, correo, fotografía, informe) para evitar sanciones de 2-9 años de prisión." },
-                { title: "3. Liga evidencia irrefutable", description: "Sube la URL del entregable (Drive, SharePoint) <strong>antes</strong> de marcarlo como Entregado. El sistema sella timestamp. El SAT puede pedir fotos/video en visitas (art. 48 CFF reformado)." },
-                { title: "4. Firma la recepción con NIF", description: "Captura nombre y correo de quien firma la recepción. Registra la <strong>NIF aplicable</strong> (C-6, C-8, D-1...) y sube la póliza contable para demostrar sustancia económica." },
+                {
+                  title: "1. Selecciona la operación",
+                  description: "Elige la <strong>operación</strong> en el panel izquierdo. El semáforo indica el nivel de materialidad: CFDI ✓, SPEI ✓, Contrato ✓, NIF ✓. Empieza siempre por la operación con más riesgo (semáforo rojo).",
+                },
+                {
+                  title: "2. Requisito sugerido",
+                  description: "Selecciona una <strong>plantilla predefinida</strong> para cargar automáticamente el título, descripción, código y tipo de gasto. Ahorra tiempo y garantiza nomenclatura homogénea en todos los expedientes.",
+                },
+                {
+                  title: "3. Título del entregable",
+                  description: "Nombre <strong>específico y descriptivo</strong> del documento o evidencia: «Informe de avance semana 3», «Evidencia fotográfica instalación», «Minuta de reunión 2026-02-20». Evita términos genéricos como «Documento» o «Archivo».",
+                },
+                {
+                  title: "4. Descripción",
+                  description: "Explica el <strong>contenido y alcance</strong> del entregable: qué demuestra, a qué etapa del contrato corresponde y qué actividad específica acredita. Esta narrativa es la que lee el auditor del SAT.",
+                },
+                {
+                  title: "5. Código y Tipo de gasto",
+                  description: "El <strong>código</strong> (ej. C-01, D-3) vincula el entregable con la cláusula contractual correspondiente. El <strong>tipo de gasto</strong> (CapEx, OpEx, viáticos) define el tratamiento contable correcto bajo NIF y es requerido en auditorías metodológicas.",
+                },
+                {
+                  title: "6. Orden de compra y Fecha OC",
+                  description: "Registra el <strong>número de orden de compra</strong> que autorizó el gasto internamente. La <strong>fecha de la OC</strong> debe ser anterior a la factura y al servicio prestado — esto demuestra que existió proceso de aprobación previo, clave para acreditar sustancia económica.",
+                },
+                {
+                  title: "7. URL de evidencia",
+                  description: "Liga el <strong>documento de soporte</strong> en Drive, SharePoint o cualquier repositorio accesible (URL pública o con permisos). Esta URL se sella con timestamp cuando se guarda. El SAT puede solicitar acceso directo al archivo en una visita domiciliaria (Art. 48 CFF).",
+                },
+                {
+                  title: "8. Fecha compromiso y Requerido",
+                  description: "La <strong>fecha compromiso</strong> define el plazo máximo de entrega; el sistema la usa para alertar vencimientos. Marca como <strong>Requerido</strong> los entregables cuya ausencia impide acreditar la operación ante el SAT; los opcionales son refuerzo adicional.",
+                },
+                {
+                  title: "9. Comentarios",
+                  description: "Agrega <strong>contexto adicional</strong>: instrucciones para el equipo, advertencias legales, referencia a cláusulas contractuales o aclaraciones para el expediente. Este campo es visible en el Dossier SAT exportado.",
+                },
+                {
+                  title: "10. Marcar Entregado → Recibido",
+                  description: "Avanza el estado a <strong>Entregado</strong> cuando el proveedor entregue la evidencia (requiere URL). Cambia a <strong>Recibido</strong> capturando nombre y correo de quien firma la recepción — esto cierra el ciclo de materialidad y sella el timestamp de recepción.",
+                },
               ]}
               concepts={[
-                { term: "Semáforo de materialidad", definition: "Indicador por operación que muestra si CFDI, SPEI, Contrato y NIF están validados. Si alguno falla, la operación tiene riesgo de ser considerada simulación." },
-                { term: "Reforma 2026 — Art. 69-B CFF", definition: "Sanciones de 2-9 años de prisión por CFDI sin operación real. Ya NO basta el contrato + CFDI + pago: se requieren entregables con evidencia documental robusta." },
-                { term: "Sustancia económica (NIF)", definition: "Principio de las NIF que obliga a demostrar que el activo o servicio tiene uso real en el negocio y genera beneficios económicos futuros, independiente del aspecto legal." },
-                { term: "Art. 48 CFF reformado", definition: "El SAT ahora puede usar fotografías, videos y grabaciones en visitas domiciliarias como evidencia en tu contra. Documenta tus instalaciones y procesos proactivamente." },
+                { term: "Semáforo de materialidad", definition: "Indicador por operación que muestra si CFDI, SPEI, Contrato y NIF están validados. Si alguno falla, la operación tiene riesgo de ser considerada simulación fiscal." },
+                { term: "Reforma 2026 — Art. 69-B CFF", definition: "Sanciones severas por CFDI sin operación real demostrable. Ya NO basta el contrato + CFDI + pago: se requieren entregables con evidencia documental robusta que acredite sustancia económica." },
+                { term: "Sustancia económica (NIF)", definition: "Principio de las NIF que obliga a demostrar que el activo o servicio tiene uso real en el negocio y genera beneficios económicos futuros, independientemente del aspecto legal del contrato." },
+                { term: "Timestamp de evidencia", definition: "Sello de fecha y hora que el sistema registra automáticamente cuando se guarda la URL de evidencia. Es admisible como prueba ante el SAT para demostrar que el documento existía antes de la revisión." },
+                { term: "Dossier SAT", definition: "Expediente estructurado (ZIP/PDF) que agrupa todos los entregables, evidencias y firmas de una operación. Úsalo para responder requerimientos, visitas domiciliarias o revisiones electrónicas de gabinete." },
+                { term: "Art. 48 CFF reformado", definition: "El SAT puede usar fotografías, videos y grabaciones en visitas domiciliarias como evidencia. Documenta tus instalaciones, equipos y procesos proactivamente." },
               ]}
               tips={[
                 "<strong>⚠️ Riesgo 2026:</strong> Un CFDI válido sin evidencias de materialidad es suficiente para que el SAT presuma simulación y bloquee tu CSD.",
-                "Sube evidencias fotográficas y bitácoras <strong>el mismo día</strong> que se presta el servicio o entrega el bien.",
-                "Para la recepción, usa el <strong>correo corporativo</strong> con asunto descriptivo — los correos son evidencia admisible ante el SAT.",
-                "Registra la <strong>NIF aplicable</strong> en cada operación para demostrar el tratamiento contable correcto ante una auditoría metodológica (Art. 48 CFF).",
+                "Sube la evidencia <strong>el mismo día</strong> que se presta el servicio o se entrega el bien — el timestamp lo confirma ante cualquier auditoría.",
+                "El <strong>Código</strong> del entregable debe coincidir con la cláusula del contrato que obliga al proveedor a entregarlo. Facilita la trazabilidad documental.",
+                "Para la recepción, usa el <strong>correo corporativo</strong> con asunto descriptivo — los correos electrónicos son evidencia admisible ante el SAT.",
+                "Marca como <strong>Requerido</strong> todo entregable que esté mencionado explícitamente en el contrato; lo opcional es evidencia de refuerzo.",
+                "Exporta el <strong>Expediente SAT (Dossier)</strong> inmediatamente al cerrar todos los entregables como Recibidos — tenlo listo antes de que llegue cualquier requerimiento.",
               ]}
             />
           </div>
