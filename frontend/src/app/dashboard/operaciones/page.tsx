@@ -25,11 +25,11 @@ import { type Proveedor } from "../../../lib/providers";
 import { DeliverableRequirement, fetchDeliverableRequirements } from "../../../lib/checklists";
 
 const ESTADO_STYLES: Record<OperacionEntregable["estado"], string> = {
-  PENDIENTE: "bg-slate-200 text-slate-700",
-  EN_PROCESO: "bg-amber-100 text-amber-700",
-  ENTREGADO: "bg-blue-100 text-blue-700",
-  RECIBIDO: "bg-emerald-100 text-emerald-700",
-  FACTURADO: "bg-indigo-100 text-indigo-700",
+  PENDIENTE: "bg-slate-700/80 text-slate-200 border border-slate-500/50",
+  EN_PROCESO: "bg-amber-500/20 text-amber-300 border border-amber-400/40",
+  ENTREGADO: "bg-blue-500/20 text-blue-300 border border-blue-400/40",
+  RECIBIDO: "bg-emerald-500/20 text-emerald-300 border border-emerald-400/40",
+  FACTURADO: "bg-indigo-500/20 text-indigo-300 border border-indigo-400/40",
 };
 
 const estadosOrden = ["PENDIENTE", "EN_PROCESO", "ENTREGADO", "RECIBIDO", "FACTURADO"] as const;
@@ -67,31 +67,27 @@ function MaterialidadSemaforo({ op }: { op: Operacion }) {
     { label: "Contrato", ok: Boolean(op.contrato_nombre), warn: false },
     { label: "NIF", ok: Boolean(op.nif_aplicable), warn: false },
   ];
-  const allOk = checks.every((c) => c.ok);
   const hasWarn = checks.some((c) => c.warn);
   return (
-    <div className="mt-2">
-      <div className="flex flex-wrap gap-1">
+    <div className="mt-2.5">
+      <div className="flex flex-wrap gap-1.5">
         {checks.map((c) => (
           <span
             key={c.label}
-            title={c.label}
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border ${c.ok
-              ? "bg-emerald-500/15 border-emerald-400/40 text-emerald-300"
-              : c.warn
-                ? "bg-red-500/15 border-red-400/40 text-red-300"
-                : "bg-white/5 border-white/10 text-slate-400"
-              }`}
+            className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold tracking-wide ${
+              c.ok
+                ? "bg-emerald-500/25 text-emerald-300"
+                : c.warn
+                ? "bg-red-500/25 text-red-300"
+                : "bg-white/8 text-slate-400"
+            }`}
           >
-            {c.ok ? "✓" : c.warn ? "✗" : "○"} {c.label}
+            {c.ok ? "✓" : c.warn ? "✗" : "·"} {c.label}
           </span>
         ))}
       </div>
-      {!allOk && !hasWarn && (
-        <p className="mt-1 text-[10px] text-amber-300">⚠ Materialidad incompleta</p>
-      )}
       {hasWarn && (
-        <p className="mt-1 text-[10px] text-red-300">⛔ Riesgo alto — revisa CFDI/SPEI</p>
+        <p className="mt-1.5 text-[10px] font-semibold text-red-400">⛔ Riesgo alto — revisa CFDI/SPEI</p>
       )}
     </div>
   );
@@ -353,20 +349,21 @@ export default function OperacionesPage() {
   return (
     <DashboardShell>
       <div className="space-y-8">
-        <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        {/* ── Header ── */}
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-emerald-300">Operaciones</p>
-            <h1 className="text-xl sm:text-2xl font-semibold text-white">Trazabilidad de entregables</h1>
-            <p className="text-sm text-slate-300">
-              Lista operaciones, agrega entregables y liga evidencia para avanzar a Entregado / Recibido.
+            <p className="text-[11px] font-bold uppercase tracking-[0.4em] text-emerald-400">Ejecución / Inteligencia fiscal</p>
+            <h1 className="mt-1 text-2xl font-bold text-white tracking-tight">Operaciones &amp; Entregables</h1>
+            <p className="mt-0.5 text-sm text-slate-400">
+              Gestiona operaciones, liga evidencia y cierra cada entregable con materialidad probada.
             </p>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowModal(true)}
-              className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/30 transition hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/40"
             >
-              + Nueva Operación
+              <span className="text-base leading-none">＋</span> Nueva Operación
             </button>
             <GuiaContador
               section="Operaciones y entregables — Reforma 2026"
@@ -393,74 +390,107 @@ export default function OperacionesPage() {
         </header>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20 lg:col-span-1">
-            <div className="flex items-center justify-between">
+          {/* ── Panel izquierdo: lista de operaciones ── */}
+          <div className="rounded-2xl border border-white/10 bg-slate-800/60 backdrop-blur-sm shadow-2xl shadow-black/30 lg:col-span-1 overflow-hidden">
+            {/* Header del panel */}
+            <div className="flex items-center justify-between border-b border-white/10 bg-slate-700/40 px-5 py-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Operaciones</p>
-                <h2 className="text-lg font-semibold text-white">Selecciona una operación</h2>
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-emerald-400">Lista</p>
+                <h2 className="text-base font-bold text-white">Operaciones</h2>
               </div>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-100">{operaciones.length}</span>
+              <span className="rounded-lg bg-emerald-500/20 border border-emerald-500/30 px-3 py-1 text-sm font-bold text-emerald-300">
+                {operaciones.length}
+              </span>
             </div>
-            <div className="mt-4 space-y-3">
-              {loading && <p className="text-sm text-slate-300">Cargando operaciones...</p>}
+            <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+              {loading && (
+                <div className="flex items-center gap-2 py-4 px-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent" />
+                  <p className="text-sm text-slate-400">Cargando operaciones…</p>
+                </div>
+              )}
               {!loading && operaciones.length === 0 && (
-                <p className="text-sm text-slate-300">Aún no hay operaciones registradas.</p>
+                <div className="rounded-xl border border-dashed border-white/15 bg-white/3 py-8 text-center">
+                  <p className="text-sm font-medium text-slate-400">Sin operaciones registradas</p>
+                  <p className="mt-1 text-xs text-slate-500">Crea la primera con &quot;+ Nueva Operación&quot;</p>
+                </div>
               )}
               {!loading &&
                 operaciones.map((op) => {
                   const isActive = op.id === selectedOperacionId;
-                  // Detectar riesgo: CFDI válido sin contrato (posible simulación)
                   const cfdiSinContrato = op.cfdi_estatus === "VALIDO" && !op.contrato_nombre;
+                  const tipoColors: Record<string, string> = {
+                    COMPRA: "text-blue-300",
+                    SERVICIO: "text-purple-300",
+                    ARRENDAMIENTO: "text-amber-300",
+                    OTRO: "text-slate-300",
+                  };
+                  const tipoColor = tipoColors[op.tipo_operacion] ?? "text-slate-300";
                   return (
                     <button
                       key={op.id}
                       type="button"
-                      onClick={() => {
-                        void handleSelectOperacion(op.id);
-                      }}
-                      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${isActive
-                        ? "border-emerald-300/70 bg-emerald-500/20 text-white"
-                        : cfdiSinContrato
-                          ? "border-red-400/50 bg-red-500/10 text-white hover:border-red-300"
-                          : "border-white/10 bg-white/5 text-slate-200 hover:border-emerald-300/40"
-                        }`}
+                      onClick={() => { void handleSelectOperacion(op.id); }}
+                      className={`group w-full rounded-xl border text-left transition-all duration-150 ${
+                        isActive
+                          ? "border-emerald-400/60 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 shadow-lg shadow-emerald-500/10"
+                          : cfdiSinContrato
+                          ? "border-red-500/40 bg-red-500/8 hover:border-red-400/60 hover:bg-red-500/12"
+                          : "border-white/8 bg-white/4 hover:border-white/20 hover:bg-white/8"
+                      }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold">{op.proveedor_nombre}</p>
-                        <span className="text-xs text-slate-200">{op.fecha_operacion}</span>
-                      </div>
-                      {cfdiSinContrato && (
-                        <div className="mt-1 rounded-lg bg-red-500/20 px-2 py-1 text-[11px] font-semibold text-red-300">
-                          ⛔ CFDI sin materialidad — Riesgo Reforma 2026
+                      {/* Card header */}
+                      <div className={`rounded-t-xl px-4 py-3 ${isActive ? "bg-emerald-500/10" : "bg-white/3"}`}>
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm font-bold text-white leading-tight">{op.proveedor_nombre}</p>
+                          <span className="shrink-0 text-[10px] text-slate-400 mt-0.5">{op.fecha_operacion}</span>
                         </div>
-                      )}
-                      <p className="text-xs text-slate-200">{op.contrato_nombre || <span className="text-red-400">Sin contrato</span>}</p>
-                      <p className="text-sm font-medium text-emerald-300">
-                        {formatCurrency(op.monto, op.moneda)} · {op.tipo_operacion}
-                      </p>
-                      {/* Semáforo de materialidad */}
-                      <MaterialidadSemaforo op={op} />
-                      <div className="mt-2 text-xs text-slate-200">
-                        <p className="font-semibold text-white">Concepto CFDI</p>
-                        <p className="text-slate-200">{op.concepto || "(sin concepto)"}</p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <p className="text-base font-extrabold text-emerald-300">
+                            {formatCurrency(op.monto, op.moneda)}
+                          </p>
+                          <span className={`text-[10px] font-bold uppercase tracking-wide ${tipoColor}`}>
+                            · {op.tipo_operacion}
+                          </span>
+                        </div>
+                      </div>
+                      {/* Card body */}
+                      <div className="px-4 py-3 space-y-2">
+                        {cfdiSinContrato && (
+                          <div className="rounded-lg bg-red-500/20 border border-red-400/30 px-3 py-1.5 text-[10px] font-bold text-red-300">
+                            ⛔ Sin contrato — Riesgo Reforma 2026
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-slate-500">Contrato:</span>
+                          {op.contrato_nombre
+                            ? <span className="text-[11px] font-medium text-slate-200 truncate">{op.contrato_nombre}</span>
+                            : <span className="text-[11px] font-semibold text-red-400">Sin contrato</span>
+                          }
+                        </div>
+                        {/* Semáforo */}
+                        <MaterialidadSemaforo op={op} />
+                        {/* Concepto */}
+                        <div className="border-t border-white/8 pt-2">
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-0.5">Concepto CFDI</p>
+                          <p className="text-[11px] text-slate-300 leading-snug line-clamp-2">{op.concepto || <span className="italic text-slate-500">sin concepto</span>}</p>
+                        </div>
                         {op.concepto_generico && (
-                          <div className="mt-1 space-y-1">
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-[11px] font-semibold text-amber-800">
-                              Concepto genérico
+                          <div className="space-y-2">
+                            <span className="inline-flex items-center rounded-md bg-amber-500/15 border border-amber-400/30 px-2 py-0.5 text-[10px] font-bold text-amber-300">
+                              ⚠ Concepto genérico
                             </span>
                             {op.concepto_sugerido && (
-                              <div className="rounded-xl border border-white/10 bg-white/5 p-2 text-[11px] text-slate-200">
-                                <p className="text-slate-100">Sugerencia: {op.concepto_sugerido}</p>
+                              <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-3 py-2">
+                                <p className="text-[10px] text-slate-400 mb-1">Sugerencia IA:</p>
+                                <p className="text-[11px] text-slate-200 leading-snug">{op.concepto_sugerido}</p>
                                 <button
                                   type="button"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    void aplicarSugerenciaConcepto(op);
-                                  }}
+                                  onClick={(e) => { e.stopPropagation(); void aplicarSugerenciaConcepto(op); }}
                                   disabled={updatingConceptId === op.id}
-                                  className="mt-1 rounded-full bg-emerald-500 px-3 py-1 min-h-[44px] text-[11px] font-semibold text-white hover:bg-emerald-600 disabled:opacity-60"
+                                  className="mt-2 w-full rounded-lg bg-emerald-500 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-400 disabled:opacity-60 transition"
                                 >
-                                  {updatingConceptId === op.id ? "Aplicando..." : "Aplicar sugerencia"}
+                                  {updatingConceptId === op.id ? "Aplicando…" : "Aplicar sugerencia"}
                                 </button>
                               </div>
                             )}
@@ -474,391 +504,479 @@ export default function OperacionesPage() {
           </div>
 
           <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            {/* ── Panel: Nuevo entregable ── */}
+            <div className="rounded-2xl border border-white/10 bg-slate-800/60 backdrop-blur-sm shadow-2xl shadow-black/30 overflow-hidden">
+              {/* Header */}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 bg-slate-700/40 px-6 py-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Nuevo entregable</p>
-                  <h3 className="text-lg font-semibold text-white">Programar entregable</h3>
-                  <p className="text-sm text-slate-300">
-                    Usa un requisito sugerido o captura un entregable manual con fecha compromiso.
+                  <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-emerald-400">Captura</p>
+                  <h3 className="text-base font-bold text-white">Nuevo entregable</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Usa una plantilla sugerida o captura un entregable manual con fecha compromiso.
                   </p>
                 </div>
                 {selectedOperacion && (
-                  <div className="text-right text-xs text-slate-300">
-                    <p>Proveedor: <span className="font-semibold text-white">{selectedOperacion.proveedor_nombre}</span></p>
-                    <p>Monto: <span className="font-semibold text-emerald-300">{formatCurrency(selectedOperacion.monto, selectedOperacion.moneda)}</span></p>
-
+                  <div className="shrink-0 text-right">
+                    <p className="text-xs text-slate-400">
+                      Operación: <span className="font-bold text-white">{selectedOperacion.proveedor_nombre}</span>
+                    </p>
+                    <p className="text-sm font-bold text-emerald-300">
+                      {formatCurrency(selectedOperacion.monto, selectedOperacion.moneda)}
+                    </p>
                     <button
                       type="button"
                       onClick={() => handleExportDossier(selectedOperacion.id)}
                       disabled={exportingId === selectedOperacion.id}
-                      title="Descarga el expediente estructurado con todas las evidencias (PDF/ZIP) para revisiones del SAT (Gabinete/Domiciliarias)."
-                      className="mt-3 flex items-center justify-end gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 font-semibold text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50"
+                      title="Descarga el expediente estructurado (PDF/ZIP) para revisiones del SAT."
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50 transition"
                     >
                       <span>🗂️</span>
-                      {exportingId === selectedOperacion.id ? "Generando ZIP..." : "Exportar Expediente SAT (Dossier)"}
+                      {exportingId === selectedOperacion.id ? "Generando ZIP…" : "Exportar Expediente SAT"}
                     </button>
                   </div>
                 )}
               </div>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Requisito sugerido</label>
-                    <select
-                      value={form.requirement ?? ""}
-                      onChange={(e) => handleRequirementChange(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
-                    >
-                      <option value="">Sin plantilla</option>
-                      {requisitos.map((req) => (
-                        <option key={req.id} value={req.id}>
-                          {req.codigo} · {req.titulo}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Título</label>
-                    <input
-                      value={form.titulo}
-                      onChange={(e) => handleFormChange("titulo", e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
-                      placeholder="Entregable: informe, evidencia fotográfica, minuta..."
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Descripción</label>
-                    <textarea
-                      value={form.descripcion}
-                      onChange={(e) => handleFormChange("descripcion", e.target.value)}
-                      rows={3}
-                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
-                    />
-                  </div>
-                  <div className="grid gap-3 md:grid-cols-2">
+
+              {/* Form body */}
+              <div className="p-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                  {/* Columna izquierda */}
+                  <div className="space-y-4">
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Fecha compromiso</label>
-                      <input
-                        type="date"
-                        value={form.fecha_compromiso ?? ""}
-                        onChange={(e) => handleFormChange("fecha_compromiso", e.target.value)}
-                        className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Requerido</label>
+                      <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                        Requisito sugerido
+                      </label>
                       <select
-                        value={form.requerido ? "1" : "0"}
-                        onChange={(e) => handleFormChange("requerido", e.target.value === "1")}
-                        className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                        value={form.requirement ?? ""}
+                        onChange={(e) => handleRequirementChange(e.target.value)}
+                        className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
                       >
-                        <option value="1">Sí</option>
-                        <option value="0">Opcional</option>
+                        <option value="" className="bg-slate-800">Sin plantilla</option>
+                        {requisitos.map((req) => (
+                          <option key={req.id} value={req.id} className="bg-slate-800">
+                            {req.codigo} · {req.titulo}
+                          </option>
+                        ))}
                       </select>
                     </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                        Título <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        value={form.titulo}
+                        onChange={(e) => handleFormChange("titulo", e.target.value)}
+                        className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
+                        placeholder="Ej. Informe de avance, evidencia fotográfica…"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                        Descripción
+                      </label>
+                      <textarea
+                        value={form.descripcion}
+                        onChange={(e) => handleFormChange("descripcion", e.target.value)}
+                        rows={3}
+                        className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition resize-none"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                          Fecha compromiso
+                        </label>
+                        <input
+                          type="date"
+                          value={form.fecha_compromiso ?? ""}
+                          onChange={(e) => handleFormChange("fecha_compromiso", e.target.value)}
+                          className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-2.5 text-sm text-white focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
+                          style={{ colorScheme: "dark" }}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                          Requerido
+                        </label>
+                        <select
+                          value={form.requerido ? "1" : "0"}
+                          onChange={(e) => handleFormChange("requerido", e.target.value === "1")}
+                          className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-2.5 text-sm text-white focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
+                        >
+                          <option value="1" className="bg-slate-800">Sí, requerido</option>
+                          <option value="0" className="bg-slate-800">Opcional</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Columna derecha */}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                          Código
+                        </label>
+                        <input
+                          value={form.codigo ?? ""}
+                          onChange={(e) => handleFormChange("codigo", e.target.value)}
+                          className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
+                          placeholder="C-01"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                          Tipo de gasto
+                        </label>
+                        <input
+                          value={form.tipo_gasto ?? ""}
+                          onChange={(e) => handleFormChange("tipo_gasto", e.target.value)}
+                          className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
+                          placeholder="CapEx, OpEx…"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                          Orden de compra
+                        </label>
+                        <input
+                          value={form.oc_numero ?? ""}
+                          onChange={(e) => handleFormChange("oc_numero", e.target.value)}
+                          className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
+                          placeholder="OC-1234"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                          Fecha OC
+                        </label>
+                        <input
+                          type="date"
+                          value={form.oc_fecha ?? ""}
+                          onChange={(e) => handleFormChange("oc_fecha", e.target.value)}
+                          className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-2.5 text-sm text-white focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
+                          style={{ colorScheme: "dark" }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                        URL de evidencia
+                      </label>
+                      <input
+                        type="url"
+                        value={form.oc_archivo_url ?? ""}
+                        onChange={(e) => handleFormChange("oc_archivo_url", e.target.value)}
+                        className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
+                        placeholder="https://drive.google.com/…"
+                      />
+                      <p className="mt-1 text-[11px] text-slate-500">
+                        Drive, SharePoint o cualquier URL pública accesible.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                        Comentarios
+                      </label>
+                      <textarea
+                        value={form.comentarios ?? ""}
+                        onChange={(e) => handleFormChange("comentarios", e.target.value)}
+                        rows={2}
+                        className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition resize-none"
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-3">
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Código</label>
-                      <input
-                        value={form.codigo ?? ""}
-                        onChange={(e) => handleFormChange("codigo", e.target.value)}
-                        className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Tipo de gasto</label>
-                      <input
-                        value={form.tipo_gasto ?? ""}
-                        onChange={(e) => handleFormChange("tipo_gasto", e.target.value)}
-                        className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
-                        placeholder="CapEx, OpEx, viáticos..."
-                      />
-                    </div>
-                  </div>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Orden de compra</label>
-                      <input
-                        value={form.oc_numero ?? ""}
-                        onChange={(e) => handleFormChange("oc_numero", e.target.value)}
-                        className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
-                        placeholder="OC-1234"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Fecha OC</label>
-                      <input
-                        type="date"
-                        value={form.oc_fecha ?? ""}
-                        onChange={(e) => handleFormChange("oc_fecha", e.target.value)}
-                        className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">URL de evidencia</label>
-                    <input
-                      type="url"
-                      value={form.oc_archivo_url ?? ""}
-                      onChange={(e) => handleFormChange("oc_archivo_url", e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
-                      placeholder="https://drive..."
-                    />
-                    <p className="mt-1 text-xs text-slate-300">Enlaza carpeta o archivo que se usará para marcar como entregado/recibido.</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Comentarios</label>
-                    <textarea
-                      value={form.comentarios ?? ""}
-                      onChange={(e) => handleFormChange("comentarios", e.target.value)}
-                      rows={2}
-                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
-                    />
-                  </div>
+
+                <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-4">
+                  {!selectedOperacion && (
+                    <p className="text-xs text-amber-400">⚠ Selecciona una operación para habilitar el registro.</p>
+                  )}
+                  {selectedOperacion && <span />}
+                  <button
+                    type="button"
+                    onClick={() => { void submitEntregable(); }}
+                    disabled={saving || !selectedOperacion}
+                    className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 transition hover:from-emerald-400 hover:to-teal-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {saving ? "Guardando…" : "Agregar entregable"}
+                  </button>
                 </div>
-              </div>
-              <div className="mt-4 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    void submitEntregable();
-                  }}
-                  disabled={saving || !selectedOperacion}
-                  className="rounded-xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-60"
-                >
-                  {saving ? "Guardando..." : "Agregar entregable"}
-                </button>
               </div>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            {/* ── Panel: Entregables de la operación ── */}
+            <div className="rounded-2xl border border-white/10 bg-slate-800/60 backdrop-blur-sm shadow-2xl shadow-black/30 overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-white/10 bg-slate-700/40 px-6 py-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Seguimiento</p>
-                  <h3 className="text-lg font-semibold text-white">Entregables de la operación</h3>
-                  <p className="text-sm text-slate-300">Sube la evidencia y marca el estado a Entregado / Recibido.</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-emerald-400">Seguimiento</p>
+                  <h3 className="text-base font-bold text-white">Entregables de la operación</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Sube la evidencia y avanza el estado a Entregado / Recibido.</p>
                 </div>
-                <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-100">{entregables.length}</span>
+                <span className="rounded-lg bg-emerald-500/20 border border-emerald-500/30 px-3 py-1 text-sm font-bold text-emerald-300">
+                  {entregables.length}
+                </span>
               </div>
-              <div className="mt-4 overflow-x-auto">
-                <table className="min-w-full divide-y divide-white/10 text-sm text-slate-100">
-                  <thead className="text-xs uppercase tracking-wide text-slate-300">
-                    <tr>
-                      <th className="px-3 py-2 text-left">Título</th>
-                      <th className="px-3 py-2 text-left">Compromiso</th>
-                      <th className="px-3 py-2 text-left">Evidencia / firma</th>
-                      <th className="px-3 py-2 text-left">Estado</th>
-                      <th className="px-3 py-2 text-left">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/10">
-                    {entregables.length === 0 && (
-                      <tr>
-                        <td className="px-3 py-4 text-center text-slate-300" colSpan={5}>
-                          No hay entregables para esta operación.
-                        </td>
-                      </tr>
-                    )}
-                    {entregables
-                      .sort((a, b) => estadosOrden.indexOf(a.estado) - estadosOrden.indexOf(b.estado))
-                      .map((item) => (
-                        <tr key={item.id}>
-                          <td className="px-3 py-3">
-                            <p className="font-semibold text-white">{item.titulo}</p>
-                            <p className="text-xs text-slate-300">{item.codigo || item.tipo_gasto}</p>
-                            {item.descripcion && <p className="text-xs text-slate-400">{item.descripcion}</p>}
-                          </td>
-                          <td className="px-3 py-3 text-slate-200">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span>{item.fecha_compromiso || "-"}</span>
+
+              {entregables.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 px-6">
+                  <div className="rounded-2xl border border-dashed border-white/15 bg-white/3 px-8 py-10 text-center max-w-sm">
+                    <p className="text-2xl mb-3">📋</p>
+                    <p className="text-sm font-bold text-slate-300">Sin entregables aún</p>
+                    <p className="mt-1 text-xs text-slate-500">Registra el primer entregable en el formulario de arriba.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="divide-y divide-white/8">
+                  {entregables
+                    .sort((a, b) => estadosOrden.indexOf(a.estado) - estadosOrden.indexOf(b.estado))
+                    .map((item, idx) => (
+                      <div key={item.id} className={`px-6 py-5 ${idx % 2 === 0 ? "bg-slate-800/30" : "bg-slate-900/20"}`}>
+                        <div className="grid gap-5 lg:grid-cols-3">
+                          {/* Columna 1: Identificación */}
+                          <div className="space-y-2">
+                            <div className="flex items-start gap-2">
+                              <div className="shrink-0 mt-0.5 h-2 w-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
+                              <div>
+                                <p className="text-sm font-bold text-white leading-tight">{item.titulo}</p>
+                                {(item.codigo || item.tipo_gasto) && (
+                                  <p className="mt-0.5 text-[11px] font-medium text-slate-400">
+                                    {[item.codigo, item.tipo_gasto].filter(Boolean).join(" · ")}
+                                  </p>
+                                )}
+                                {item.descripcion && (
+                                  <p className="mt-1 text-[11px] text-slate-400 leading-snug">{item.descripcion}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-bold ${ESTADO_STYLES[item.estado]}`}>
+                                {item.estado}
+                              </span>
                               {item.vencido && (
-                                <span className="rounded-full bg-flame-100 px-2 py-1 text-[11px] font-semibold text-flame-800">
-                                  Vencido · {item.dias_atraso}d
+                                <span className="inline-flex items-center rounded-md bg-red-500/20 border border-red-400/30 px-2 py-0.5 text-[10px] font-bold text-red-300">
+                                  ⚠ Vencido +{item.dias_atraso}d
                                 </span>
                               )}
                             </div>
-                          </td>
-                          <td className="px-3 py-3">
-                            <div className="space-y-2">
+                            {item.fecha_compromiso && (
+                              <p className="text-[11px] text-slate-400">
+                                <span className="text-slate-500">Compromiso:</span>{" "}
+                                <span className="text-slate-200 font-medium">{item.fecha_compromiso}</span>
+                              </p>
+                            )}
+                            {/* Timestamps */}
+                            <div className="space-y-0.5">
+                              {item.fecha_entregado && (
+                                <p className="text-[10px] text-slate-500">✓ Entregado: <span className="text-slate-400">{item.fecha_entregado}</span></p>
+                              )}
+                              {item.fecha_recepcion && (
+                                <p className="text-[10px] text-slate-500">✓ Recibido: <span className="text-slate-400">{item.fecha_recepcion}</span></p>
+                              )}
+                              {item.recepcion_firmado_por && (
+                                <p className="text-[10px] text-slate-500">✍ Firmó: <span className="text-slate-300 font-medium">{item.recepcion_firmado_por}</span></p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Columna 2: Evidencia y firma */}
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-1">
+                                URL de evidencia
+                              </label>
                               <input
                                 type="url"
                                 value={evidencias[item.id] ?? ""}
                                 onChange={(e) => handleEvidenciaChange(item.id, e.target.value)}
-                                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white focus:border-emerald-300 focus:outline-none"
-                                placeholder="https://drive..."
+                                className="w-full rounded-lg border border-white/15 bg-slate-700/60 px-3 py-2 text-xs text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
+                                placeholder="https://drive.google.com/…"
                               />
-                              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                                <input
-                                  type="text"
-                                  value={firmas[item.id]?.por ?? ""}
-                                  onChange={(e) => handleFirmaChange(item.id, "por", e.target.value)}
-                                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white focus:border-emerald-300 focus:outline-none"
-                                  placeholder="Recibido por (nombre)"
-                                />
-                                <input
-                                  type="email"
-                                  value={firmas[item.id]?.email ?? ""}
-                                  onChange={(e) => handleFirmaChange(item.id, "email", e.target.value)}
-                                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white focus:border-emerald-300 focus:outline-none"
-                                  placeholder="Correo quien recibe"
-                                />
-                              </div>
                               {item.oc_archivo_url && (
                                 <a
                                   href={item.oc_archivo_url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="inline-flex items-center gap-1 text-xs text-emerald-200 hover:text-emerald-100"
+                                  className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400 hover:text-emerald-300"
                                 >
-                                  Ver evidencia
+                                  ↗ Ver evidencia actual
                                 </a>
                               )}
                               {item.evidencia_cargada_en && (
-                                <p className="text-[11px] text-slate-400">Sellado: {item.evidencia_cargada_en}</p>
+                                <p className="mt-0.5 text-[10px] text-slate-500">🕐 Sellado: {item.evidencia_cargada_en}</p>
                               )}
                             </div>
-                          </td>
-                          <td className="px-3 py-3">
-                            <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${ESTADO_STYLES[item.estado]}`}>
-                              {item.estado}
-                            </span>
-                            <div className="mt-1 text-[11px] text-slate-300">
-                              {item.fecha_entregado && <p>Entregado: {item.fecha_entregado}</p>}
-                              {item.fecha_recepcion && <p>Recibido: {item.fecha_recepcion}</p>}
-                              {item.recepcion_firmada_en && <p>Recepción firmada: {item.recepcion_firmada_en}</p>}
-                              {item.recepcion_firmado_por && <p className="text-slate-200">Firmó: {item.recepcion_firmado_por}</p>}
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-1">
+                                  Recibido por
+                                </label>
+                                <input
+                                  type="text"
+                                  value={firmas[item.id]?.por ?? ""}
+                                  onChange={(e) => handleFirmaChange(item.id, "por", e.target.value)}
+                                  className="w-full rounded-lg border border-white/15 bg-slate-700/60 px-3 py-2 text-xs text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
+                                  placeholder="Nombre completo"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-1">
+                                  Correo
+                                </label>
+                                <input
+                                  type="email"
+                                  value={firmas[item.id]?.email ?? ""}
+                                  onChange={(e) => handleFirmaChange(item.id, "email", e.target.value)}
+                                  className="w-full rounded-lg border border-white/15 bg-slate-700/60 px-3 py-2 text-xs text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
+                                  placeholder="correo@empresa.mx"
+                                />
+                              </div>
                             </div>
-                          </td>
-                          <td className="px-3 py-3">
-                            <div className="flex flex-wrap gap-2">
-                              <button
-                                type="button"
-                                className="rounded-full border border-amber-300/50 px-3 py-1 min-h-[44px] text-xs font-semibold text-amber-200 hover:bg-amber-300/10"
-                                onClick={() => {
-                                  void avanzarEstado(item, "ENTREGADO");
-                                }}
-                              >
-                                Marcar entregado
-                              </button>
-                              <button
-                                type="button"
-                                className="rounded-full border border-emerald-300/50 px-3 py-1 min-h-[44px] text-xs font-semibold text-emerald-200 hover:bg-emerald-300/10"
-                                onClick={() => {
-                                  void avanzarEstado(item, "RECIBIDO");
-                                }}
-                              >
-                                Marcar recibido
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
+                          </div>
+
+                          {/* Columna 3: Acciones */}
+                          <div className="flex flex-col gap-2 justify-center">
+                            <button
+                              type="button"
+                              onClick={() => { void avanzarEstado(item, "ENTREGADO"); }}
+                              className="flex w-full items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 py-2.5 text-xs font-bold text-amber-300 hover:bg-amber-500/20 hover:border-amber-400/60 transition"
+                            >
+                              <span>📦</span> Marcar Entregado
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { void avanzarEstado(item, "RECIBIDO"); }}
+                              className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-2.5 text-xs font-bold text-emerald-300 hover:bg-emerald-500/20 hover:border-emerald-400/60 transition"
+                            >
+                              <span>✅</span> Marcar Recibido
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modal Nueva Operación Manual */}
+      {/* ── Modal Nueva Operación ── */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
-          <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/75 backdrop-blur-md">
+          <div className="w-full max-w-lg rounded-2xl border border-white/12 bg-slate-800 shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal header */}
+            <div className="flex items-center justify-between border-b border-white/10 bg-slate-700/60 px-6 py-5">
               <div>
-                <h3 className="text-xl font-semibold text-white">Registrar Operación</h3>
-                <p className="text-sm text-slate-400 mt-1">
-                  Da de alta manualmente una operación de compra o gasto.
+                <h3 className="text-lg font-bold text-white">Registrar Operación</h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Alta manual de una operación de compra, servicio o gasto.
                 </p>
               </div>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-white text-3xl leading-none font-light"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white transition text-xl leading-none"
               >
                 &times;
               </button>
             </div>
-            <form onSubmit={(e) => void handleCreateOperacion(e)} className="space-y-4">
+
+            <form onSubmit={(e) => void handleCreateOperacion(e)} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+              {/* Empresa */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Empresa</label>
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                  Empresa <span className="text-red-400">*</span>
+                </label>
                 <select
                   required
                   value={newOpForm.empresa || ""}
                   onChange={(e) => setNewOpForm({ ...newOpForm, empresa: Number(e.target.value) })}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                  className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-3 text-sm text-white focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
                 >
-                  <option value="" className="text-slate-800">Selecciona una empresa</option>
+                  <option value="" className="bg-slate-800 text-slate-300">Selecciona una empresa</option>
                   {empresas.map((empresa) => (
-                    <option key={empresa.id} value={empresa.id} className="text-slate-800">{empresa.razon_social}</option>
+                    <option key={empresa.id} value={empresa.id} className="bg-slate-800 text-white">{empresa.razon_social}</option>
                   ))}
                 </select>
               </div>
 
+              {/* Proveedor */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Proveedor</label>
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                  Proveedor <span className="text-red-400">*</span>
+                </label>
                 <select
                   required
                   value={newOpForm.proveedor || ""}
                   onChange={(e) => setNewOpForm({ ...newOpForm, proveedor: Number(e.target.value) })}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                  className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-3 text-sm text-white focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
                 >
-                  <option value="" className="text-slate-800">Selecciona un proveedor</option>
+                  <option value="" className="bg-slate-800 text-slate-300">Selecciona un proveedor</option>
                   {proveedores.map((p) => (
-                    <option key={p.id} value={p.id} className="text-slate-800">{p.razon_social}</option>
+                    <option key={p.id} value={p.id} className="bg-slate-800 text-white">{p.razon_social}</option>
                   ))}
                 </select>
               </div>
 
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Tipo de operación</label>
-                <select
-                  required
-                  value={newOpForm.tipo_operacion || "COMPRA"}
-                  onChange={(e) => setNewOpForm({ ...newOpForm, tipo_operacion: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none"
-                >
-                  <option value="COMPRA" className="text-slate-800">Compra</option>
-                  <option value="SERVICIO" className="text-slate-800">Servicio</option>
-                  <option value="ARRENDAMIENTO" className="text-slate-800">Arrendamiento</option>
-                  <option value="OTRO" className="text-slate-800">Otro</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Contrato vinculado (Opcional)</label>
-                <select
-                  value={newOpForm.contrato || ""}
-                  onChange={(e) => setNewOpForm({ ...newOpForm, contrato: e.target.value ? Number(e.target.value) : null })}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none"
-                >
-                  <option value="" className="text-slate-800">Sin contrato - Solo CFDI</option>
-                  {contratos.map((c) => (
-                    <option key={c.id} value={c.id} className="text-slate-800">{c.nombre}</option>
-                  ))}
-                </select>
-              </div>
-
+              {/* Tipo + Contrato */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Fecha Operación</label>
+                  <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                    Tipo de operación <span className="text-red-400">*</span>
+                  </label>
+                  <select
+                    required
+                    value={newOpForm.tipo_operacion || "COMPRA"}
+                    onChange={(e) => setNewOpForm({ ...newOpForm, tipo_operacion: e.target.value })}
+                    className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-3 text-sm text-white focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
+                  >
+                    <option value="COMPRA" className="bg-slate-800">Compra</option>
+                    <option value="SERVICIO" className="bg-slate-800">Servicio</option>
+                    <option value="ARRENDAMIENTO" className="bg-slate-800">Arrendamiento</option>
+                    <option value="OTRO" className="bg-slate-800">Otro</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                    Contrato vinculado
+                  </label>
+                  <select
+                    value={newOpForm.contrato || ""}
+                    onChange={(e) => setNewOpForm({ ...newOpForm, contrato: e.target.value ? Number(e.target.value) : null })}
+                    className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-3 text-sm text-white focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
+                  >
+                    <option value="" className="bg-slate-800">Sin contrato</option>
+                    {contratos.map((c) => (
+                      <option key={c.id} value={c.id} className="bg-slate-800">{c.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Fecha + Monto */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                    Fecha operación <span className="text-red-400">*</span>
+                  </label>
                   <input
                     type="date"
                     required
                     value={newOpForm.fecha_operacion || ""}
                     onChange={(e) => setNewOpForm({ ...newOpForm, fecha_operacion: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                    className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-3 text-sm text-white focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
                     style={{ colorScheme: "dark" }}
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Monto sin IVA</label>
-                  <div className="relative mt-1">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">$</span>
+                  <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                    Monto sin IVA <span className="text-red-400">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-3 flex items-center text-slate-400 text-sm font-bold">$</span>
                     <input
                       type="number"
                       step="0.01"
@@ -866,49 +984,56 @@ export default function OperacionesPage() {
                       placeholder="0.00"
                       value={newOpForm.monto || ""}
                       onChange={(e) => setNewOpForm({ ...newOpForm, monto: e.target.value })}
-                      className="w-full rounded-xl border border-white/10 bg-white/5 pl-8 pr-3 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                      className="w-full rounded-xl border border-white/15 bg-slate-700/60 pl-7 pr-3 py-3 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
                     />
                   </div>
                 </div>
               </div>
 
+              {/* UUID CFDI */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Folio fiscal / UUID CFDI (Opcional)</label>
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                  Folio fiscal / UUID CFDI <span className="text-slate-500 font-normal">(Opcional)</span>
+                </label>
                 <input
                   type="text"
-                  placeholder="Ej. ABCD-1234-..."
+                  placeholder="ABCD-1234-EFGH-5678-..."
                   value={newOpForm.uuid_cfdi || ""}
                   onChange={(e) => setNewOpForm({ ...newOpForm, uuid_cfdi: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none font-mono text-xs"
+                  className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-3 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition font-mono"
                 />
               </div>
 
+              {/* Concepto */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Concepto de la operación</label>
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
+                  Concepto de la operación <span className="text-red-400">*</span>
+                </label>
                 <textarea
                   rows={2}
                   required
                   value={newOpForm.concepto || ""}
                   onChange={(e) => setNewOpForm({ ...newOpForm, concepto: e.target.value })}
-                  placeholder="Descripción de los servicios o bienes..."
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                  placeholder="Descripción de los servicios o bienes contratados…"
+                  className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-3 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition resize-none"
                 />
               </div>
 
-              <div className="pt-4 flex justify-end gap-3 border-t border-white/10 mt-6">
+              {/* Actions */}
+              <div className="flex justify-end gap-3 border-t border-white/10 pt-4 mt-2">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="rounded-xl px-5 py-2.5 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition"
+                  className="rounded-xl px-5 py-2.5 text-sm font-bold text-slate-400 hover:bg-white/8 hover:text-white transition"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={creatingOp}
-                  className="rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 disabled:opacity-50"
+                  className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 transition hover:from-emerald-400 hover:to-teal-400 disabled:opacity-50"
                 >
-                  {creatingOp ? "Guardando..." : "Crear Operación"}
+                  {creatingOp ? "Guardando…" : "Crear Operación"}
                 </button>
               </div>
             </form>
