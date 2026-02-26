@@ -100,18 +100,20 @@ function MaterialidadSemaforo({ op }: { op: Operacion }) {
 export default function OperacionesPage() {
   const { isAuthenticated } = useAuthContext();
   const [operaciones, setOperaciones] = useState<Operacion[]>([]);
+  const [empresas, setEmpresas] = useState<Array<{ id: number; razon_social: string }>>([]);
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [contratos, setContratos] = useState<{ id: number, nombre: string }[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [creatingOp, setCreatingOp] = useState(false);
   const [newOpForm, setNewOpForm] = useState<OperacionPayload>({
+    empresa: 0,
     proveedor: 0,
     contrato: null,
     uuid_cfdi: "",
     monto: "",
     moneda: "MXN",
     fecha_operacion: today(),
-    tipo_operacion: "GASTO",
+    tipo_operacion: "COMPRA",
     concepto: "",
   });
 
@@ -134,16 +136,25 @@ export default function OperacionesPage() {
   const loadInitialData = useCallback(async () => {
     setLoading(true);
     try {
-      const [ops, reqs, provsData, contsData] = await Promise.all([
+      const [ops, reqs, empresasData, provsData, contsData] = await Promise.all([
         fetchOperaciones(),
         fetchDeliverableRequirements(),
+        apiFetch<any>("/api/materialidad/empresas/"),
         apiFetch<any>("/api/materialidad/proveedores/"),
         apiFetch<any>("/api/materialidad/contratos/"),
       ]);
+      const empresasList = Array.isArray(empresasData) ? empresasData : empresasData?.results ?? [];
       setOperaciones(ops);
       setRequisitos(reqs);
+      setEmpresas(empresasList);
       setProveedores(Array.isArray(provsData) ? provsData : provsData?.results ?? []);
       setContratos(Array.isArray(contsData) ? contsData : contsData?.results ?? []);
+      if (empresasList[0]?.id) {
+        setNewOpForm((prev) => ({
+          ...prev,
+          empresa: prev.empresa || empresasList[0].id,
+        }));
+      }
       const primera = ops[0]?.id ?? null;
       setSelectedOperacionId(primera);
       if (primera) {
@@ -188,19 +199,30 @@ export default function OperacionesPage() {
 
   const handleCreateOperacion = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newOpForm.empresa) {
+      await alertError("Falta empresa", "Selecciona una empresa válida");
+      return;
+    }
     if (!newOpForm.proveedor) {
       await alertError("Falta proveedor", "Selecciona un proveedor válido");
       return;
     }
     setCreatingOp(true);
     try {
-      const op = await createOperacion(newOpForm);
+      const allowedTipos = new Set(["COMPRA", "SERVICIO", "ARRENDAMIENTO", "OTRO"]);
+      const tipoNormalizado = String(newOpForm.tipo_operacion ?? "COMPRA").replace(/^"+|"+$/g, "");
+      const payload: OperacionPayload = {
+        ...newOpForm,
+        tipo_operacion: allowedTipos.has(tipoNormalizado) ? tipoNormalizado : "COMPRA",
+      };
+      const op = await createOperacion(payload);
       await alertSuccess("Operación creada", "Se registró exitosamente");
       setOperaciones((prev) => [op, ...prev]);
       setSelectedOperacionId(op.id);
       setShowModal(false);
       setNewOpForm({
-        ...newOpForm,
+        ...payload,
+        empresa: payload.empresa,
         proveedor: 0,
         contrato: null,
         uuid_cfdi: "",
@@ -763,6 +785,21 @@ export default function OperacionesPage() {
             </div>
             <form onSubmit={(e) => void handleCreateOperacion(e)} className="space-y-4">
               <div>
+                <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Empresa</label>
+                <select
+                  required
+                  value={newOpForm.empresa || ""}
+                  onChange={(e) => setNewOpForm({ ...newOpForm, empresa: Number(e.target.value) })}
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                >
+                  <option value="" className="text-slate-800">Selecciona una empresa</option>
+                  {empresas.map((empresa) => (
+                    <option key={empresa.id} value={empresa.id} className="text-slate-800">{empresa.razon_social}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Proveedor</label>
                 <select
                   required
@@ -774,6 +811,21 @@ export default function OperacionesPage() {
                   {proveedores.map((p) => (
                     <option key={p.id} value={p.id} className="text-slate-800">{p.razon_social}</option>
                   ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Tipo de operación</label>
+                <select
+                  required
+                  value={newOpForm.tipo_operacion || "COMPRA"}
+                  onChange={(e) => setNewOpForm({ ...newOpForm, tipo_operacion: e.target.value })}
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                >
+                  <option value="COMPRA" className="text-slate-800">Compra</option>
+                  <option value="SERVICIO" className="text-slate-800">Servicio</option>
+                  <option value="ARRENDAMIENTO" className="text-slate-800">Arrendamiento</option>
+                  <option value="OTRO" className="text-slate-800">Otro</option>
                 </select>
               </div>
 
