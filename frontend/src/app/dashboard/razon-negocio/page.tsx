@@ -1,4 +1,5 @@
 "use client";
+import { PasteUrlField } from "../../../components/PasteUrlField";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -542,16 +543,11 @@ export default function RazonNegocioPage() {
                     <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Evidencia (URL)
                     </label>
-                    <input
+                    <PasteUrlField
                       value={form.evidencia_url}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          evidencia_url: e.target.value,
-                        }))
-                      }
-                      className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-400 placeholder-slate-400"
+                      onChange={(v) => setForm((prev) => ({ ...prev, evidencia_url: v }))}
                       placeholder="Carpeta de aprobaciones, correo o acta"
+                      className="mt-1 rounded-xl border border-slate-300 bg-white py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-400 placeholder-slate-400"
                     />
                   </div>
                 </div>

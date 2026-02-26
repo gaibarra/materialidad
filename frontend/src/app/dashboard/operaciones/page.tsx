@@ -24,6 +24,7 @@ import { apiFetch } from "../../../lib/api";
 import { type Proveedor } from "../../../lib/providers";
 import { DeliverableRequirement, fetchDeliverableRequirements } from "../../../lib/checklists";
 import { RequisitoCombobox } from "../../../components/RequisitoCombobox";
+import { PasteUrlField } from "../../../components/PasteUrlField";
 
 const ESTADO_STYLES: Record<OperacionEntregable["estado"], string> = {
   PENDIENTE: "bg-slate-700/80 text-slate-200 border border-slate-500/50",
@@ -702,16 +703,12 @@ export default function OperacionesPage() {
                       <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
                         URL de evidencia
                       </label>
-                      <input
-                        type="url"
+                      <PasteUrlField
                         value={form.oc_archivo_url ?? ""}
-                        onChange={(e) => handleFormChange("oc_archivo_url", e.target.value)}
-                        className="w-full rounded-xl border border-white/15 bg-slate-700/60 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
+                        onChange={(v) => handleFormChange("oc_archivo_url", v)}
                         placeholder="https://drive.google.com/…"
+                        className="rounded-xl border border-white/15 bg-slate-700/60 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
                       />
-                      <p className="mt-1 text-[11px] text-slate-500">
-                        Drive, SharePoint o cualquier URL pública accesible.
-                      </p>
                     </div>
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-1.5">
@@ -825,12 +822,11 @@ export default function OperacionesPage() {
                               <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-1">
                                 URL de evidencia
                               </label>
-                              <input
-                                type="url"
+                              <PasteUrlField
                                 value={evidencias[item.id] ?? ""}
-                                onChange={(e) => handleEvidenciaChange(item.id, e.target.value)}
-                                className="w-full rounded-lg border border-white/15 bg-slate-700/60 px-3 py-2 text-xs text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
+                                onChange={(v) => handleEvidenciaChange(item.id, v)}
                                 placeholder="https://drive.google.com/…"
+                                className="rounded-lg border border-white/15 bg-slate-700/60 py-2 text-xs text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
                               />
                               {item.oc_archivo_url && (
                                 <a

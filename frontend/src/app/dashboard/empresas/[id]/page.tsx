@@ -1,4 +1,5 @@
 "use client";
+import { PasteUrlField } from "../../../../components/PasteUrlField";
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -785,14 +786,15 @@ export default function EmpresaMaterialidadPage() {
               </div>
               <div>
                 <label className="text-sm font-medium text-ink-500">Expediente externo / URL</label>
-                <input
-                  type="url"
-                  name="expediente_externo"
+                <PasteUrlField
                   value={contratoForm.expediente_externo}
-                  onChange={handleContratoChange}
-                  required={selectedTemplate?.campos_configurables.includes("expediente_externo")}
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-jade-500 focus:outline-none"
-                  placeholder="https://drive..."
+                  onChange={(v) =>
+                    handleContratoChange({
+                      target: { name: "expediente_externo", value: v },
+                    } as React.ChangeEvent<HTMLInputElement>)
+                  }
+                  placeholder="https://drive.google.com/…"
+                  className="mt-1 rounded-lg border border-slate-200 py-2 text-sm focus:border-jade-500 focus:outline-none"
                 />
               </div>
               <div>

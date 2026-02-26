@@ -1,4 +1,5 @@
 "use client";
+import { PasteUrlField } from "../../../components/PasteUrlField";
 
 import { useCallback, useEffect, useReducer, useState } from "react";
 
@@ -635,11 +636,11 @@ export default function FirmaLogisticaPage() {
                   </div>
                   <div>
                     <label className="text-xs font-medium text-slate-500">URL de testimonio / archivo notariado</label>
-                    <input
-                      className={inputCls}
-                      placeholder="Link seguro al testimonio"
+                    <PasteUrlField
                       value={form.archivoNotariadoUrl}
-                      onChange={(e) => set("archivoNotariadoUrl", e.target.value)}
+                      onChange={(v) => set("archivoNotariadoUrl", v)}
+                      placeholder="Link seguro al testimonio"
+                      className="mt-1 rounded-xl border border-slate-200 bg-white py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-colors"
                     />
                   </div>
                 </div>

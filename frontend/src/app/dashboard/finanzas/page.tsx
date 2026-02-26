@@ -1,4 +1,5 @@
 "use client";
+import { PasteUrlField } from "../../../components/PasteUrlField";
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -323,7 +324,12 @@ export default function FinanzasPage() {
                 <div className="grid gap-2">
                   <input className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white" type="date" value={estadoForm.periodo_inicio} onChange={(e) => setEstadoForm((p) => ({ ...p, periodo_inicio: e.target.value }))} />
                   <input className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white" type="date" value={estadoForm.periodo_fin} onChange={(e) => setEstadoForm((p) => ({ ...p, periodo_fin: e.target.value }))} />
-                  <input className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white" placeholder="URL del estado (PDF)" value={estadoForm.archivo_url} onChange={(e) => setEstadoForm((p) => ({ ...p, archivo_url: e.target.value }))} />
+                  <PasteUrlField
+                    value={estadoForm.archivo_url}
+                    onChange={(v) => setEstadoForm((p) => ({ ...p, archivo_url: v }))}
+                    placeholder="URL del estado (PDF)"
+                    className="rounded-xl border border-white/10 bg-white/5 py-2 text-sm text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 focus:outline-none transition"
+                  />
                   <p className="text-[11px] text-slate-300">Próximamente: carga directa de PDF cuando el backend exponga upload.</p>
                   <div className="grid grid-cols-2 gap-2">
                     <input className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white" placeholder="Saldo inicial" value={estadoForm.saldo_inicial} onChange={(e) => setEstadoForm((p) => ({ ...p, saldo_inicial: e.target.value }))} />
