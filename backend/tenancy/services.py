@@ -20,6 +20,36 @@ class TenantProvisionError(Exception):
     pass
 
 
+def _seed_global_deliverables(tenant: Tenant) -> None:
+    """Copia las plantillas globales de entregables (tenant_slug='') a la DB del nuevo tenant."""
+    try:
+        from materialidad.models import DeliverableRequirement
+
+        if tenant.db_alias not in connections.databases:
+            connections.databases[tenant.db_alias] = tenant.database_dict()
+
+        plantillas = list(
+            DeliverableRequirement.objects.using(DEFAULT_DB_ALIAS)
+            .filter(tenant_slug="")
+            .values("tipo_gasto", "codigo", "titulo", "descripcion", "pillar", "requerido")
+        )
+        for p in plantillas:
+            DeliverableRequirement.objects.using(tenant.db_alias).update_or_create(
+                tenant_slug="",
+                tipo_gasto=p["tipo_gasto"],
+                codigo=p["codigo"],
+                defaults={
+                    "titulo": p["titulo"],
+                    "descripcion": p["descripcion"],
+                    "pillar": p["pillar"],
+                    "requerido": p["requerido"],
+                },
+            )
+        logger.info("Plantillas globales propagadas al tenant %s (%d)", tenant.slug, len(plantillas))
+    except Exception as exc:  # pragma: no cover - no bloquear el provisionamiento
+        logger.warning("No se pudieron propagar plantillas al tenant %s: %s", tenant.slug, exc)
+
+
 def record_provision_log(
     *,
     slug: str,
@@ -152,6 +182,7 @@ def provision_tenant(
 
         _migrate_tenant_db(tenant)
         _upsert_admin_user(tenant, admin_email.strip(), admin_password, admin_name or "")
+        _seed_global_deliverables(tenant)
     except TenantProvisionError as exc:
         record_provision_log(
             slug=slug,

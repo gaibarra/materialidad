@@ -747,8 +747,44 @@ def run():
             updated += 1
 
     total = created + updated
-    print(f"\n✅ Seed completado — {total} entregables procesados: {created} nuevos, {updated} actualizados.\n")
-    print("Distribución por tipo de contrato:")
+    print(f"\n✅ DB control — {total} entregables: {created} nuevos, {updated} actualizados.")
+
+    # ── Propagar plantillas globales a cada base de datos de tenant ──────────
+    try:
+        from tenancy.models import Tenant
+        from tenancy.context import TenantContext
+        from django.db import connections
+
+        plantillas = list(DeliverableRequirement.objects.using("default").filter(tenant_slug="").values(
+            "tipo_gasto", "codigo", "titulo", "descripcion", "pillar", "requerido"
+        ))
+
+        print(f"\n🔄 Propagando {len(plantillas)} plantillas a tenants activos...")
+        for tenant in Tenant.objects.filter(is_active=True):
+            if tenant.db_alias not in connections.databases:
+                connections.databases[tenant.db_alias] = tenant.database_dict()
+            alias = tenant.db_alias
+            t_created = 0
+            for p in plantillas:
+                _, was_new = DeliverableRequirement.objects.using(alias).update_or_create(
+                    tenant_slug="",
+                    tipo_gasto=p["tipo_gasto"],
+                    codigo=p["codigo"],
+                    defaults={
+                        "titulo": p["titulo"],
+                        "descripcion": p["descripcion"],
+                        "pillar": p["pillar"],
+                        "requerido": p["requerido"],
+                    },
+                )
+                if was_new:
+                    t_created += 1
+            total_now = DeliverableRequirement.objects.using(alias).filter(tenant_slug="").count()
+            print(f"  ✅ {tenant.slug:<20} ({alias}): {t_created} nuevos, total={total_now}")
+    except Exception as e:
+        print(f"\n  ⚠️  No se pudo propagar a tenants: {e}")
+
+    print(f"\nDistribución por tipo de contrato:")
     from collections import Counter
     counter = Counter(item["tipo_gasto"] for item in CATALOG)
     for tipo, count in sorted(counter.items()):
