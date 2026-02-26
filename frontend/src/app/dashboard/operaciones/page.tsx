@@ -419,7 +419,7 @@ export default function OperacionesPage() {
                         void handleSelectOperacion(op.id);
                       }}
                       className={`w-full rounded-2xl border px-4 py-3 text-left transition ${isActive
-                        ? "border-emerald-300/60 bg-emerald-500/10 text-white"
+                        ? "border-emerald-300/70 bg-emerald-500/20 text-white"
                         : cfdiSinContrato
                           ? "border-red-400/50 bg-red-500/10 text-white hover:border-red-300"
                           : "border-white/10 bg-white/5 text-slate-200 hover:border-emerald-300/40"
@@ -427,14 +427,14 @@ export default function OperacionesPage() {
                     >
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-semibold">{op.proveedor_nombre}</p>
-                        <span className="text-xs text-slate-300">{op.fecha_operacion}</span>
+                        <span className="text-xs text-slate-200">{op.fecha_operacion}</span>
                       </div>
                       {cfdiSinContrato && (
                         <div className="mt-1 rounded-lg bg-red-500/20 px-2 py-1 text-[11px] font-semibold text-red-300">
                           ⛔ CFDI sin materialidad — Riesgo Reforma 2026
                         </div>
                       )}
-                      <p className="text-xs text-slate-300">{op.contrato_nombre || <span className="text-red-400">Sin contrato</span>}</p>
+                      <p className="text-xs text-slate-200">{op.contrato_nombre || <span className="text-red-400">Sin contrato</span>}</p>
                       <p className="text-sm font-medium text-emerald-300">
                         {formatCurrency(op.monto, op.moneda)} · {op.tipo_operacion}
                       </p>
@@ -474,7 +474,7 @@ export default function OperacionesPage() {
           </div>
 
           <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20 [&_label]:!text-slate-100 [&_input]:!bg-slate-900/70 [&_input]:!text-slate-100 [&_input]:placeholder:!text-slate-300 [&_textarea]:!bg-slate-900/70 [&_textarea]:!text-slate-100 [&_textarea]:placeholder:!text-slate-300 [&_select]:!bg-slate-900/70 [&_select]:!text-slate-100">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Nuevo entregable</p>
@@ -504,7 +504,7 @@ export default function OperacionesPage() {
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <div className="space-y-3">
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">Requisito sugerido</label>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Requisito sugerido</label>
                     <select
                       value={form.requirement ?? ""}
                       onChange={(e) => handleRequirementChange(e.target.value)}
@@ -519,7 +519,7 @@ export default function OperacionesPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">Título</label>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Título</label>
                     <input
                       value={form.titulo}
                       onChange={(e) => handleFormChange("titulo", e.target.value)}
@@ -528,7 +528,7 @@ export default function OperacionesPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">Descripción</label>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Descripción</label>
                     <textarea
                       value={form.descripcion}
                       onChange={(e) => handleFormChange("descripcion", e.target.value)}
@@ -538,7 +538,7 @@ export default function OperacionesPage() {
                   </div>
                   <div className="grid gap-3 md:grid-cols-2">
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">Fecha compromiso</label>
+                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Fecha compromiso</label>
                       <input
                         type="date"
                         value={form.fecha_compromiso ?? ""}
@@ -547,7 +547,7 @@ export default function OperacionesPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">Requerido</label>
+                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Requerido</label>
                       <select
                         value={form.requerido ? "1" : "0"}
                         onChange={(e) => handleFormChange("requerido", e.target.value === "1")}
@@ -562,7 +562,7 @@ export default function OperacionesPage() {
                 <div className="space-y-3">
                   <div className="grid gap-3 md:grid-cols-2">
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">Código</label>
+                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Código</label>
                       <input
                         value={form.codigo ?? ""}
                         onChange={(e) => handleFormChange("codigo", e.target.value)}
@@ -570,7 +570,7 @@ export default function OperacionesPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">Tipo de gasto</label>
+                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Tipo de gasto</label>
                       <input
                         value={form.tipo_gasto ?? ""}
                         onChange={(e) => handleFormChange("tipo_gasto", e.target.value)}
@@ -581,7 +581,7 @@ export default function OperacionesPage() {
                   </div>
                   <div className="grid gap-3 md:grid-cols-2">
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">Orden de compra</label>
+                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Orden de compra</label>
                       <input
                         value={form.oc_numero ?? ""}
                         onChange={(e) => handleFormChange("oc_numero", e.target.value)}
@@ -590,7 +590,7 @@ export default function OperacionesPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">Fecha OC</label>
+                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Fecha OC</label>
                       <input
                         type="date"
                         value={form.oc_fecha ?? ""}
@@ -600,7 +600,7 @@ export default function OperacionesPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">URL de evidencia</label>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">URL de evidencia</label>
                     <input
                       type="url"
                       value={form.oc_archivo_url ?? ""}
@@ -611,7 +611,7 @@ export default function OperacionesPage() {
                     <p className="mt-1 text-xs text-slate-300">Enlaza carpeta o archivo que se usará para marcar como entregado/recibido.</p>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">Comentarios</label>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-100">Comentarios</label>
                     <textarea
                       value={form.comentarios ?? ""}
                       onChange={(e) => handleFormChange("comentarios", e.target.value)}
@@ -783,7 +783,7 @@ export default function OperacionesPage() {
                 &times;
               </button>
             </div>
-            <form onSubmit={(e) => void handleCreateOperacion(e)} className="space-y-4 [&_label]:!text-slate-100 [&_input]:!bg-slate-800 [&_input]:!text-slate-100 [&_input]:placeholder:!text-slate-300 [&_textarea]:!bg-slate-800 [&_textarea]:!text-slate-100 [&_textarea]:placeholder:!text-slate-300 [&_select]:!bg-slate-800 [&_select]:!text-slate-100">
+            <form onSubmit={(e) => void handleCreateOperacion(e)} className="space-y-4">
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Empresa</label>
                 <select
