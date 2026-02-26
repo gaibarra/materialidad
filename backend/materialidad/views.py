@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta
 import logging
 from decimal import Decimal
+from uuid import UUID
 from django.db import DatabaseError
 from django.db.models import Prefetch
+from django.db.models import Model
 
 from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpResponse
@@ -187,8 +189,25 @@ def _capture_ip(request):
     return meta.get("REMOTE_ADDR")
 
 
+def _to_json_safe(value):
+    if isinstance(value, dict):
+        return {str(key): _to_json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [_to_json_safe(item) for item in value]
+    if isinstance(value, Model):
+        return getattr(value, "pk", str(value))
+    if isinstance(value, (datetime, date, time)):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, UUID):
+        return str(value)
+    return value
+
+
 def _audit(request, action: str, obj, changes: dict | None = None):
     user = getattr(request, "user", None)
+    safe_changes = _to_json_safe(changes or {})
     AuditLog.objects.create(
         actor_id=getattr(user, "id", None),
         actor_email=getattr(user, "email", "") or "",
@@ -197,7 +216,7 @@ def _audit(request, action: str, obj, changes: dict | None = None):
         object_type=obj._meta.label_lower,
         object_id=str(getattr(obj, "pk", "")),
         object_repr=str(obj)[:255],
-        changes=changes or {},
+        changes=safe_changes,
         source_ip=_capture_ip(request),
     )
 

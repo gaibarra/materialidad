@@ -474,7 +474,7 @@ export default function OperacionesPage() {
           </div>
 
           <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20 [&_label]:!text-slate-100 [&_input]:!bg-slate-900/70 [&_input]:!text-slate-100 [&_input]:placeholder:!text-slate-300 [&_textarea]:!bg-slate-900/70 [&_textarea]:!text-slate-100 [&_textarea]:placeholder:!text-slate-300 [&_select]:!bg-slate-900/70 [&_select]:!text-slate-100">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Nuevo entregable</p>
@@ -783,7 +783,7 @@ export default function OperacionesPage() {
                 &times;
               </button>
             </div>
-            <form onSubmit={(e) => void handleCreateOperacion(e)} className="space-y-4">
+            <form onSubmit={(e) => void handleCreateOperacion(e)} className="space-y-4 [&_label]:!text-slate-100 [&_input]:!bg-slate-800 [&_input]:!text-slate-100 [&_input]:placeholder:!text-slate-300 [&_textarea]:!bg-slate-800 [&_textarea]:!text-slate-100 [&_textarea]:placeholder:!text-slate-300 [&_select]:!bg-slate-800 [&_select]:!text-slate-100">
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Empresa</label>
                 <select
