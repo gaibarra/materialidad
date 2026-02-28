@@ -8,6 +8,7 @@ from materialidad.models import (
     Empresa,
     Operacion,
     Contrato,
+    Proveedor,
     AlertaCSD,
     TipoAlertaCSD,
     EstatusAlertaCSD,
