@@ -11,6 +11,7 @@ import { PortfolioRiskTable } from "./tenant-variants/PortfolioRiskTable";
 import { OperativeWorkflows } from "./tenant-variants/OperativeWorkflows";
 import { apiFetch } from "../../../lib/api";
 import Cookies from "js-cookie";
+import { GuiaContador } from "../../../components/GuiaContador";
 
 interface AlertData {
     id: number;
@@ -96,6 +97,40 @@ export function ExecutiveOverview() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
+            {/* Guía del Contador */}
+            <div className="flex justify-start mb-6">
+                <GuiaContador
+                    section="Dashboard Ejecutivo"
+                    steps={[
+                        {
+                            title: "Revisa las Alertas Críticas",
+                            description: "Detecta de inmediato si algún proveedor tiene riesgo 69-B (EFOS) o si tu CSD está en peligro de cancelación."
+                        },
+                        {
+                            title: "Analiza el Valor Fiscal Protegido",
+                            description: "Mide el impacto económico de las operaciones que ya cuentan con un expediente de materialidad validado."
+                        },
+                        {
+                            title: "Coordina la Operación",
+                            description: "Utiliza las Herramientas Operativas para vigilar qué expedientes faltan o qué contratos están por vencer, y delega a tu equipo."
+                        }
+                    ]}
+                    concepts={[
+                        {
+                            term: "Riesgo CSD",
+                            definition: "El porcentaje de operaciones facturadas que provienen de proveedores con un estatus riesgoso ante el SAT."
+                        },
+                        {
+                            term: "Cobertura Contractual",
+                            definition: "El porcentaje de empresas en el grupo que cuentan con contratos vigentes cargados en la plataforma."
+                        }
+                    ]}
+                    tips={[
+                        "Mantén tu Cobertura de Materialidad por encima del 80% para asegurar el flujo de la organización en caso de auditoría.",
+                        "Revisa diariamente el panel de 'Atención Inmediata' para mitigar cualquier riesgo o controversia fiscal de raíz."
+                    ]}
+                />
+            </div>
 
             {/* Sección 1: Alertas Críticas (Atención Inmediata) */}
             <section className="flex flex-col gap-3">
