@@ -58,6 +58,7 @@ router.register(
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("dashboard/", include("materialidad.api.dashboard.urls")),
     path("dashboard/metricas/", DashboardMetricsView.as_view(), name="dashboard-metrics"),
     path(
         "dashboard/metricas/historico/",
