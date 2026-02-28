@@ -199,19 +199,20 @@ systemctl restart materialidad-backend
 ok "Gunicorn activo"
 
 # ══════════════════════════════════════════════════════════════════════
-# 10. FRONTEND VÍA SUPERVISOR
+# 10. FRONTEND VÍA SYSTEMD
 # ══════════════════════════════════════════════════════════════════════
-info "Instalando servicio frontend (Supervisor)..."
-cp "${APP_DIR}/deploy/supervisor/materialidad-frontend.conf" /etc/supervisor/conf.d/
-supervisorctl reread
-supervisorctl update
+info "Instalando servicio frontend (Systemd)..."
+supervisorctl stop materialidad-frontend 2>/dev/null || true
+cp "${APP_DIR}/deploy/systemd/materialidad-frontend.service" /etc/systemd/system/ 2>/dev/null || true
+systemctl daemon-reload
+systemctl enable materialidad-frontend
 
 # Asegurar que el puerto 3100 esté libre antes de reiniciar
-supervisorctl stop materialidad-frontend 2>/dev/null || true
+systemctl stop materialidad-frontend 2>/dev/null || true
 fuser -k 3100/tcp 2>/dev/null || true
 sleep 1
-supervisorctl start materialidad-frontend
-ok "Frontend activo bajo Supervisor"
+systemctl restart materialidad-frontend
+ok "Frontend activo bajo Systemd"
 
 # ══════════════════════════════════════════════════════════════════════
 # 11. NGINX
