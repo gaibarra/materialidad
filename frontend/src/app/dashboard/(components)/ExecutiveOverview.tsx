@@ -103,31 +103,44 @@ export function ExecutiveOverview() {
                     section="Dashboard Ejecutivo"
                     steps={[
                         {
-                            title: "Revisa las Alertas Críticas",
-                            description: "Detecta de inmediato si algún proveedor tiene riesgo 69-B (EFOS) o si tu CSD está en peligro de cancelación."
+                            title: "Monitoreo de Alertas Críticas",
+                            description: "Revisa inmediatamente la sección de <strong>Atención Inmediata</strong> al iniciar sesión. Las alertas de riesgo CSD propio o de proveedores definitivos 69-B requieren acción legal u operativa urgente para evitar el congelamiento de cuentas o el rechazo de deducciones."
                         },
                         {
-                            title: "Analiza el Valor Fiscal Protegido",
-                            description: "Mide el impacto económico de las operaciones que ya cuentan con un expediente de materialidad validado."
+                            title: "Análisis de Cobertura y Protección",
+                            description: "Analiza la correlación entre el <strong>Valor Fiscal Protegido</strong> y la <strong>Cobertura de Materialidad</strong>. Un alto valor protegido con baja cobertura indica que hay un gran volumen monetario expuesto ante auditorías del SAT por falta de expedientes completos."
                         },
                         {
-                            title: "Coordina la Operación",
-                            description: "Utiliza las Herramientas Operativas para vigilar qué expedientes faltan o qué contratos están por vencer, y delega a tu equipo."
+                            title: "Gestión de Riesgos de la Cartera",
+                            description: "Utiliza la tabla de riesgo por empresa temporal para priorizar las revisiones. Enfoca a tu equipo operativo en las entidades con mayor 'Risk Score' o con mayor rezago en la recolección de expedientes."
+                        },
+                        {
+                            title: "Vigilancia de Integridad Operativa",
+                            description: "Monitorea constantemente los expedientes pendientes, los proveedores sin validación y los contratos próximos a caducar para garantizar un cumplimiento fiscal preventivo y continuo."
                         }
                     ]}
                     concepts={[
                         {
                             term: "Riesgo CSD",
-                            definition: "El porcentaje de operaciones facturadas que provienen de proveedores con un estatus riesgoso ante el SAT."
+                            definition: "Indicador porcentual del monto facturado al grupo empresarial proveniente de proveedores con estatus de riesgo (Presunto, Definitivo o Desvirtuado) frente a las listas negras del artículo 69-B del CFF."
                         },
                         {
-                            term: "Cobertura Contractual",
-                            definition: "El porcentaje de empresas en el grupo que cuentan con contratos vigentes cargados en la plataforma."
+                            term: "Valor Fiscal Protegido",
+                            definition: "Monto total acumulado de las operaciones que cuentan con un Entregable de Materialidad validado al 100%, asegurando la deducibilidad del gasto y el acreditamiento del IVA."
+                        },
+                        {
+                            term: "Cobertura de Materialidad",
+                            definition: "Relación porcentual entre las operaciones blindadas con entregables y el total de operaciones registradas. La meta ideal para mitigar contingencias es superar el 85%."
+                        },
+                        {
+                            term: "Valoración de Intangibles",
+                            definition: "Sumatoria del beneficio económico esperado de los contratos clasificados como Activos Intangibles (ej. marcas, patentes, software), medular para revisiones de Precios de Transferencia y razón de negocios."
                         }
                     ]}
                     tips={[
-                        "Mantén tu Cobertura de Materialidad por encima del 80% para asegurar el flujo de la organización en caso de auditoría.",
-                        "Revisa diariamente el panel de 'Atención Inmediata' para mitigar cualquier riesgo o controversia fiscal de raíz."
+                        "Establece como política interna no realizar pagos a proveedores cuyo estatus ante el SAT no haya sido validado en los últimos 30 días.",
+                        "Prioriza la recolección de entregables de materialidad para las operaciones de mayor monto en el último trimestre previo al cierre del ejercicio fiscal.",
+                        "Utiliza el 'Risk Score' de la cartera para sustentar y programar auditorías internas preventivas en las subsidiarias con alta exposición de operaciones."
                     ]}
                 />
             </div>
