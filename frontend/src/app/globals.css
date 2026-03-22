@@ -1,0 +1,202 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #172033;
+  background: #f4f2ed;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --fiscal-canvas: #f4f2ed;
+  --fiscal-panel: #fbfaf7;
+  --fiscal-panel-strong: rgba(251, 250, 247, 0.96);
+  --fiscal-shell: #0d6d66;
+  --fiscal-shell-soft: #119688;
+  --fiscal-line: #d8d3c8;
+  --fiscal-line-strong: #c8c0b1;
+  --fiscal-ink: #172033;
+  --fiscal-muted: #5b6678;
+  --fiscal-accent: #0f7f73;
+  --fiscal-accent-soft: #d8f1ed;
+  --fiscal-gold: #8ee7da;
+  --fiscal-gold-strong: #56cdbd;
+  --fiscal-success: #1f7a5a;
+  --fiscal-success-soft: #ddf1e8;
+  --fiscal-warning: #a6671f;
+  --fiscal-warning-soft: #f7e7d3;
+  --fiscal-danger: #a0433d;
+  --fiscal-danger-soft: #f7ddda;
+}
+
+html {
+  min-height: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  background: var(--fiscal-canvas);
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100svh;
+  min-height: 100dvh;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(120, 229, 210, 0.16), transparent 30%),
+    radial-gradient(circle at 88% 0%, rgba(17, 150, 136, 0.16), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(244, 242, 237, 0.92)),
+    var(--fiscal-canvas);
+  color: var(--fiscal-ink);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "ss01" on, "ss02" on;
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+body > div:first-child {
+  min-height: calc(100dvh - var(--safe-top) - var(--safe-bottom));
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(a[href], button, input, select, textarea, [role="button"], [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(244, 242, 237, 0.96), 0 0 0 6px rgba(15, 127, 115, 0.34);
+}
+
+:where(button, input, select, textarea, [role="button"]):disabled,
+:where(button, input, select, textarea, [role="button"])[aria-disabled="true"] {
+  cursor: not-allowed;
+  filter: saturate(0.82);
+}
+
+:where(button, [role="button"])[aria-busy="true"] {
+  cursor: progress;
+}
+
+img,
+svg,
+canvas,
+video,
+iframe {
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.03em;
+}
+
+::selection {
+  background: rgba(15, 127, 115, 0.18);
+  color: var(--fiscal-ink);
+}
+
+@layer components {
+  .surface-panel {
+    background: var(--fiscal-panel-strong);
+    border: 1px solid rgba(200, 192, 177, 0.7);
+    box-shadow: 0 12px 35px rgba(15, 23, 36, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  }
+
+  .surface-panel-strong {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(251, 250, 247, 0.92));
+    border: 1px solid rgba(200, 192, 177, 0.85);
+    box-shadow: 0 18px 45px rgba(15, 23, 36, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  }
+
+  .surface-shell {
+    background:
+        radial-gradient(circle at top right, rgba(199, 255, 247, 0.2), transparent 26%),
+        radial-gradient(circle at 18% 12%, rgba(142, 231, 218, 0.16), transparent 24%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+        linear-gradient(160deg, #16a898, var(--fiscal-shell-soft) 28%, var(--fiscal-shell) 66%, #084f4b);
+      border-color: rgba(143, 240, 224, 0.2);
+  }
+
+  .kicker-label {
+    color: var(--fiscal-accent);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .eyebrow-shell {
+    color: rgba(224, 255, 250, 0.84);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .heading-editorial {
+    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.04em;
+    line-height: 0.98;
+  }
+
+  .button-institutional {
+    background: linear-gradient(135deg, #13a392, var(--fiscal-accent), #0d6d66);
+    color: white;
+    box-shadow: 0 16px 32px rgba(15, 127, 115, 0.28);
+  }
+
+  .button-institutional:hover {
+    background: linear-gradient(135deg, #18b5a2, #0f7f73, #0b6058);
+  }
+
+  .button-institutional:focus-visible {
+    box-shadow: 0 0 0 3px rgba(244, 242, 237, 0.96), 0 0 0 6px rgba(15, 127, 115, 0.34), 0 16px 32px rgba(15, 127, 115, 0.24);
+  }
+}
+
+@layer utilities {
+  .mobile-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(15, 127, 115, 0.26) transparent;
+  }
+
+  .mobile-scrollbar::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+
+  .mobile-scrollbar::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(15, 127, 115, 0.26);
+  }
+}
+
+/* Prevent iOS zoom on input focus */
+@supports (-webkit-touch-callout: none) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  input[type="date"],
+  input[type="datetime-local"],
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

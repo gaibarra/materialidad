@@ -1,0 +1,78 @@
+# Environments
+.env
+*.env
+.env.local
+env/
+venv/
+.venv/
+venv_sat/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.python-version
+*.sqlite3
+*.db
+*.log
+instance/
+*.egg-info/
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.hypothesis/
+.tox/
+.nox/
+.ipynb_checkpoints/
+
+# Django
+/staticfiles/
+backend/staticfiles/
+media/
+*.pot
+
+# Node / Next.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+yarn.lock
+pnpm-lock.yaml
+.next/
+.turbo/
+*.tsbuildinfo
+out/
+coverage/
+.eslintcache
+stylelintcache
+
+# VS Code / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker / misc
+docker-data/
+*.pid
+logs/
+.deploy-local-*/
+
+# venv_sat urllib3 internals (evitar versionar archivos del entorno)
+venv_sat/lib/python3.12/site-packages/urllib3/http2/connection.py
+venv_sat/lib/python3.12/site-packages/urllib3/http2/probe.py
+venv_sat/lib/python3.12/site-packages/urllib3/http2/__pycache__/
+venv_sat/lib/python3.12/site-packages/urllib3/util/
+venv_sat/lib/python3.12/site-packages/urllib3/util/__init__.py
+venv_sat/lib/python3.12/site-packages/urllib3/util/connection.py
+venv_sat/lib/python3.12/site-packages/urllib3/util/proxy.py
+venv_sat/lib/python3.12/site-packages/urllib3/util/request.py

@@ -1,0 +1,70 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="56" y1="56" x2="1544" y2="844" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FCFBF8"/>
+      <stop offset="1" stop-color="#F1EEE7"/>
+    </linearGradient>
+    <linearGradient id="shell" x1="758" y1="118" x2="1492" y2="436" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#19263F"/>
+      <stop offset="1" stop-color="#10192C"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="1700" height="1000" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#172033" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="900" rx="36" fill="#F4F2ED"/>
+  <rect x="56" y="56" width="1488" height="788" rx="32" fill="url(#bg)" stroke="#D8D3C8" stroke-width="2"/>
+
+  <g filter="url(#shadow)" font-family="Arial, sans-serif">
+    <rect x="112" y="120" width="586" height="658" rx="30" fill="#FFFFFF" stroke="#D8D3C8" stroke-width="2"/>
+    <text x="156" y="168" fill="#2D5B88" font-size="17" font-weight="700">Expediente listo para auditoría</text>
+    <text x="156" y="214" fill="#172033" font-size="34" font-weight="800">
+      <tspan x="156" dy="0">Cadena documental</tspan>
+      <tspan x="156" dy="40">verificable</tspan>
+    </text>
+
+    <rect x="156" y="324" width="486" height="72" rx="22" fill="#DDE6F0"/>
+    <text x="188" y="368" fill="#172033" font-size="22" font-weight="700">Contrato y versión definitiva</text>
+    <rect x="156" y="422" width="486" height="72" rx="22" fill="#DDEFE8"/>
+    <text x="188" y="466" fill="#172033" font-size="22" font-weight="700">CFDI, SPEI y validaciones</text>
+    <rect x="156" y="520" width="486" height="72" rx="22" fill="#E8D8C4"/>
+    <text x="188" y="564" fill="#172033" font-size="22" font-weight="700">Entregables y evidencia</text>
+    <rect x="156" y="618" width="486" height="72" rx="22" fill="#F0D8D4"/>
+    <text x="188" y="662" fill="#172033" font-size="22" font-weight="700">Hallazgos, alertas y respuestas</text>
+
+    <path d="M660 360C704 360 704 458 660 458" stroke="#B88946" stroke-width="9" stroke-linecap="round"/>
+    <path d="M660 458C704 458 704 556 660 556" stroke="#B88946" stroke-width="9" stroke-linecap="round"/>
+    <path d="M660 556C704 556 704 654 660 654" stroke="#B88946" stroke-width="9" stroke-linecap="round"/>
+  </g>
+
+  <g filter="url(#shadow)" font-family="Arial, sans-serif">
+    <rect x="756" y="120" width="736" height="296" rx="30" fill="url(#shell)"/>
+    <text x="804" y="168" fill="#DCE5F2" font-size="17" font-weight="700">Comité · Auditoría · Fiscal</text>
+    <text x="804" y="224" fill="#FFFFFF" font-size="44" font-weight="800">
+      <tspan x="804" dy="0">Una lectura clara para</tspan>
+      <tspan x="804" dy="50">varias revisiones</tspan>
+    </text>
+    <rect x="804" y="326" width="194" height="14" rx="7" fill="#DDEFE8"/>
+    <rect x="804" y="354" width="304" height="14" rx="7" fill="#DBE6F0"/>
+  </g>
+
+  <g filter="url(#shadow)" font-family="Arial, sans-serif">
+    <rect x="756" y="456" width="736" height="322" rx="30" fill="#FFFFFF" stroke="#D8D3C8" stroke-width="2"/>
+    <text x="804" y="504" fill="#A0433D" font-size="17" font-weight="700">Resultado</text>
+    <text x="804" y="558" fill="#172033" font-size="31" font-weight="800">
+      <tspan x="804" dy="0">Defensa fiscal y auditoría</tspan>
+      <tspan x="804" dy="40">con narrativa sustentada</tspan>
+    </text>
+    <text x="804" y="632" fill="#5B6678" font-size="17">La misma base documental acompaña la lectura, la evidencia y la revisión.</text>
+
+    <circle cx="836" cy="706" r="14" fill="#1F7A5A"/>
+    <text x="868" y="714" fill="#172033" font-size="21" font-weight="700">Trazabilidad por operación</text>
+    <circle cx="836" cy="752" r="14" fill="#2D5B88"/>
+    <text x="868" y="760" fill="#172033" font-size="21" font-weight="700">Narrativa ejecutiva sustentada</text>
+    <circle cx="1188" cy="706" r="14" fill="#B88946"/>
+    <text x="1220" y="700" fill="#172033" font-size="21" font-weight="700">
+      <tspan x="1220" dy="0">Exportables y evidencia</tspan>
+      <tspan x="1220" dy="24">lista para revisión</tspan>
+    </text>
+  </g>
+</svg>

@@ -1,0 +1,103 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="60" y1="60" x2="1540" y2="840" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FCFBF8"/>
+      <stop offset="1" stop-color="#F1EEE7"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="984" y1="120" x2="1494" y2="768" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1A2740"/>
+      <stop offset="1" stop-color="#10192C"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="1700" height="1000" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#172033" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="900" rx="36" fill="#F4F2ED"/>
+  <rect x="54" y="54" width="1492" height="792" rx="32" fill="url(#bg)" stroke="#D8D3C8" stroke-width="2"/>
+
+  <g filter="url(#shadow)" font-family="Arial, sans-serif">
+    <rect x="96" y="110" width="258" height="680" rx="30" fill="#172033"/>
+    <text x="136" y="164" fill="#D7E2F1" font-size="18" font-weight="700">Flujo coordinado</text>
+    <text x="136" y="206" fill="#FFFFFF" font-size="30" font-weight="800">Visión integral</text>
+    <text x="136" y="238" fill="#B7C4D7" font-size="15">Operación, evidencia y revisión.</text>
+
+    <rect x="128" y="292" width="194" height="54" rx="18" fill="#254A71"/>
+    <text x="158" y="326" fill="#FFFFFF" font-size="18" font-weight="700">Proveedores</text>
+    <rect x="128" y="366" width="194" height="54" rx="18" fill="#213B59"/>
+    <text x="158" y="400" fill="#FFFFFF" font-size="18" font-weight="700">Contratos</text>
+    <rect x="128" y="440" width="194" height="54" rx="18" fill="#213B59"/>
+    <text x="158" y="474" fill="#FFFFFF" font-size="18" font-weight="700">Operaciones</text>
+    <rect x="128" y="514" width="194" height="54" rx="18" fill="#213B59"/>
+    <text x="158" y="548" fill="#FFFFFF" font-size="18" font-weight="700">Expedientes</text>
+    <rect x="128" y="588" width="194" height="54" rx="18" fill="#213B59"/>
+    <text x="158" y="622" fill="#FFFFFF" font-size="18" font-weight="700">Alertas</text>
+    <rect x="128" y="662" width="194" height="54" rx="18" fill="#213B59"/>
+    <text x="158" y="696" fill="#FFFFFF" font-size="18" font-weight="700">Consultas</text>
+  </g>
+
+  <g filter="url(#shadow)" font-family="Arial, sans-serif">
+    <rect x="418" y="124" width="506" height="166" rx="30" fill="#FFFFFF" stroke="#DDD7CA" stroke-width="2"/>
+    <text x="460" y="168" fill="#2D5B88" font-size="17" font-weight="700">01 · Alta y evaluación</text>
+    <text x="460" y="220" fill="#172033" font-size="28" font-weight="800">Proveedor con contexto claro</text>
+    <rect x="460" y="242" width="118" height="32" rx="16" fill="#EEF3F8"/>
+    <text x="492" y="263" fill="#2D5B88" font-size="14" font-weight="700">RFC</text>
+    <rect x="592" y="242" width="118" height="32" rx="16" fill="#EEF5EF"/>
+    <text x="620" y="263" fill="#1F7A5A" font-size="14" font-weight="700">Capacidad</text>
+    <rect x="724" y="242" width="132" height="32" rx="16" fill="#F5ECE1"/>
+    <text x="754" y="263" fill="#B88946" font-size="14" font-weight="700">Señales clave</text>
+    <circle cx="850" cy="196" r="28" fill="#DDEFE8"/>
+    <path d="M840 196L848 204L862 188" stroke="#1F7A5A" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <g filter="url(#shadow)" font-family="Arial, sans-serif">
+    <rect x="418" y="366" width="506" height="166" rx="30" fill="#FFFFFF" stroke="#DDD7CA" stroke-width="2"/>
+    <text x="460" y="410" fill="#B88946" font-size="17" font-weight="700">02 · Ejecución con soporte</text>
+    <text x="460" y="462" fill="#172033" font-size="28" font-weight="800">Contrato, CFDI y evidencia</text>
+    <rect x="460" y="484" width="118" height="32" rx="16" fill="#EEF3F8"/>
+    <text x="488" y="505" fill="#2D5B88" font-size="14" font-weight="700">Contrato</text>
+    <rect x="592" y="484" width="118" height="32" rx="16" fill="#EEF5EF"/>
+    <text x="628" y="505" fill="#1F7A5A" font-size="14" font-weight="700">CFDI</text>
+    <rect x="724" y="484" width="132" height="32" rx="16" fill="#F5ECE1"/>
+    <text x="756" y="505" fill="#B88946" font-size="14" font-weight="700">Entregables</text>
+    <rect x="780" y="392" width="112" height="80" rx="22" fill="#DBE6F0"/>
+    <rect x="804" y="376" width="88" height="68" rx="20" fill="#E8D7C0"/>
+  </g>
+
+  <g filter="url(#shadow)" font-family="Arial, sans-serif">
+    <rect x="418" y="608" width="506" height="166" rx="30" fill="#FFFFFF" stroke="#DDD7CA" stroke-width="2"/>
+    <text x="460" y="652" fill="#A0433D" font-size="17" font-weight="700">03 · Lectura ejecutiva</text>
+    <text x="460" y="704" fill="#172033" font-size="28" font-weight="800">Alertas, consultas y FDI</text>
+    <rect x="460" y="726" width="118" height="32" rx="16" fill="#F3E6E3"/>
+    <text x="490" y="747" fill="#A0433D" font-size="14" font-weight="700">Alertas</text>
+    <rect x="592" y="726" width="118" height="32" rx="16" fill="#EEF3F8"/>
+    <text x="618" y="747" fill="#2D5B88" font-size="14" font-weight="700">Consultas</text>
+    <rect x="724" y="726" width="118" height="32" rx="16" fill="#EEF5EF"/>
+    <text x="768" y="747" fill="#1F7A5A" font-size="14" font-weight="700">FDI</text>
+    <path d="M792 712C820 668 844 642 878 618" stroke="#A0433D" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="890" cy="610" r="18" fill="#A0433D"/>
+  </g>
+
+  <g filter="url(#shadow)" font-family="Arial, sans-serif">
+    <rect x="976" y="124" width="520" height="650" rx="30" fill="url(#panel)"/>
+    <text x="1018" y="170" fill="#DDE6F0" font-size="17" font-weight="700">Lectura directiva</text>
+    <text x="1018" y="236" fill="#FFFFFF" font-size="62" font-weight="800">87.0</text>
+    <text x="1188" y="236" fill="#DDE6F0" font-size="21">FDI</text>
+    <rect x="1018" y="268" width="438" height="16" rx="8" fill="#314154"/>
+    <rect x="1018" y="268" width="344" height="16" rx="8" fill="#1F7A5A"/>
+    <rect x="1018" y="334" width="192" height="106" rx="22" fill="#22364F"/>
+    <text x="1050" y="376" fill="#D0E0F3" font-size="16" font-weight="700">Expedientes listos</text>
+    <text x="1050" y="418" fill="#FFFFFF" font-size="40" font-weight="800">48</text>
+    <rect x="1264" y="334" width="192" height="106" rx="22" fill="#2B3140"/>
+    <text x="1296" y="376" fill="#F0DCCB" font-size="16" font-weight="700">Alertas activas</text>
+    <text x="1296" y="418" fill="#FFFFFF" font-size="40" font-weight="800">3</text>
+    <rect x="1018" y="488" width="438" height="218" rx="24" fill="#FBFAF7"/>
+    <text x="1056" y="532" fill="#2D5B88" font-size="16" font-weight="700">Valor para auditoría</text>
+    <text x="1056" y="578" fill="#172033" font-size="26" font-weight="800">
+      <tspan x="1056" dy="0">Auditoría interna y externa</tspan>
+      <tspan x="1056" dy="32">con trazabilidad clara</tspan>
+    </text>
+    <rect x="1056" y="636" width="160" height="14" rx="7" fill="#DBE6F0"/>
+    <rect x="1056" y="664" width="278" height="14" rx="7" fill="#F0D6D3"/>
+    <rect x="1056" y="692" width="204" height="14" rx="7" fill="#DDEFE8"/>
+  </g>
+</svg>

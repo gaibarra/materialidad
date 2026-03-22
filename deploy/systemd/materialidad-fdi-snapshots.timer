@@ -1,0 +1,11 @@
+[Unit]
+Description=Timer para captura periodica de snapshots FDI
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=10m
+Unit=materialidad-fdi-snapshots.service
+
+[Install]
+WantedBy=timers.target

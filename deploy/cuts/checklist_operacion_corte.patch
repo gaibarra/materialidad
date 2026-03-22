@@ -1,0 +1,1816 @@
+diff --git a/backend/materialidad/models.py b/backend/materialidad/models.py
+index f3f38be..7bfde97 100644
+--- a/backend/materialidad/models.py
++++ b/backend/materialidad/models.py
+@@ -1132,6 +1132,79 @@ class ChecklistItem(models.Model):
+         return f"{self.titulo} - {self.pillar}"
+ 
+ 
++class OperacionChecklist(models.Model):
++    class Origen(models.TextChoices):
++        AUTO = "AUTO", "Automático"
++        MANUAL = "MANUAL", "Manual"
++
++    operacion = models.ForeignKey(Operacion, on_delete=models.CASCADE, related_name="checklists_operativos")
++    checklist = models.ForeignKey(
++        Checklist,
++        on_delete=models.SET_NULL,
++        related_name="operaciones_asignadas",
++        null=True,
++        blank=True,
++    )
++    nombre = models.CharField(max_length=255)
++    tipo_gasto = models.CharField(max_length=128, blank=True, default="")
++    origen = models.CharField(max_length=16, choices=Origen.choices, default=Origen.AUTO)
++    estado_general = models.CharField(
++        max_length=16,
++        choices=ChecklistItem.Estado.choices,
++        default=ChecklistItem.Estado.PENDIENTE,
++    )
++    progreso_porcentaje = models.PositiveSmallIntegerField(default=0)
++    created_at = models.DateTimeField(auto_now_add=True)
++    updated_at = models.DateTimeField(auto_now=True)
++
++    class Meta:
++        db_table = "materialidad_operacion_checklist"
++        ordering = ("created_at",)
++        constraints = [
++            models.UniqueConstraint(fields=["operacion", "checklist"], name="op_checklist_unique_idx"),
++        ]
++        indexes = [
++            models.Index(fields=["operacion", "estado_general"], name="op_check_estado_idx"),
++        ]
++
++    def __str__(self) -> str:  # pragma: no cover - presentación
++        return f"Checklist operativo {self.operacion_id} · {self.nombre}"
++
++
++class OperacionChecklistItem(models.Model):
++    operacion_checklist = models.ForeignKey(
++        OperacionChecklist,
++        on_delete=models.CASCADE,
++        related_name="items",
++    )
++    checklist_item = models.ForeignKey(
++        ChecklistItem,
++        on_delete=models.SET_NULL,
++        related_name="operaciones_items",
++        null=True,
++        blank=True,
++    )
++    pillar = models.CharField(max_length=32, choices=CompliancePillar.choices)
++    titulo = models.CharField(max_length=255)
++    descripcion = models.TextField(blank=True, default="")
++    requerido = models.BooleanField(default=True)
++    responsable = models.CharField(max_length=255, blank=True, default="")
++    estado = models.CharField(max_length=16, choices=ChecklistItem.Estado.choices, default=ChecklistItem.Estado.PENDIENTE)
++    created_at = models.DateTimeField(auto_now_add=True)
++    updated_at = models.DateTimeField(auto_now=True)
++
++    class Meta:
++        db_table = "materialidad_operacion_checklist_item"
++        ordering = ("created_at",)
++        indexes = [
++            models.Index(fields=["operacion_checklist", "estado"], name="op_check_item_estado_idx"),
++            models.Index(fields=["pillar", "estado"], name="op_check_pillar_estado_idx"),
++        ]
++
++    def __str__(self) -> str:  # pragma: no cover - presentación
++        return f"{self.titulo} · {self.operacion_checklist_id}"
++
++
+ class DeliverableRequirement(models.Model):
+     tenant_slug = models.SlugField(max_length=255, db_index=True)
+     tipo_gasto = models.CharField(max_length=128)
+diff --git a/backend/materialidad/tests/test_operacion_bandeja_revision.py b/backend/materialidad/tests/test_operacion_bandeja_revision.py
+index 19ed11c..75cbdd7 100644
+--- a/backend/materialidad/tests/test_operacion_bandeja_revision.py
++++ b/backend/materialidad/tests/test_operacion_bandeja_revision.py
+@@ -94,6 +94,7 @@ class OperacionBandejaRevisionTests(TestCase):
+         self.assertGreaterEqual(len(row["faltantes"]), 1)
+         self.assertIn("alertas_activas", row)
+         self.assertEqual(len(row["alertas_activas"]), 1)
++        self.assertIn("checklists_resumen", row)
+ 
+     def test_bandeja_filtra_por_estatus_y_rfc(self):
+         operacion_match = self._crear_operacion(estatus_validacion=Operacion.EstatusValidacion.EN_PROCESO)
+diff --git a/backend/materialidad/tests/test_operacion_matriz_materialidad.py b/backend/materialidad/tests/test_operacion_matriz_materialidad.py
+index 532fc85..b27db13 100644
+--- a/backend/materialidad/tests/test_operacion_matriz_materialidad.py
++++ b/backend/materialidad/tests/test_operacion_matriz_materialidad.py
+@@ -7,7 +7,17 @@ from django.test import TestCase, override_settings
+ from rest_framework.test import APIClient
+ 
+ from accounts.models import User
+-from materialidad.models import Contrato, Empresa, EvidenciaMaterial, Operacion, Proveedor
++from materialidad.checklist_templates import assign_default_checklists_to_operacion
++from materialidad.models import (
++    Checklist,
++    ChecklistItem,
++    CompliancePillar,
++    Contrato,
++    Empresa,
++    EvidenciaMaterial,
++    Operacion,
++    Proveedor,
++)
+ 
+ 
+ @override_settings(TENANT_REQUIRED_PATH_PREFIXES=[])
+@@ -39,6 +49,26 @@ class OperacionMatrizMaterialidadTests(TestCase):
+             proceso=Contrato.ProcesoNegocio.OPERACIONES,
+             tipo_empresa=Contrato.TipoEmpresa.SERVICIOS,
+         )
++        checklist = Checklist.objects.create(
++            tenant_slug="",
++            nombre="Base · Servicios profesionales",
++            tipo_gasto="Servicios profesionales",
++            vigente=True,
++        )
++        ChecklistItem.objects.create(
++            checklist=checklist,
++            pillar=CompliancePillar.RAZON_NEGOCIO,
++            titulo="Narrativa de razón de negocio",
++            requerido=True,
++            responsable="Fiscal",
++        )
++        ChecklistItem.objects.create(
++            checklist=checklist,
++            pillar=CompliancePillar.ENTREGABLES,
++            titulo="Entregables fechados",
++            requerido=True,
++            responsable="Operaciones",
++        )
+ 
+     def _crear_operacion(self, **kwargs) -> Operacion:
+         defaults = {
+@@ -157,3 +187,33 @@ class OperacionMatrizMaterialidadTests(TestCase):
+         )
+         self.assertEqual(response_bad.status_code, 400)
+         self.assertIn("ordenes_validos", response_bad.data)
++
++    def test_matriz_refleja_checklist_operativo_en_completitud(self):
++        operacion = self._crear_operacion(
++            contrato=self.contrato,
++            uuid_cfdi="d12504e0-4f89-41d3-9a0c-0305e82c3311",
++            referencia_spei="SPEI-MAT-003",
++        )
++        EvidenciaMaterial.objects.create(
++            operacion=operacion,
++            tipo=EvidenciaMaterial.Tipo.ENTREGABLE,
++            archivo=SimpleUploadedFile("entregable-matriz-checklist.txt", b"entregable"),
++            descripcion="Entregable",
++        )
++        EvidenciaMaterial.objects.create(
++            operacion=operacion,
++            tipo=EvidenciaMaterial.Tipo.BITACORA,
++            archivo=SimpleUploadedFile("bitacora-matriz-checklist.txt", b"bitacora"),
++            descripcion="Bitacora",
++        )
++        assign_default_checklists_to_operacion(operacion=operacion, tenant_slug="")
++
++        response = self.client.get("/api/materialidad/operaciones/matriz-materialidad/")
++        self.assertEqual(response.status_code, 200)
++        rows = self._get_results(response)
++        row = next(item for item in rows if item["id"] == operacion.id)
++
++        self.assertEqual(row["estado_completitud"], "INCOMPLETO")
++        self.assertTrue(any("Checklist operativo incompleto" in item for item in row["faltantes"]))
++        self.assertEqual(len(row["checklists_resumen"]), 1)
++        self.assertEqual(row["checklists_resumen"][0]["requeridos_pendientes"], 2)
+diff --git a/backend/materialidad/urls.py b/backend/materialidad/urls.py
+index 119a160..e295d44 100644
+--- a/backend/materialidad/urls.py
++++ b/backend/materialidad/urls.py
+@@ -6,6 +6,7 @@ from rest_framework.routers import DefaultRouter
+ from .views import (
+     ChecklistItemViewSet,
+     ChecklistViewSet,
++    OperacionChecklistItemViewSet,
+     AuditMaterialityDossierViewSet,
+     ClauseTemplateViewSet,
+     ContratoTemplateViewSet,
+@@ -58,6 +59,7 @@ router.register("corpus-legales", LegalCorpusUploadViewSet, basename="legal-corp
+ router.register("consultas-legales", LegalConsultationViewSet, basename="legal-consultation")
+ router.register("checklists", ChecklistViewSet, basename="checklist")
+ router.register("checklist-items", ChecklistItemViewSet, basename="checklist-item")
++router.register("operacion-checklist-items", OperacionChecklistItemViewSet, basename="operacion-checklist-item")
+ router.register("entregables", DeliverableRequirementViewSet, basename="entregable")
+ router.register("operacion-entregables", OperacionEntregableViewSet, basename="operacion-entregable")
+ router.register("cotizaciones-pdf", CotizacionPDFViewSet, basename="cotizacion-pdf")
+diff --git a/backend/tenancy/management/commands/create_tenant.py b/backend/tenancy/management/commands/create_tenant.py
+index f51c3e7..0e4d36e 100644
+--- a/backend/tenancy/management/commands/create_tenant.py
++++ b/backend/tenancy/management/commands/create_tenant.py
+@@ -3,6 +3,7 @@ from __future__ import annotations
+ from django.core.management.base import BaseCommand, CommandError
+ from django.db import DEFAULT_DB_ALIAS, connections
+ 
++from materialidad.checklist_templates import seed_default_checklists_for_tenant
+ from tenancy.models import Tenant
+ 
+ 
+@@ -51,6 +52,8 @@ class Command(BaseCommand):
+         if create_db:
+             self._ensure_database_exists(db_name, db_user)
+ 
++        seed_default_checklists_for_tenant(tenant_slug=tenant.slug)
++
+         self.stdout.write(self.style.SUCCESS(f"Tenant {tenant.slug} creado"))
+ 
+     def _ensure_database_exists(self, db_name: str, owner: str) -> None:
+diff --git a/backend/tenancy/services.py b/backend/tenancy/services.py
+index 3d0363d..c3a5cf7 100644
+--- a/backend/tenancy/services.py
++++ b/backend/tenancy/services.py
+@@ -9,6 +9,7 @@ from django.db import DEFAULT_DB_ALIAS, connections, transaction
+ from django.db.utils import ProgrammingError
+ 
+ from accounts.models import User
++from materialidad.checklist_templates import seed_default_checklists_for_tenant
+ 
+ from .context import TenantContext
+ from .models import Despacho, Tenant, TenantProvisionLog
+@@ -50,6 +51,11 @@ def _seed_global_deliverables(tenant: Tenant) -> None:
+         logger.warning("No se pudieron propagar plantillas al tenant %s: %s", tenant.slug, exc)
+ 
+ 
++def _seed_default_checklists(tenant: Tenant) -> None:
++    seeded = seed_default_checklists_for_tenant(tenant_slug=tenant.slug)
++    logger.info("Checklists base sembrados para tenant %s (%d)", tenant.slug, seeded)
++
++
+ def record_provision_log(
+     *,
+     slug: str,
+@@ -183,6 +189,7 @@ def provision_tenant(
+         _migrate_tenant_db(tenant)
+         _upsert_admin_user(tenant, admin_email.strip(), admin_password, admin_name or "")
+         _seed_global_deliverables(tenant)
++        _seed_default_checklists(tenant)
+     except TenantProvisionError as exc:
+         record_provision_log(
+             slug=slug,
+diff --git a/backend/tenancy/tests/test_provisioning.py b/backend/tenancy/tests/test_provisioning.py
+index 4e629be..cbba383 100644
+--- a/backend/tenancy/tests/test_provisioning.py
++++ b/backend/tenancy/tests/test_provisioning.py
+@@ -6,6 +6,7 @@ from django.test import TestCase, override_settings
+ from rest_framework.test import APIClient
+ 
+ from accounts.models import User
++from materialidad.models import Checklist
+ from tenancy.models import Despacho, Tenant, TenantProvisionLog
+ from tenancy.services import TenantProvisionError
+ 
+@@ -39,6 +40,7 @@ class TenantProvisioningTests(TestCase):
+         }
+ 
+     @mock.patch("tenancy.services._upsert_admin_user")
++    @mock.patch("tenancy.services._seed_global_deliverables")
+     @mock.patch("tenancy.services._migrate_tenant_db")
+     @mock.patch("tenancy.services._ensure_database")
+     @mock.patch("tenancy.services._ensure_db_role")
+@@ -49,6 +51,7 @@ class TenantProvisioningTests(TestCase):
+         mock_role,
+         mock_db,
+         mock_migrate,
++        mock_seed_deliverables,
+         mock_user,
+     ):
+         response = self.client.post("/api/tenancy/provision/", self._payload(), format="json")
+@@ -62,8 +65,13 @@ class TenantProvisioningTests(TestCase):
+         self.assertEqual(log.slug, "cliente-demo")
+         self.assertEqual(log.initiated_by, self.admin)
+         self.assertIn("db_name", log.metadata)
++        seeded = Checklist.objects.filter(tenant_slug="cliente-demo")
++        self.assertGreaterEqual(seeded.count(), 5)
++        self.assertTrue(seeded.filter(nombre="Base · Servicios profesionales").exists())
++        self.assertTrue(any((checklist.items.count() > 0) for checklist in seeded))
+ 
+     @mock.patch("tenancy.services._upsert_admin_user")
++    @mock.patch("tenancy.services._seed_global_deliverables")
+     @mock.patch("tenancy.services._migrate_tenant_db")
+     @mock.patch("tenancy.services._ensure_database", side_effect=TenantProvisionError("sin permisos"))
+     @mock.patch("tenancy.services._ensure_db_role")
+@@ -74,6 +82,7 @@ class TenantProvisioningTests(TestCase):
+         mock_role,
+         mock_db,
+         mock_migrate,
++        mock_seed_deliverables,
+         mock_user,
+     ):
+         response = self.client.post("/api/tenancy/provision/", self._payload(), format="json")
+diff --git a/frontend/src/app/dashboard/expedientes/page.tsx b/frontend/src/app/dashboard/expedientes/page.tsx
+index 138a642..73a113b 100644
+--- a/frontend/src/app/dashboard/expedientes/page.tsx
++++ b/frontend/src/app/dashboard/expedientes/page.tsx
+@@ -11,6 +11,7 @@ import {
+   fetchBandejaRevision,
+   fetchMatrizMaterialidad,
+   MatrizMaterialidadItem,
++  OperacionChecklistResumen,
+   exportOperacionDossier,
+   exportOperacionDefensaPdf,
+ } from "../../../lib/operaciones";
+@@ -62,6 +63,39 @@ function DocCheck({ present, label }: { present: boolean; label: string }) {
+   );
+ }
+ 
++function ChecklistSnapshot({ checklists }: { checklists: OperacionChecklistResumen[] }) {
++  if (!checklists.length) return null;
++
++  return (
++    <div className="rounded-xl border border-[rgba(45,91,136,0.18)] bg-[var(--fiscal-accent-soft)]/55 px-4 py-3">
++      <div className="flex items-center justify-between gap-2">
++        <p className="text-xs font-semibold text-[var(--fiscal-accent)]">Checklist operativo</p>
++        <span className="text-[11px] font-medium text-[var(--fiscal-muted)]">{checklists.length} asociado(s)</span>
++      </div>
++      <div className="mt-2 space-y-2">
++        {checklists.map((checklist) => (
++          <div key={checklist.id} className="rounded-xl border border-white/70 bg-white/80 px-3 py-2">
++            <div className="flex flex-wrap items-center justify-between gap-2">
++              <p className="text-xs font-semibold text-[var(--fiscal-ink)]">{checklist.nombre}</p>
++              <div className="flex items-center gap-2 text-[10px] font-bold">
++                <span className={`rounded-full border px-2 py-0.5 ${STATUS_BADGE[checklist.requeridos_pendientes > 0 ? "INCOMPLETO" : "COMPLETO"]}`}>
++                  {checklist.requeridos_pendientes > 0 ? `${checklist.requeridos_pendientes} req. pendientes` : "Requeridos completos"}
++                </span>
++                <span className="rounded-full border border-[rgba(45,91,136,0.18)] bg-white px-2 py-0.5 text-[var(--fiscal-accent)]">
++                  {checklist.progreso_porcentaje}%
++                </span>
++              </div>
++            </div>
++            <p className="mt-1 text-[11px] text-[var(--fiscal-muted)]">
++              {checklist.completos}/{checklist.total_items} items completos
++            </p>
++          </div>
++        ))}
++      </div>
++    </div>
++  );
++}
++
+ /* ───────── KPI card ───────── */
+ function KPI({ label, value, color = "slate", icon }: { label: string; value: React.ReactNode; color?: string; icon?: ReactNode }) {
+   const map: Record<string, string> = {
+@@ -310,6 +344,7 @@ export default function ExpedientesPage() {
+               <div className="space-y-3">
+                 {matriz.map((item) => {
+                   const expanded = expandedId === item.id;
++                  const checklistPendientes = item.checklists_resumen.reduce((acc, checklist) => acc + checklist.requeridos_pendientes, 0);
+                   return (
+                     <article key={item.id} className="rounded-2xl border border-[rgba(200,192,177,0.72)] bg-white shadow-panel transition hover:shadow-fiscal">
+                       {/* card header */}
+@@ -331,6 +366,11 @@ export default function ExpedientesPage() {
+                           <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${STATUS_BADGE[item.estado_completitud] || "border-slate-200 bg-slate-50 text-slate-600"}`}>
+                             {item.estado_completitud}
+                           </span>
++                          {item.checklists_resumen.length > 0 && (
++                            <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${checklistPendientes > 0 ? "border-blue-200 bg-blue-50 text-blue-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
++                              Checklist {checklistPendientes > 0 ? `pendiente ${checklistPendientes}` : "al día"}
++                            </span>
++                          )}
+                           {item.estatus_validacion && (
+                             <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${VALIDACION_BADGE[item.estatus_validacion] || "border-slate-200 bg-slate-50 text-slate-600"}`}>
+                               {item.estatus_validacion}
+@@ -351,6 +391,8 @@ export default function ExpedientesPage() {
+                             <DocCheck present={item.cadena_documental.evidencia.presente} label="Evidencia" />
+                           </div>
+ 
++                          <ChecklistSnapshot checklists={item.checklists_resumen} />
++
+                           {/* missing items */}
+                           {item.faltantes.length > 0 && (
+                             <div className="rounded-xl border border-[rgba(166,103,31,0.22)] bg-[var(--fiscal-warning-soft)]/70 px-4 py-3">
+@@ -431,12 +473,13 @@ export default function ExpedientesPage() {
+                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--fiscal-muted)]">Estatus</th>
+                   <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[var(--fiscal-muted)]">Monto</th>
+                   <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[var(--fiscal-muted)]">Faltantes</th>
++                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[var(--fiscal-muted)]">Checklist</th>
+                   <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[var(--fiscal-muted)]">Alertas</th>
+                 </tr>
+               </thead>
+               <tbody className="divide-y divide-slate-100">
+                 {!loading && bandeja.length === 0 && (
+-                  <tr><td className="px-4 py-8 text-center text-sm text-[var(--fiscal-muted)]" colSpan={8}>No hay operaciones pendientes en esta bandeja con los filtros actuales.</td></tr>
++                  <tr><td className="px-4 py-8 text-center text-sm text-[var(--fiscal-muted)]" colSpan={9}>No hay operaciones pendientes en esta bandeja con los filtros actuales.</td></tr>
+                 )}
+                 {bandeja.map((item) => (
+                   <tr key={item.id} className="hover:bg-slate-50/60">
+@@ -466,6 +509,15 @@ export default function ExpedientesPage() {
+                         ? <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">{item.faltantes.length}</span>
+                         : <span className="text-xs text-slate-300">0</span>}
+                     </td>
++                    <td className="px-4 py-3 text-center">
++                      {item.checklists_resumen.length > 0 ? (
++                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${item.checklists_resumen.some((checklist) => checklist.requeridos_pendientes > 0) ? "border-blue-200 bg-blue-50 text-blue-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
++                          {item.checklists_resumen.reduce((acc, checklist) => acc + checklist.requeridos_pendientes, 0)} req.
++                        </span>
++                      ) : (
++                        <span className="text-xs text-slate-300">0</span>
++                      )}
++                    </td>
+                     <td className="px-4 py-3 text-center">
+                       {item.alertas_activas.length > 0
+                         ? <span className="rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">{item.alertas_activas.length}</span>
+diff --git a/frontend/src/app/dashboard/operaciones/page.tsx b/frontend/src/app/dashboard/operaciones/page.tsx
+index 4a36b90..adaa1bc 100644
+--- a/frontend/src/app/dashboard/operaciones/page.tsx
++++ b/frontend/src/app/dashboard/operaciones/page.tsx
+@@ -26,15 +26,18 @@ import Swal from "sweetalert2";
+ import {
+   createOperacionEntregable,
+   fetchOperacionEntregables,
++  fetchOperacionChecklists,
+   fetchOperaciones,
+   fetchAlertasOperacion,
+   fetchMatrizMaterialidad,
+   fetchBandejaRevision,
+   mapRequirementToEntregable,
+   Operacion,
++  OperacionChecklist,
+   OperacionEntregable,
+   OperacionEntregablePayload,
+   updateOperacionEntregable,
++  updateOperacionChecklistItem,
+   updateOperacion,
+   cambiarOperacionEstatus,
+   exportOperacionDossier,
+@@ -62,6 +65,7 @@ const ESTADO_STYLES: Record<OperacionEntregable["estado"], string> = {
+ const VALIDACION_STYLES: Record<string, string> = {
+   PENDIENTE: "bg-slate-100 text-slate-600 border-slate-200",
+   EN_PROCESO: "bg-amber-50 text-amber-700 border-amber-200",
++  COMPLETO: "bg-emerald-50 text-emerald-700 border-emerald-200",
+   VALIDADO: "bg-emerald-50 text-emerald-700 border-emerald-200",
+   RECHAZADO: "bg-red-50 text-red-700 border-red-200",
+ };
+@@ -169,6 +173,7 @@ export default function OperacionesPage() {
+ 
+   /* ── Entregables ── */
+   const [entregables, setEntregables] = useState<OperacionEntregable[]>([]);
++  const [operacionChecklists, setOperacionChecklists] = useState<OperacionChecklist[]>([]);
+   const [form, setForm] = useState<OperacionEntregablePayload>(emptyForm);
+   const [saving, setSaving] = useState(false);
+   const [evidencias, setEvidencias] = useState<Record<number, string>>({});
+@@ -282,6 +287,7 @@ export default function OperacionesPage() {
+       if (primera) {
+         setForm((prev) => ({ ...prev, operacion: primera }));
+         await loadEntregables(primera);
++        await loadOperacionChecklists(primera);
+       }
+     } catch (err) {
+       void alertError("No pudimos cargar operaciones", (err as Error).message);
+@@ -333,6 +339,16 @@ export default function OperacionesPage() {
+     }
+   };
+ 
++  const loadOperacionChecklists = async (operacionId: number) => {
++    try {
++      const data = await fetchOperacionChecklists(operacionId);
++      setOperacionChecklists(data);
++    } catch (err) {
++      setOperacionChecklists([]);
++      void alertError("No pudimos cargar checklists", (err as Error).message);
++    }
++  };
++
+   /* ── Handlers ── */
+   const handleCreateOperacion = async (e: React.FormEvent) => {
+     e.preventDefault();
+@@ -350,6 +366,7 @@ export default function OperacionesPage() {
+       setShowModal(false);
+       setNewOpForm({ ...payload, empresa: payload.empresa, proveedor: 0, contrato: null, uuid_cfdi: "", monto: "", concepto: "" });
+       await loadEntregables(op.id);
++      await loadOperacionChecklists(op.id);
+     } catch (err) {
+       void alertError("Error al registrar", (err as Error).message);
+     } finally {
+@@ -361,6 +378,7 @@ export default function OperacionesPage() {
+     setSelectedOperacionId(operacionId);
+     setForm((prev) => ({ ...prev, operacion: operacionId }));
+     await loadEntregables(operacionId);
++    await loadOperacionChecklists(operacionId);
+   };
+ 
+   const handleExportDossier = async (operacionId: number) => {
+@@ -457,6 +475,17 @@ export default function OperacionesPage() {
+     }
+   };
+ 
++  const actualizarChecklistItem = async (itemId: number, estado: "PENDIENTE" | "EN_PROCESO" | "COMPLETO") => {
++    if (!selectedOperacionId) return;
++    try {
++      await updateOperacionChecklistItem(itemId, { estado });
++      await loadOperacionChecklists(selectedOperacionId);
++      await loadInitialData();
++    } catch (err) {
++      void alertError("No pudimos actualizar el checklist", (err as Error).message);
++    }
++  };
++
+   const handleCambiarEstatus = async (op: Operacion, nuevoEstatus: "PENDIENTE" | "EN_PROCESO" | "VALIDADO" | "RECHAZADO") => {
+     try {
+       await cambiarOperacionEstatus(op.id, { estatus_validacion: nuevoEstatus });
+@@ -950,6 +979,67 @@ export default function OperacionesPage() {
+                       )}
+                     </div>
+ 
++                    <div className="surface-panel rounded-[1.75rem] p-6 shadow-fiscal">
++                      <div className="flex items-center justify-between gap-4">
++                        <div>
++                          <p className="kicker-label">Cumplimiento</p>
++                          <h3 className="text-lg font-bold text-[var(--fiscal-ink)]">Checklist operativo asociado</h3>
++                          <p className="mt-0.5 text-xs text-[var(--fiscal-muted)]">Seguimiento no bloqueante para asegurar sustancia y trazabilidad por operación.</p>
++                        </div>
++                        <span className="rounded-full border border-[rgba(45,91,136,0.22)] bg-[var(--fiscal-accent-soft)] px-3 py-1 text-sm font-bold text-[var(--fiscal-accent)]">
++                          {operacionChecklists.length}
++                        </span>
++                      </div>
++
++                      {operacionChecklists.length === 0 ? (
++                        <div className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-5 text-sm text-slate-500">
++                          Esta operación aún no tiene checklist base asignado automáticamente.
++                        </div>
++                      ) : (
++                        <div className="mt-5 space-y-4">
++                          {operacionChecklists.map((checklist) => (
++                            <div key={checklist.id} className="rounded-[1.5rem] border border-[rgba(200,192,177,0.55)] bg-white/90 p-4">
++                              <div className="flex flex-wrap items-start justify-between gap-3">
++                                <div>
++                                  <p className="text-sm font-semibold text-[var(--fiscal-ink)]">{checklist.nombre}</p>
++                                  <p className="mt-1 text-xs text-[var(--fiscal-muted)]">
++                                    {checklist.completos}/{checklist.total_items} ítems completos · {checklist.pendientes} pendientes
++                                  </p>
++                                </div>
++                                <div className="flex flex-wrap items-center gap-2">
++                                  <Badge label={checklist.estado_general} className={VALIDACION_STYLES[checklist.estado_general] || ""} />
++                                  <Badge label={`${checklist.progreso_porcentaje}%`} className="bg-blue-50 text-blue-700 border-blue-200" />
++                                </div>
++                              </div>
++                              <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
++                                <div className="h-full rounded-full bg-[var(--fiscal-accent)] transition-all" style={{ width: `${checklist.progreso_porcentaje}%` }} />
++                              </div>
++                              <div className="mt-4 space-y-3">
++                                {checklist.items.map((item) => (
++                                  <div key={item.id} className="grid gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-3 md:grid-cols-[1fr_auto] md:items-center">
++                                    <div>
++                                      <p className="text-sm font-semibold text-slate-800">{item.titulo}</p>
++                                      <p className="mt-1 text-xs text-slate-500">{item.pillar.replace(/_/g, " ")} · {item.responsable || "Sin responsable"}</p>
++                                      {item.descripcion && <p className="mt-1 text-xs leading-relaxed text-slate-500">{item.descripcion}</p>}
++                                    </div>
++                                    <select
++                                      value={item.estado}
++                                      onChange={(event) => void actualizarChecklistItem(item.id, event.target.value as "PENDIENTE" | "EN_PROCESO" | "COMPLETO")}
++                                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200/60"
++                                    >
++                                      <option value="PENDIENTE">Pendiente</option>
++                                      <option value="EN_PROCESO">En proceso</option>
++                                      <option value="COMPLETO">Completo</option>
++                                    </select>
++                                  </div>
++                                ))}
++                              </div>
++                            </div>
++                          ))}
++                        </div>
++                      )}
++                    </div>
++
+                     {/* ── Nuevo entregable form ── */}
+                     <div className="surface-panel rounded-[1.75rem] p-6 shadow-fiscal">
+                       <div className="flex items-center justify-between mb-5">
+diff --git a/frontend/src/lib/operaciones.ts b/frontend/src/lib/operaciones.ts
+index f3def76..e9fa268 100644
+--- a/frontend/src/lib/operaciones.ts
++++ b/frontend/src/lib/operaciones.ts
+@@ -31,6 +31,50 @@ export type Operacion = {
+   riesgo_nivel?: "BAJO" | "MEDIO" | "ALTO";
+   riesgo_score?: number;
+   riesgo_motivos?: string[];
++  checklists_resumen?: OperacionChecklistResumen[];
++};
++
++export type OperacionChecklistResumen = {
++  id: number;
++  nombre: string;
++  tipo_gasto?: string;
++  estado_general: "PENDIENTE" | "EN_PROCESO" | "COMPLETO";
++  progreso_porcentaje: number;
++  total_items: number;
++  completos: number;
++  pendientes: number;
++  requeridos_pendientes: number;
++};
++
++export type OperacionChecklistItem = {
++  id: number;
++  operacion_checklist: number;
++  checklist_item: number | null;
++  pillar: string;
++  titulo: string;
++  descripcion: string;
++  requerido: boolean;
++  responsable: string;
++  estado: "PENDIENTE" | "EN_PROCESO" | "COMPLETO";
++  created_at: string;
++  updated_at: string;
++};
++
++export type OperacionChecklist = {
++  id: number;
++  operacion: number;
++  checklist: number | null;
++  nombre: string;
++  tipo_gasto: string;
++  origen: "AUTO" | "MANUAL";
++  estado_general: "PENDIENTE" | "EN_PROCESO" | "COMPLETO";
++  progreso_porcentaje: number;
++  total_items: number;
++  completos: number;
++  pendientes: number;
++  created_at: string;
++  updated_at: string;
++  items: OperacionChecklistItem[];
+ };
+ 
+ export type OperacionCambioEstatusPayload = {
+@@ -74,6 +118,7 @@ export type BandejaRevisionItem = {
+   riesgo_motivos: string[];
+   faltantes: string[];
+   alertas_activas: AlertaOperacion[];
++  checklists_resumen: OperacionChecklistResumen[];
+ };
+ 
+ export type MatrizCadenaDocumental = {
+@@ -117,6 +162,7 @@ export type MatrizMaterialidadItem = {
+   faltantes: string[];
+   cadena_documental: MatrizCadenaDocumental;
+   alertas_activas: AlertaOperacion[];
++  checklists_resumen: OperacionChecklistResumen[];
+ };
+ 
+ export type OperacionEntregable = {
+@@ -211,6 +257,21 @@ export async function fetchOperacionEntregables(operacionId: number): Promise<Op
+   return payload?.results ?? [];
+ }
+ 
++export async function fetchOperacionChecklists(operacionId: number): Promise<OperacionChecklist[]> {
++  return apiFetch<OperacionChecklist[]>(`/api/materialidad/operaciones/${operacionId}/checklists/`);
++}
++
++export async function updateOperacionChecklistItem(
++  id: number,
++  data: Partial<Pick<OperacionChecklistItem, "estado">>
++): Promise<OperacionChecklistItem> {
++  return apiFetch<OperacionChecklistItem>(`/api/materialidad/operacion-checklist-items/${id}/`, {
++    method: "PATCH",
++    headers: { "Content-Type": "application/json" },
++    body: JSON.stringify(data),
++  });
++}
++
+ export type OperacionEntregablePayload = {
+   operacion: number;
+   requirement?: number | null;
+diff --git a/backend/materialidad/checklist_templates.py b/backend/materialidad/checklist_templates.py
+new file mode 100644
+index 0000000..7e8b2eb
+--- /dev/null
++++ b/backend/materialidad/checklist_templates.py
+@@ -0,0 +1,295 @@
++from __future__ import annotations
++
++from django.db import transaction
++
++from .models import (
++    Checklist,
++    ChecklistItem,
++    CompliancePillar,
++    Operacion,
++    OperacionChecklist,
++    OperacionChecklistItem,
++)
++
++
++DEFAULT_CHECKLIST_TEMPLATES = [
++    {
++        "nombre": "Base · Servicios profesionales",
++        "tipo_gasto": "Servicios profesionales",
++        "items": [
++            {
++                "pillar": CompliancePillar.RAZON_NEGOCIO,
++                "titulo": "Narrativa de razon de negocio aprobada",
++                "descripcion": "Explica beneficio economico, objetivo operativo y relacion con la estrategia del contribuyente.",
++                "requerido": True,
++                "responsable": "Fiscal / Direccion",
++            },
++            {
++                "pillar": CompliancePillar.ENTREGABLES,
++                "titulo": "Entregables fechados y trazables",
++                "descripcion": "Memo, reporte, minuta o entregable firmado que vincule la prestacion efectiva del servicio.",
++                "requerido": True,
++                "responsable": "Area solicitante",
++            },
++            {
++                "pillar": CompliancePillar.CAPACIDAD_PROVEEDOR,
++                "titulo": "Validacion de capacidad del proveedor",
++                "descripcion": "Evidencia de personal, oficina, experiencia, web, curriculum o estructura operativa suficiente.",
++                "requerido": True,
++                "responsable": "Compliance",
++            },
++            {
++                "pillar": CompliancePillar.FECHA_CIERTA,
++                "titulo": "Contrato y anexos con fecha cierta cuando aplique",
++                "descripcion": "Ratificacion, fedatario, sello de tiempo o evidencia documental equivalente para piezas criticas.",
++                "requerido": False,
++                "responsable": "Juridico",
++            },
++        ],
++    },
++    {
++        "nombre": "Base · Arrendamiento de maquinaria o equipo",
++        "tipo_gasto": "Arrendamiento",
++        "items": [
++            {
++                "pillar": CompliancePillar.RAZON_NEGOCIO,
++                "titulo": "Justificacion operativa del arrendamiento",
++                "descripcion": "Debe explicar por que se arrenda el activo, periodo de uso y necesidad economica del proyecto.",
++                "requerido": True,
++                "responsable": "Operaciones",
++            },
++            {
++                "pillar": CompliancePillar.ENTREGABLES,
++                "titulo": "Acta de entrega y bitacora de uso",
++                "descripcion": "Documenta entrega fisica, ubicacion, horas de uso, operador y devolucion del equipo arrendado.",
++                "requerido": True,
++                "responsable": "Operaciones / Almacen",
++            },
++            {
++                "pillar": CompliancePillar.CAPACIDAD_PROVEEDOR,
++                "titulo": "Evidencia de tenencia y capacidad del proveedor",
++                "descripcion": "Fotos, inventario, placas, serie, patio, operadores o documentos que acrediten disponibilidad real del bien.",
++                "requerido": True,
++                "responsable": "Compras / Compliance",
++            },
++            {
++                "pillar": CompliancePillar.FECHA_CIERTA,
++                "titulo": "Contrato marco y anexo tecnico firmado",
++                "descripcion": "Resguarda el contrato y sus anexos tecnicos para reforzar defendibilidad documental.",
++                "requerido": False,
++                "responsable": "Juridico",
++            },
++        ],
++    },
++    {
++        "nombre": "Base · Compras e inventario",
++        "tipo_gasto": "Compras",
++        "items": [
++            {
++                "pillar": CompliancePillar.RAZON_NEGOCIO,
++                "titulo": "Solicitud y autorizacion de compra",
++                "descripcion": "Debe vincular la compra con consumo, proyecto, inventario o necesidad operativa real.",
++                "requerido": True,
++                "responsable": "Compras",
++            },
++            {
++                "pillar": CompliancePillar.ENTREGABLES,
++                "titulo": "Recepcion material y entrada a inventario",
++                "descripcion": "Acta, orden de compra, evidencia fotografica, entrada a almacen o registro de inventario.",
++                "requerido": True,
++                "responsable": "Almacen",
++            },
++            {
++                "pillar": CompliancePillar.CAPACIDAD_PROVEEDOR,
++                "titulo": "Perfil comercial del proveedor validado",
++                "descripcion": "Valida actividad, domicilio, capacidad de suministro, historial y consistencia de facturacion.",
++                "requerido": True,
++                "responsable": "Compliance",
++            },
++            {
++                "pillar": CompliancePillar.FECHA_CIERTA,
++                "titulo": "Pedido, contrato o confirmacion formal de compra",
++                "descripcion": "Formaliza documentalmente la compra cuando el monto o criticidad del caso lo requiera.",
++                "requerido": False,
++                "responsable": "Juridico / Compras",
++            },
++        ],
++    },
++    {
++        "nombre": "Base · Intercompany",
++        "tipo_gasto": "Intercompany",
++        "items": [
++            {
++                "pillar": CompliancePillar.RAZON_NEGOCIO,
++                "titulo": "Memo ejecutivo de beneficio economico",
++                "descripcion": "Describe el beneficio recibido, el racional de centralizacion y la logica intragrupo.",
++                "requerido": True,
++                "responsable": "Fiscal corporativo",
++            },
++            {
++                "pillar": CompliancePillar.ENTREGABLES,
++                "titulo": "Evidencia periodica de servicios recibidos",
++                "descripcion": "Reportes, allocators, SLAs, evidencias de uso o soporte recurrente entre partes relacionadas.",
++                "requerido": True,
++                "responsable": "Area receptora",
++            },
++            {
++                "pillar": CompliancePillar.CAPACIDAD_PROVEEDOR,
++                "titulo": "Soporte de funciones y personal del prestador intragrupo",
++                "descripcion": "Documenta quienes prestan el servicio, desde donde y con que estructura operan.",
++                "requerido": True,
++                "responsable": "Corporativo",
++            },
++            {
++                "pillar": CompliancePillar.FECHA_CIERTA,
++                "titulo": "Convenio intercompany y anexos formalizados",
++                "descripcion": "Resguarda convenio firmado, anexos, vigencia y, cuando aplique, fecha cierta o ratificacion.",
++                "requerido": True,
++                "responsable": "Juridico corporativo",
++            },
++        ],
++    },
++    {
++        "nombre": "Base · Contencion proveedor 69-B",
++        "tipo_gasto": "Riesgo 69-B",
++        "items": [
++            {
++                "pillar": CompliancePillar.RAZON_NEGOCIO,
++                "titulo": "Evaluacion ejecutiva del riesgo y decision de comite",
++                "descripcion": "Resume el riesgo identificado, impacto fiscal esperado y criterio de contencion o sustitucion.",
++                "requerido": True,
++                "responsable": "Fiscal / Direccion",
++            },
++            {
++                "pillar": CompliancePillar.ENTREGABLES,
++                "titulo": "Expediente de materializacion reforzada",
++                "descripcion": "Reune prueba intensiva de prestacion o entrega real, pagos, correos, bitacoras y aceptaciones.",
++                "requerido": True,
++                "responsable": "Area solicitante",
++            },
++            {
++                "pillar": CompliancePillar.CAPACIDAD_PROVEEDOR,
++                "titulo": "Revision reforzada de proveedor y estatus SAT",
++                "descripcion": "Valida opinion, listado, domicilio, activos, personal y hallazgos de due diligence reforzada.",
++                "requerido": True,
++                "responsable": "Compliance",
++            },
++            {
++                "pillar": CompliancePillar.FECHA_CIERTA,
++                "titulo": "Contrato y soporte critico bajo resguardo reforzado",
++                "descripcion": "Concentra contrato, anexos, acuses y cualquier evidencia temporal critica para defensa o reversa.",
++                "requerido": False,
++                "responsable": "Juridico",
++            },
++        ],
++    },
++]
++
++
++DEFAULT_CHECKLIST_NAME_BY_OPERATION_TYPE = {
++    Operacion.TipoOperacion.SERVICIO: "Base · Servicios profesionales",
++    Operacion.TipoOperacion.COMPRA: "Base · Compras e inventario",
++    Operacion.TipoOperacion.ARRENDAMIENTO: "Base · Arrendamiento de maquinaria o equipo",
++}
++
++
++@transaction.atomic
++def seed_default_checklists_for_tenant(*, tenant_slug: str) -> int:
++    created_or_updated = 0
++
++    for template in DEFAULT_CHECKLIST_TEMPLATES:
++        checklist, _ = Checklist.objects.update_or_create(
++            tenant_slug=tenant_slug,
++            nombre=template["nombre"],
++            defaults={
++                "tipo_gasto": template["tipo_gasto"],
++                "vigente": True,
++            },
++        )
++        checklist.items.all().delete()
++        ChecklistItem.objects.bulk_create([
++            ChecklistItem(
++                checklist=checklist,
++                pillar=item["pillar"],
++                titulo=item["titulo"],
++                descripcion=item.get("descripcion", ""),
++                requerido=item.get("requerido", True),
++                estado=ChecklistItem.Estado.PENDIENTE,
++                responsable=item.get("responsable", ""),
++            )
++            for item in template["items"]
++        ])
++        created_or_updated += 1
++
++    return created_or_updated
++
++
++def refresh_operacion_checklist_progress(operacion_checklist: OperacionChecklist) -> OperacionChecklist:
++    items = list(operacion_checklist.items.all())
++    total = len(items)
++    completos = sum(1 for item in items if item.estado == ChecklistItem.Estado.COMPLETO)
++    en_proceso = sum(1 for item in items if item.estado == ChecklistItem.Estado.EN_PROCESO)
++
++    progreso = int((completos / total) * 100) if total else 0
++    if total and completos == total:
++        estado_general = ChecklistItem.Estado.COMPLETO
++    elif en_proceso or completos:
++        estado_general = ChecklistItem.Estado.EN_PROCESO
++    else:
++        estado_general = ChecklistItem.Estado.PENDIENTE
++
++    changed_fields: list[str] = []
++    if operacion_checklist.progreso_porcentaje != progreso:
++        operacion_checklist.progreso_porcentaje = progreso
++        changed_fields.append("progreso_porcentaje")
++    if operacion_checklist.estado_general != estado_general:
++        operacion_checklist.estado_general = estado_general
++        changed_fields.append("estado_general")
++    if changed_fields:
++        operacion_checklist.save(update_fields=[*changed_fields, "updated_at"])
++    return operacion_checklist
++
++
++@transaction.atomic
++def assign_default_checklists_to_operacion(*, operacion: Operacion, tenant_slug: str = "") -> list[OperacionChecklist]:
++    checklist_name = DEFAULT_CHECKLIST_NAME_BY_OPERATION_TYPE.get(operacion.tipo_operacion)
++    if not checklist_name:
++        return []
++
++    checklists = list(
++        Checklist.objects.filter(
++            tenant_slug=tenant_slug,
++            vigente=True,
++            nombre=checklist_name,
++        ).prefetch_related("items")
++    )
++
++    assigned: list[OperacionChecklist] = []
++    for checklist in checklists:
++        operacion_checklist, _ = OperacionChecklist.objects.update_or_create(
++            operacion=operacion,
++            checklist=checklist,
++            defaults={
++                "nombre": checklist.nombre,
++                "tipo_gasto": checklist.tipo_gasto,
++                "origen": OperacionChecklist.Origen.AUTO,
++            },
++        )
++        if not operacion_checklist.items.exists():
++            OperacionChecklistItem.objects.bulk_create([
++                OperacionChecklistItem(
++                    operacion_checklist=operacion_checklist,
++                    checklist_item=item,
++                    pillar=item.pillar,
++                    titulo=item.titulo,
++                    descripcion=item.descripcion,
++                    requerido=item.requerido,
++                    responsable=item.responsable,
++                    estado=ChecklistItem.Estado.PENDIENTE,
++                )
++                for item in checklist.items.all()
++            ])
++        refresh_operacion_checklist_progress(operacion_checklist)
++        assigned.append(operacion_checklist)
++
++    return assigned
+\ No newline at end of file
+diff --git a/backend/materialidad/migrations/0055_operacionchecklist_operacionchecklistitem_and_more.py b/backend/materialidad/migrations/0055_operacionchecklist_operacionchecklistitem_and_more.py
+new file mode 100644
+index 0000000..48b2fee
+--- /dev/null
++++ b/backend/materialidad/migrations/0055_operacionchecklist_operacionchecklistitem_and_more.py
+@@ -0,0 +1,69 @@
++# Generated by Django 5.0.2 on 2026-03-13 20:41
++
++import django.db.models.deletion
++from django.db import migrations, models
++
++
++class Migration(migrations.Migration):
++
++    dependencies = [
++        ('materialidad', '0054_auditmaterialitydossierversion'),
++    ]
++
++    operations = [
++        migrations.CreateModel(
++            name='OperacionChecklist',
++            fields=[
++                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
++                ('nombre', models.CharField(max_length=255)),
++                ('tipo_gasto', models.CharField(blank=True, default='', max_length=128)),
++                ('origen', models.CharField(choices=[('AUTO', 'Automático'), ('MANUAL', 'Manual')], default='AUTO', max_length=16)),
++                ('estado_general', models.CharField(choices=[('PENDIENTE', 'Pendiente'), ('EN_PROCESO', 'En proceso'), ('COMPLETO', 'Completo')], default='PENDIENTE', max_length=16)),
++                ('progreso_porcentaje', models.PositiveSmallIntegerField(default=0)),
++                ('created_at', models.DateTimeField(auto_now_add=True)),
++                ('updated_at', models.DateTimeField(auto_now=True)),
++                ('checklist', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='operaciones_asignadas', to='materialidad.checklist')),
++                ('operacion', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='checklists_operativos', to='materialidad.operacion')),
++            ],
++            options={
++                'db_table': 'materialidad_operacion_checklist',
++                'ordering': ('created_at',),
++            },
++        ),
++        migrations.CreateModel(
++            name='OperacionChecklistItem',
++            fields=[
++                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
++                ('pillar', models.CharField(choices=[('ENTREGABLES', 'Entregables'), ('RAZON_NEGOCIO', 'Razón de negocio'), ('CAPACIDAD_PROVEEDOR', 'Capacidad del proveedor'), ('FECHA_CIERTA', 'Fecha cierta')], max_length=32)),
++                ('titulo', models.CharField(max_length=255)),
++                ('descripcion', models.TextField(blank=True, default='')),
++                ('requerido', models.BooleanField(default=True)),
++                ('responsable', models.CharField(blank=True, default='', max_length=255)),
++                ('estado', models.CharField(choices=[('PENDIENTE', 'Pendiente'), ('EN_PROCESO', 'En proceso'), ('COMPLETO', 'Completo')], default='PENDIENTE', max_length=16)),
++                ('created_at', models.DateTimeField(auto_now_add=True)),
++                ('updated_at', models.DateTimeField(auto_now=True)),
++                ('checklist_item', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='operaciones_items', to='materialidad.checklistitem')),
++                ('operacion_checklist', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='materialidad.operacionchecklist')),
++            ],
++            options={
++                'db_table': 'materialidad_operacion_checklist_item',
++                'ordering': ('created_at',),
++            },
++        ),
++        migrations.AddIndex(
++            model_name='operacionchecklist',
++            index=models.Index(fields=['operacion', 'estado_general'], name='op_check_estado_idx'),
++        ),
++        migrations.AddConstraint(
++            model_name='operacionchecklist',
++            constraint=models.UniqueConstraint(fields=('operacion', 'checklist'), name='op_checklist_unique_idx'),
++        ),
++        migrations.AddIndex(
++            model_name='operacionchecklistitem',
++            index=models.Index(fields=['operacion_checklist', 'estado'], name='op_check_item_estado_idx'),
++        ),
++        migrations.AddIndex(
++            model_name='operacionchecklistitem',
++            index=models.Index(fields=['pillar', 'estado'], name='op_check_pillar_estado_idx'),
++        ),
++    ]
+diff --git a/backend/materialidad/tests/test_operacion_checklists.py b/backend/materialidad/tests/test_operacion_checklists.py
+new file mode 100644
+index 0000000..ddd6374
+--- /dev/null
++++ b/backend/materialidad/tests/test_operacion_checklists.py
+@@ -0,0 +1,205 @@
++from __future__ import annotations
++
++from datetime import date
++
++from django.core.files.uploadedfile import SimpleUploadedFile
++from django.test import TestCase, override_settings
++from rest_framework.test import APIClient
++
++from accounts.models import User
++from materialidad.checklist_templates import assign_default_checklists_to_operacion
++from materialidad.models import (
++    AlertaOperacion,
++    Checklist,
++    ChecklistItem,
++    CompliancePillar,
++    Contrato,
++    Empresa,
++    EvidenciaMaterial,
++    Operacion,
++    Proveedor,
++)
++
++
++@override_settings(TENANT_REQUIRED_PATH_PREFIXES=[])
++class OperacionChecklistTests(TestCase):
++    def setUp(self):
++        self.client = APIClient()
++        self.user = User.objects.create_user(
++            email="qa.checklists@example.com",
++            password="Password123!",
++        )
++        self.client.force_authenticate(user=self.user)
++
++        self.empresa = Empresa.objects.create(
++            razon_social="Empresa Checklist SA de CV",
++            rfc="ECS010101AAA",
++            regimen_fiscal="601",
++            estado="CDMX",
++        )
++        self.proveedor = Proveedor.objects.create(
++            razon_social="Proveedor Checklist SA de CV",
++            rfc="PCS010101AAA",
++        )
++
++        checklist = Checklist.objects.create(
++            tenant_slug="",
++            nombre="Base · Servicios profesionales",
++            tipo_gasto="Servicios profesionales",
++            vigente=True,
++        )
++        ChecklistItem.objects.create(
++            checklist=checklist,
++            pillar=CompliancePillar.RAZON_NEGOCIO,
++            titulo="Narrativa de razón de negocio",
++            requerido=True,
++            responsable="Fiscal",
++        )
++        ChecklistItem.objects.create(
++            checklist=checklist,
++            pillar=CompliancePillar.ENTREGABLES,
++            titulo="Entregables fechados",
++            requerido=True,
++            responsable="Operaciones",
++        )
++
++    def test_crear_operacion_asigna_checklist_base_y_resume_en_respuesta(self):
++        response = self.client.post(
++            "/api/materialidad/operaciones/",
++            {
++                "empresa": self.empresa.id,
++                "proveedor": self.proveedor.id,
++                "monto": "2500.00",
++                "moneda": Operacion.Moneda.MXN,
++                "fecha_operacion": date(2026, 3, 1).isoformat(),
++                "tipo_operacion": Operacion.TipoOperacion.SERVICIO,
++                "concepto": "Servicio de consultoría operativa con soporte documental",
++            },
++            format="json",
++        )
++
++        self.assertEqual(response.status_code, 201)
++        self.assertEqual(len(response.data["checklists_resumen"]), 1)
++        self.assertEqual(response.data["checklists_resumen"][0]["nombre"], "Base · Servicios profesionales")
++        self.assertEqual(response.data["checklists_resumen"][0]["progreso_porcentaje"], 0)
++
++        operacion_id = response.data["id"]
++        detail = self.client.get(f"/api/materialidad/operaciones/{operacion_id}/checklists/")
++        self.assertEqual(detail.status_code, 200)
++        self.assertEqual(len(detail.data), 1)
++        self.assertEqual(detail.data[0]["total_items"], 2)
++        self.assertEqual(detail.data[0]["pendientes"], 2)
++
++    def test_actualizar_item_recalcula_progreso_del_checklist_operativo(self):
++        create_response = self.client.post(
++            "/api/materialidad/operaciones/",
++            {
++                "empresa": self.empresa.id,
++                "proveedor": self.proveedor.id,
++                "monto": "3200.00",
++                "moneda": Operacion.Moneda.MXN,
++                "fecha_operacion": date(2026, 3, 3).isoformat(),
++                "tipo_operacion": Operacion.TipoOperacion.SERVICIO,
++                "concepto": "Servicio para recalcular progreso",
++            },
++            format="json",
++        )
++        self.assertEqual(create_response.status_code, 201)
++
++        detail = self.client.get(f"/api/materialidad/operaciones/{create_response.data['id']}/checklists/")
++        item_id = detail.data[0]["items"][0]["id"]
++
++        update_response = self.client.patch(
++            f"/api/materialidad/operacion-checklist-items/{item_id}/",
++            {"estado": "COMPLETO"},
++            format="json",
++        )
++        self.assertEqual(update_response.status_code, 200)
++
++        refreshed = self.client.get(f"/api/materialidad/operaciones/{create_response.data['id']}/checklists/")
++        self.assertEqual(refreshed.status_code, 200)
++        self.assertEqual(refreshed.data[0]["completos"], 1)
++        self.assertEqual(refreshed.data[0]["pendientes"], 1)
++        self.assertEqual(refreshed.data[0]["estado_general"], "EN_PROCESO")
++        self.assertEqual(refreshed.data[0]["progreso_porcentaje"], 50)
++
++    def test_actualizar_checklist_sincroniza_alerta_y_riesgo_materialidad(self):
++        contrato = Contrato.objects.create(
++            empresa=self.empresa,
++            proveedor=self.proveedor,
++            nombre="Contrato Checklist Sync",
++            categoria=Contrato.Categoria.PROVEEDORES,
++            proceso=Contrato.ProcesoNegocio.OPERACIONES,
++            tipo_empresa=Contrato.TipoEmpresa.SERVICIOS,
++        )
++        operacion = Operacion.objects.create(
++            empresa=self.empresa,
++            proveedor=self.proveedor,
++            contrato=contrato,
++            monto="3200.00",
++            moneda=Operacion.Moneda.MXN,
++            fecha_operacion=date(2026, 3, 5),
++            tipo_operacion=Operacion.TipoOperacion.SERVICIO,
++            concepto="Servicio con expediente completo y checklist pendiente",
++            uuid_cfdi="d12504e0-4f89-41d3-9a0c-0305e82c3311",
++            referencia_spei="SPEI-CHECK-001",
++        )
++        EvidenciaMaterial.objects.create(
++            operacion=operacion,
++            tipo=EvidenciaMaterial.Tipo.ENTREGABLE,
++            archivo=SimpleUploadedFile("entregable-checklist.txt", b"entregable"),
++            descripcion="Entregable checklist",
++        )
++        EvidenciaMaterial.objects.create(
++            operacion=operacion,
++            tipo=EvidenciaMaterial.Tipo.BITACORA,
++            archivo=SimpleUploadedFile("bitacora-checklist.txt", b"bitacora"),
++            descripcion="Bitacora checklist",
++        )
++        assign_default_checklists_to_operacion(operacion=operacion, tenant_slug="")
++
++        detail = self.client.get(f"/api/materialidad/operaciones/{operacion.id}/checklists/")
++        self.assertEqual(detail.status_code, 200)
++        items = detail.data[0]["items"]
++        self.assertEqual(len(items), 2)
++        self.assertEqual(AlertaOperacion.objects.filter(operacion=operacion).count(), 0)
++
++        first_update = self.client.patch(
++            f"/api/materialidad/operacion-checklist-items/{items[0]['id']}/",
++            {"estado": "COMPLETO"},
++            format="json",
++        )
++        self.assertEqual(first_update.status_code, 200)
++
++        operacion.refresh_from_db()
++        riesgo = (operacion.metadata or {}).get("riesgo_materialidad", {})
++        self.assertEqual(riesgo.get("nivel"), "MEDIO")
++        self.assertGreaterEqual(riesgo.get("score", 0), 20)
++
++        alerta = AlertaOperacion.objects.get(operacion=operacion, estatus=AlertaOperacion.Estatus.ACTIVA)
++        self.assertEqual(alerta.tipo_alerta, AlertaOperacion.TipoAlerta.FALTANTES_CRITICOS)
++        self.assertTrue(any("Checklist operativo incompleto" in item for item in alerta.detalle.get("faltantes_criticos", [])))
++
++        second_update = self.client.patch(
++            f"/api/materialidad/operacion-checklist-items/{items[1]['id']}/",
++            {"estado": "COMPLETO"},
++            format="json",
++        )
++        self.assertEqual(second_update.status_code, 200)
++
++        operacion.refresh_from_db()
++        riesgo_final = (operacion.metadata or {}).get("riesgo_materialidad", {})
++        self.assertEqual(riesgo_final.get("nivel"), "BAJO")
++        self.assertEqual(riesgo_final.get("score"), 0)
++        self.assertFalse(
++            AlertaOperacion.objects.filter(
++                operacion=operacion,
++                estatus=AlertaOperacion.Estatus.ACTIVA,
++            ).exists()
++        )
++        self.assertTrue(
++            AlertaOperacion.objects.filter(
++                operacion=operacion,
++                estatus=AlertaOperacion.Estatus.CERRADA,
++            ).exists()
++        )
+\ No newline at end of file
+diff --git a/backend/tenancy/management/commands/seed_active_tenant_checklists.py b/backend/tenancy/management/commands/seed_active_tenant_checklists.py
+new file mode 100644
+index 0000000..a2f28b4
+--- /dev/null
++++ b/backend/tenancy/management/commands/seed_active_tenant_checklists.py
+@@ -0,0 +1,46 @@
++from __future__ import annotations
++
++from django.core.management.base import BaseCommand, CommandError
++
++from materialidad.checklist_templates import seed_default_checklists_for_tenant
++from tenancy.models import Tenant
++
++
++class Command(BaseCommand):
++    help = "Siembra los checklists base en uno o todos los tenants activos"
++
++    def add_arguments(self, parser):
++        parser.add_argument(
++            "--slug",
++            help="Slug específico del tenant. Si se omite, se procesan todos los activos",
++        )
++
++    def handle(self, *args, **options):
++        slug = options.get("slug")
++        tenants = (
++            Tenant.objects.filter(slug=slug, is_active=True)
++            if slug
++            else Tenant.objects.filter(is_active=True).order_by("slug")
++        )
++
++        if slug and not tenants.exists():
++            raise CommandError("Tenant no encontrado o inactivo")
++
++        total_tenants = 0
++        total_checklists = 0
++
++        for tenant in tenants:
++            seeded = seed_default_checklists_for_tenant(tenant_slug=tenant.slug)
++            total_tenants += 1
++            total_checklists += seeded
++            self.stdout.write(
++                self.style.NOTICE(
++                    f"Tenant {tenant.slug}: {seeded} checklists base sembrados o actualizados"
++                )
++            )
++
++        self.stdout.write(
++            self.style.SUCCESS(
++                f"Proceso completado. Tenants atendidos: {total_tenants}. Checklists procesados: {total_checklists}."
++            )
++        )
+\ No newline at end of file
+
+diff --git a/backend/materialidad/services.py b/backend/materialidad/services.py
+index 1551f03..0c60bdb 100644
+--- a/backend/materialidad/services.py
++++ b/backend/materialidad/services.py
+@@ -20,6 +20,7 @@ from .ai.client import ChatMessage, get_ai_client, OpenAIClientError
+ from .legal_corpus import build_hashed_embedding, cosine_similarity
+ from .models import (
+     AlertaOperacion,
++    ChecklistItem,
+     Contrato,
+     DashboardSnapshot,
+     EvidenciaMaterial,
+@@ -43,9 +44,79 @@ CRITICAL_FALTANTE_MARKERS = (
+     "UUID CFDI",
+     "Soporte de forma de pago",
+     "Razón de negocio",
++    "Checklist operativo",
+ )
+ 
+ 
++def _get_operacion_checklists(operacion: Operacion) -> list:
++    checklists = getattr(operacion, "checklists_operativos_prefetched", None)
++    if checklists is None:
++        checklists = operacion.checklists_operativos.prefetch_related("items").all()
++    return list(checklists)
++
++
++def get_operacion_checklists_resumen(operacion: Operacion) -> list[dict[str, Any]]:
++    resumen: list[dict[str, Any]] = []
++
++    for checklist in _get_operacion_checklists(operacion):
++        items_attr = getattr(checklist, "items", None)
++        items = list(items_attr.all()) if hasattr(items_attr, "all") else list(items_attr or [])
++        total = len(items)
++        completos = sum(1 for item in items if item.estado == ChecklistItem.Estado.COMPLETO)
++        requeridos_pendientes = sum(
++            1
++            for item in items
++            if item.requerido and item.estado != ChecklistItem.Estado.COMPLETO
++        )
++        resumen.append(
++            {
++                "id": checklist.id,
++                "nombre": checklist.nombre,
++                "tipo_gasto": checklist.tipo_gasto,
++                "estado_general": checklist.estado_general,
++                "progreso_porcentaje": checklist.progreso_porcentaje,
++                "total_items": total,
++                "completos": completos,
++                "pendientes": max(total - completos, 0),
++                "requeridos_pendientes": requeridos_pendientes,
++            }
++        )
++
++    return resumen
++
++
++def get_operacion_checklist_faltantes(operacion: Operacion) -> list[str]:
++    faltantes: list[str] = []
++
++    for checklist in _get_operacion_checklists(operacion):
++        items_attr = getattr(checklist, "items", None)
++        items = list(items_attr.all()) if hasattr(items_attr, "all") else list(items_attr or [])
++        pendientes_requeridos = [
++            item.titulo
++            for item in items
++            if item.requerido and item.estado != ChecklistItem.Estado.COMPLETO
++        ]
++        if not pendientes_requeridos:
++            continue
++
++        muestra = ", ".join(pendientes_requeridos[:2])
++        if len(pendientes_requeridos) > 2:
++            muestra = f"{muestra} y {len(pendientes_requeridos) - 2} más"
++
++        detalle = f": {muestra}" if muestra else ""
++        faltantes.append(
++            f"Checklist operativo incompleto: {checklist.nombre} "
++            f"({len(pendientes_requeridos)} requeridos pendientes{detalle})"
++        )
++
++    return faltantes
++
++
++def get_operacion_faltantes_expediente(operacion: Operacion) -> tuple[str, list[str]]:
++    perfil, faltantes = get_operacion_faltantes_materialidad(operacion)
++    return perfil, [*faltantes, *get_operacion_checklist_faltantes(operacion)]
++
++
+ def get_operacion_perfil_validacion(operacion: Operacion) -> str:
+     if operacion.contrato and operacion.contrato.categoria == Contrato.Categoria.PARTES_RELACIONADAS:
+         return "PARTES_RELACIONADAS"
+@@ -105,7 +176,7 @@ def get_operacion_faltantes_materialidad(operacion: Operacion) -> tuple[str, lis
+ 
+ 
+ def get_operacion_riesgo_materialidad(operacion: Operacion) -> dict[str, Any]:
+-    perfil, faltantes = get_operacion_faltantes_materialidad(operacion)
++    perfil, faltantes = get_operacion_faltantes_expediente(operacion)
+     score = 0
+     motivos: list[str] = []
+ 
+@@ -176,6 +247,20 @@ def create_or_get_alerta_operacion_faltantes(
+         estatus=AlertaOperacion.Estatus.ACTIVA,
+     ).first()
+     if alerta:
++        detalle = {
++            "perfil_validacion": perfil_validacion,
++            "faltantes": faltantes,
++            "faltantes_criticos": faltantes_criticos,
++        }
++        changes: list[str] = []
++        if alerta.owner_email != (owner_email or ""):
++            alerta.owner_email = owner_email or ""
++            changes.append("owner_email")
++        if alerta.detalle != detalle:
++            alerta.detalle = detalle
++            changes.append("detalle")
++        if changes:
++            alerta.save(update_fields=[*changes, "updated_at"])
+         return alerta
+ 
+     return AlertaOperacion.objects.create(
+@@ -196,6 +281,55 @@ def create_or_get_alerta_operacion_faltantes(
+     )
+ 
+ 
++def sync_operacion_materialidad(
++    *,
++    operacion: Operacion,
++    owner_email: str = "",
++    sync_alertas: bool = False,
++) -> dict[str, Any]:
++    perfil_validacion, faltantes_expediente = get_operacion_faltantes_expediente(operacion)
++    riesgo = get_operacion_riesgo_materialidad(operacion)
++
++    metadata = dict(operacion.metadata or {})
++    metadata["riesgo_materialidad"] = riesgo
++    operacion.metadata = metadata
++    operacion.save(update_fields=["metadata", "updated_at"])
++
++    alerta = None
++    alertas_qs = AlertaOperacion.objects.filter(
++        operacion=operacion,
++        tipo_alerta=AlertaOperacion.TipoAlerta.FALTANTES_CRITICOS,
++        estatus=AlertaOperacion.Estatus.ACTIVA,
++    )
++
++    if sync_alertas:
++        if _get_faltantes_criticos(faltantes_expediente):
++            alerta = create_or_get_alerta_operacion_faltantes(
++                operacion=operacion,
++                perfil_validacion=perfil_validacion,
++                faltantes=faltantes_expediente,
++                owner_email=owner_email,
++            )
++            if alerta:
++                alertas_qs.exclude(id=alerta.id).update(
++                    estatus=AlertaOperacion.Estatus.CERRADA,
++                    fecha_cierre=timezone.now(),
++                )
++        else:
++            alertas_qs.update(
++                estatus=AlertaOperacion.Estatus.CERRADA,
++                fecha_cierre=timezone.now(),
++            )
++
++    return {
++        "perfil_validacion": perfil_validacion,
++        "faltantes": faltantes_expediente,
++        "riesgo": riesgo,
++        "alerta": alerta,
++        "checklists_resumen": get_operacion_checklists_resumen(operacion),
++    }
++
++
+ def validate_cfdi_spei(uuid_cfdi: str | None = None, referencia_spei: str | None = None, monto: Decimal | None = None) -> dict[str, Any]:
+     """Valida CFDI/SPEI contra conectores externos.
+ 
+diff --git a/backend/materialidad/serializers.py b/backend/materialidad/serializers.py
+index 725528e..c477260 100644
+--- a/backend/materialidad/serializers.py
++++ b/backend/materialidad/serializers.py
+@@ -34,13 +35,18 @@ from .models import (
+     LegalReferenceSource,
+     MovimientoBancario,
+     Operacion,
++    OperacionChecklist,
++    OperacionChecklistItem,
+     OperacionConciliacion,
+     OperacionEntregable,
+     Proveedor,
+     RazonNegocioAprobacion,
+ )
++from .checklist_templates import assign_default_checklists_to_operacion
+ from .services import (
++    get_operacion_checklists_resumen,
++    get_operacion_faltantes_expediente,
+     get_operacion_faltantes_materialidad,
+     get_operacion_perfil_validacion,
+     get_operacion_riesgo_materialidad,
+     operacion_forma_pago_documentada,
+@@ -672,6 +680,7 @@ class OperacionSerializer(serializers.ModelSerializer):
+     riesgo_nivel = serializers.SerializerMethodField()
+     riesgo_score = serializers.SerializerMethodField()
+     riesgo_motivos = serializers.SerializerMethodField()
++    checklists_resumen = serializers.SerializerMethodField()
+ 
+     class Meta:
+         model = Operacion
+@@ -696,6 +705,7 @@ class OperacionSerializer(serializers.ModelSerializer):
+             "riesgo_nivel",
+             "riesgo_score",
+             "riesgo_motivos",
++            "checklists_resumen",
+             "estatus_validacion",
+             "cfdi_estatus",
+             "spei_estatus",
+@@ -738,6 +748,11 @@ class OperacionSerializer(serializers.ModelSerializer):
+             validated_data["creado_por_usuario_id"] = request.user.id
+             validated_data["creado_por_email"] = request.user.email
+         operacion = super().create(validated_data)
++        tenant = getattr(request, "tenant", None) if request else None
++        assign_default_checklists_to_operacion(
++            operacion=operacion,
++            tenant_slug=tenant.slug if tenant else "",
++        )
+         trigger_proveedor_validacion(operacion)
+         return operacion
+ 
+@@ -837,6 +852,9 @@ class OperacionSerializer(serializers.ModelSerializer):
+             return [str(motivo) for motivo in motivos]
+         return []
+ 
++    def get_checklists_resumen(self, obj: Operacion) -> list[dict]:
++        return get_operacion_checklists_resumen(obj)
++
+ 
+ class OperacionCambioEstatusSerializer(serializers.Serializer):
+     estatus_validacion = serializers.ChoiceField(choices=Operacion.EstatusValidacion.choices)
+@@ -1685,6 +1725,81 @@ class ChecklistSerializer(serializers.ModelSerializer):
+         return instance
+ 
+ 
++class OperacionChecklistItemSerializer(serializers.ModelSerializer):
++    class Meta:
++        model = OperacionChecklistItem
++        fields = (
++            "id",
++            "operacion_checklist",
++            "checklist_item",
++            "pillar",
++            "titulo",
++            "descripcion",
++            "requerido",
++            "responsable",
++            "estado",
++            "created_at",
++            "updated_at",
++        )
++        read_only_fields = (
++            "id",
++            "operacion_checklist",
++            "checklist_item",
++            "pillar",
++            "titulo",
++            "descripcion",
++            "requerido",
++            "responsable",
++            "created_at",
++            "updated_at",
++        )
++
++
++class OperacionChecklistSerializer(serializers.ModelSerializer):
++    items = OperacionChecklistItemSerializer(many=True, read_only=True)
++    total_items = serializers.SerializerMethodField()
++    completos = serializers.SerializerMethodField()
++    pendientes = serializers.SerializerMethodField()
++
++    class Meta:
++        model = OperacionChecklist
++        fields = (
++            "id",
++            "operacion",
++            "checklist",
++            "nombre",
++            "tipo_gasto",
++            "origen",
++            "estado_general",
++            "progreso_porcentaje",
++            "total_items",
++            "completos",
++            "pendientes",
++            "created_at",
++            "updated_at",
++            "items",
++        )
++        read_only_fields = fields
++
++    def get_total_items(self, obj: OperacionChecklist) -> int:
++        items = getattr(obj, "items", None)
++        if items is not None and not hasattr(items, "all"):
++            return len(items)
++        return obj.items.count()
++
++    def get_completos(self, obj: OperacionChecklist) -> int:
++        items = getattr(obj, "items", None)
++        if items is not None and not hasattr(items, "all"):
++            return sum(1 for item in items if item.estado == ChecklistItem.Estado.COMPLETO)
++        return obj.items.filter(estado=ChecklistItem.Estado.COMPLETO).count()
++
++    def get_pendientes(self, obj: OperacionChecklist) -> int:
++        items = getattr(obj, "items", None)
++        if items is not None and not hasattr(items, "all"):
++            return sum(1 for item in items if item.estado != ChecklistItem.Estado.COMPLETO)
++        return obj.items.exclude(estado=ChecklistItem.Estado.COMPLETO).count()
++
++
+ class DeliverableRequirementSerializer(serializers.ModelSerializer):
+     class Meta:
+         model = DeliverableRequirement
+@@ -1978,6 +2093,7 @@ class BandejaRevisionItemSerializer(serializers.ModelSerializer):
+     riesgo_motivos = serializers.SerializerMethodField()
+     faltantes = serializers.SerializerMethodField()
+     alertas_activas = serializers.SerializerMethodField()
++    checklists_resumen = serializers.SerializerMethodField()
+ 
+     class Meta:
+         model = Operacion
+@@ -2004,13 +2120,10 @@ class BandejaRevisionItemSerializer(serializers.ModelSerializer):
+             "riesgo_motivos",
+             "faltantes",
+             "alertas_activas",
++            "checklists_resumen",
+         )
+ 
+     def _riesgo_payload(self, obj: Operacion) -> dict:
+-        metadata = obj.metadata or {}
+-        riesgo = metadata.get("riesgo_materialidad")
+-        if isinstance(riesgo, dict) and riesgo.get("nivel"):
+-            return riesgo
+         return get_operacion_riesgo_materialidad(obj)
+ 
+     def get_contrato_nombre(self, obj: Operacion) -> str | None:
+@@ -2035,9 +2148,12 @@ class BandejaRevisionItemSerializer(serializers.ModelSerializer):
+         return []
+ 
+     def get_faltantes(self, obj: Operacion) -> list[str]:
+-        _, faltantes = get_operacion_faltantes_materialidad(obj)
++        _, faltantes = get_operacion_faltantes_expediente(obj)
+         return faltantes
+ 
++    def get_checklists_resumen(self, obj: Operacion) -> list[dict]:
++        return get_operacion_checklists_resumen(obj)
++
+     def get_alertas_activas(self, obj: Operacion) -> list[dict]:
+         alertas = getattr(obj, "alertas_activas_prefetched", None)
+         if alertas is None:
+@@ -2067,6 +2183,7 @@ class MatrizMaterialidadItemSerializer(serializers.ModelSerializer):
+     perfil_validacion = serializers.SerializerMethodField()
+     cadena_documental = serializers.SerializerMethodField()
+     alertas_activas = serializers.SerializerMethodField()
++    checklists_resumen = serializers.SerializerMethodField()
+ 
+     class Meta:
+         model = Operacion
+@@ -2093,13 +2210,10 @@ class MatrizMaterialidadItemSerializer(serializers.ModelSerializer):
+             "faltantes",
+             "cadena_documental",
+             "alertas_activas",
++            "checklists_resumen",
+         )
+ 
+     def _riesgo_payload(self, obj: Operacion) -> dict:
+-        metadata = obj.metadata or {}
+-        riesgo = metadata.get("riesgo_materialidad")
+-        if isinstance(riesgo, dict) and riesgo.get("nivel"):
+-            return riesgo
+         return get_operacion_riesgo_materialidad(obj)
+ 
+     def get_riesgo_nivel(self, obj: Operacion) -> str:
+@@ -2109,7 +2223,7 @@ class MatrizMaterialidadItemSerializer(serializers.ModelSerializer):
+         return int(self._riesgo_payload(obj).get("score", 0) or 0)
+ 
+     def get_faltantes(self, obj: Operacion) -> list[str]:
+-        _, faltantes = get_operacion_faltantes_materialidad(obj)
++        _, faltantes = get_operacion_faltantes_expediente(obj)
+         return faltantes
+ 
+     def get_estado_completitud(self, obj: Operacion) -> str:
+@@ -2164,3 +2278,6 @@ class MatrizMaterialidadItemSerializer(serializers.ModelSerializer):
+             }
+             for alerta in alertas
+         ]
++
++    def get_checklists_resumen(self, obj: Operacion) -> list[dict]:
++        return get_operacion_checklists_resumen(obj)
+diff --git a/backend/materialidad/views.py b/backend/materialidad/views.py
+index 148f643..6174586 100644
+--- a/backend/materialidad/views.py
++++ b/backend/materialidad/views.py
+@@ -273,11 +274,14 @@ from .models import (
+     LegalReferenceSource,
+     MovimientoBancario,
+     Operacion,
++    OperacionChecklist,
++    OperacionChecklistItem,
+     OperacionConciliacion,
+     OperacionEntregable,
+     Proveedor,
+     RazonNegocioAprobacion,
+ )
++from .checklist_templates import refresh_operacion_checklist_progress
+ from .serializers import (
+     AlertaOperacionSerializer,
+     AuditMaterialityDossierSerializer,
+@@ -312,6 +316,8 @@ from .serializers import (
+     RedlineAnalysisSerializer,
+     OperacionConciliacionSerializer,
+     OperacionCambioEstatusSerializer,
++    OperacionChecklistItemSerializer,
++    OperacionChecklistSerializer,
+     BandejaRevisionItemSerializer,
+     MatrizMaterialidadItemSerializer,
+     EmpresaSerializer,
+@@ -336,6 +342,7 @@ from .services import (
+     get_operacion_faltantes_materialidad,
+     get_operacion_riesgo_materialidad,
+     perform_legal_consultation,
++    sync_operacion_materialidad,
+     trigger_proveedor_validacion,
+     trigger_validacion_proveedor,
+     validate_cfdi_spei,
+@@ -1363,6 +1370,30 @@ class ChecklistItemViewSet(viewsets.ModelViewSet):
+         serializer.save(checklist=checklist)
+ 
+ 
++class OperacionChecklistItemViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
++    serializer_class = OperacionChecklistItemSerializer
++    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
++    search_fields = ("titulo", "descripcion", "responsable")
++    ordering_fields = ("created_at", "updated_at", "estado")
++    ordering = ("created_at",)
++    filterset_fields = ("operacion_checklist", "operacion_checklist__operacion", "estado", "pillar")
++
++    def get_queryset(self):
++        return OperacionChecklistItem.objects.select_related("operacion_checklist", "checklist_item")
++
++    def perform_update(self, serializer):
++        changes = serializer.validated_data.copy()
++        item = serializer.save()
++        refresh_operacion_checklist_progress(item.operacion_checklist)
++        sync_operacion_materialidad(
++            operacion=item.operacion_checklist.operacion,
++            owner_email=getattr(self.request.user, "email", ""),
++            sync_alertas=True,
++        )
++        if changes:
++            _audit(self.request, "operacion_checklist_item_actualizado", item, changes=changes)
++
++
+ class DeliverableRequirementViewSet(viewsets.ModelViewSet):
+     serializer_class = DeliverableRequirementSerializer
+     pagination_class = None  # Siempre retornar todas las plantillas
+@@ -1731,8 +1770,22 @@ class OperacionViewSet(viewsets.ModelViewSet):
+         return base_qs.prefetch_related(
+             Prefetch("entregables", to_attr="entregables_prefetched"),
+             Prefetch("evidencias"),
++            Prefetch(
++                "checklists_operativos",
++                queryset=OperacionChecklist.objects.prefetch_related("items"),
++                to_attr="checklists_operativos_prefetched",
++            ),
+         )
+ 
++    @action(detail=True, methods=["get"], url_path="checklists")
++    def checklists(self, request, *args, **kwargs):
++        operacion = self.get_object()
++        serializer = OperacionChecklistSerializer(
++            operacion.checklists_operativos.prefetch_related("items").all(),
++            many=True,
++        )
++        return Response(serializer.data, status=status.HTTP_200_OK)
++
+     @action(detail=False, methods=["get"], url_path="bandeja-revision")
+     def bandeja_revision(self, request, *args, **kwargs):
+         rol = (request.query_params.get("rol") or "").strip().upper()
+@@ -1972,6 +2025,11 @@ class OperacionViewSet(viewsets.ModelViewSet):
+                 "updated_at",
+             ]
+         )
++        sync_operacion_materialidad(
++            operacion=operacion,
++            owner_email=getattr(request.user, "email", ""),
++            sync_alertas=False,
++        )
+ 
+         _audit(
+             request,

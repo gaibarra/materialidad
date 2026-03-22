@@ -1,0 +1,20 @@
+[Unit]
+Description=Servicio FastAPI Validación SAT 69-B
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/materialidad
+Environment="PATH=/srv/materialidad/.venv/bin"
+Environment="DB_HOST=localhost"
+Environment="DB_PORT=5432"
+Environment="DB_NAME=sat_69b_db"
+Environment="DB_USER=postgres"
+Environment="DB_PASSWORD=postgres"
+ExecStart=/srv/materialidad/.venv/bin/uvicorn sat_api_v2:app --host 127.0.0.1 --port 8001 --workers 2
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

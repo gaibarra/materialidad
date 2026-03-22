@@ -1,0 +1,24 @@
+External ID,Issue Type,Summary,Epic Name,Epic Link,Story Points,Sprint,Labels,Depends On,Description
+E1,Epic,E1 - Expediente probatorio mínimo,E1 - Expediente probatorio mínimo,,,P0-Sprint-1,"p0,materialidad,defensa-inmediata",,"Modelado de evidencia, checklist obligatorio y trazabilidad documental para soporte fiscal."
+E2,Epic,E2 - Flujo de revisión fiscal,E2 - Flujo de revisión fiscal,,,P0-Sprint-2,"p0,materialidad,workflow",E1,"Estados de revisión, validaciones bloqueantes y control por rol."
+E3,Epic,E3 - Paquete de defensa fiscal,E3 - Paquete de defensa fiscal,,,P0-Sprint-3,"p0,materialidad,reporting",E2,"Exportables PDF/ZIP y matriz documental para atención de facultades de comprobación."
+E4,Epic,E4 - Go-live controlado,E4 - Go-live controlado,,,P0-Sprint-4,"p0,materialidad,hardening",E3,"Seguridad, UAT real y salida controlada a producción multi-tenant."
+E1-H1,Story,H1 - Modelo Evidence + EvidenceLink + AuditTrail,,E1,8,P0-Sprint-1,"p0,backend,modelado",,Crear modelos para evidencia, relación a operación y bitácora de auditoría por evento.
+E1-H2,Story,H2 - Plantillas checklist por tipo de operación,,E1,5,P0-Sprint-1,"p0,backend,compliance",,Definir checklist mínimo para servicios compras y partes relacionadas.
+E1-H3,Story,H3 - API CRUD expediente probatorio con filtros,,E1,8,P0-Sprint-1,"p0,backend,api",E1-H1,Endpoints para crear listar actualizar evidencia con filtros por operación proveedor RFC y estatus.
+E1-H4,Story,H4 - Reglas de obligatoriedad documental por operación,,E1,5,P0-Sprint-1,"p0,backend,reglas",E1-H2,Validar documentos mínimos requeridos según tipo de operación antes de cierre.
+E1-H5,Story,H5 - UI de carga documental y porcentaje de completitud,,E1,8,P0-Sprint-1,"p0,frontend,ux",E1-H3,Formulario de evidencia con indicador de avance y faltantes por checklist.
+E2-H1,Story,H1 - Workflow de estados fiscales,,E2,8,P0-Sprint-2,"p0,backend,workflow",E1-H4,Implementar estados BORRADOR EN_REVISION OBSERVADA APROBADA con transiciones válidas.
+E2-H2,Story,H2 - Validaciones bloqueantes mínimas por operación,,E2,8,P0-Sprint-2,"p0,backend,validacion",E2-H1,Impedir aprobar operación si faltan evidencias críticas o razón de negocio.
+E2-H3,Story,H3 - Bandeja de revisión por rol,,E2,5,P0-Sprint-2,"p0,frontend,roles",E2-H1,Interfaz para analista revisor y admin con cola de casos y filtros.
+E2-H4,Story,H4 - Semáforo de riesgo base (bajo medio alto),,E2,5,P0-Sprint-2,"p0,backend,riesgo",E2-H2,Calcular riesgo preliminar por faltantes y hallazgos de documentación.
+E2-H5,Story,H5 - Alertas por faltantes y vencimientos documentales,,E2,6,P0-Sprint-2,"p0,backend,notificaciones",E2-H2,Generar alertas para expedientes incompletos y documentos vencidos.
+E3-H1,Story,H1 - Exporte PDF de defensa fiscal,,E3,8,P0-Sprint-3,"p0,backend,export",E2-H2,Generar reporte PDF con portada índice hechos y anexos documentales.
+E3-H2,Story,H2 - Paquete ZIP probatorio,,E3,8,P0-Sprint-3,"p0,backend,export",E3-H1,Descargar ZIP con evidencias checklist y bitácora de auditoría.
+E3-H3,Story,H3 - Matriz CFDI contrato pago evidencia,,E3,8,P0-Sprint-3,"p0,backend,materialidad",E1-H1,Consolidar relación documental CFDI contrato pago y evidencia de materialización.
+E3-H4,Story,H4 - Dashboard cobertura P0,,E3,7,P0-Sprint-3,"p0,frontend,dashboard",E2-H4,Mostrar avance de expediente y cumplimiento por operación proveedor y empresa.
+E4-H1,Story,H1 - Hardening permisos y aislamiento multi-tenant,,E4,8,P0-Sprint-4,"p0,backend,seguridad",E2-H3,Refuerzo de permisos por rol y aislamiento estricto de datos por tenant.
+E4-H2,Story,H2 - Versionado básico de evidencia aprobada,,E4,5,P0-Sprint-4,"p0,backend,integridad",E1-H1,Evitar sobreescritura de evidencia aprobada y conservar historial de versiones.
+E4-H3,Story,H3 - Integridad documental por hash,,E4,8,P0-Sprint-4,"p0,backend,seguridad",E4-H2,Calcular hash de archivo para detectar alteraciones posteriores.
+E4-H4,Story,H4 - UAT con 3 casos reales,,E4,7,P0-Sprint-4,"p0,qa,uat",E3-H2,Validar fin a fin servicios compras y partes relacionadas con usuarios clave.
+E4-H5,Story,H5 - Corrección final y release checklist,,E4,5,P0-Sprint-4,"p0,release,operacion",E4-H4,Cerrar hallazgos UAT checklist de salida y plan de despliegue controlado.
